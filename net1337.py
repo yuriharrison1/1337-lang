@@ -638,8 +638,8 @@ class Network1337:
         self.all_participants: dict[str, Any] = {self.human.id: self.human}
 
     def add_agent(self, name: str, persona: str) -> Agent1337:
-        if len(self.agents) >= 4:
-            print("⚠ Máximo 4 agentes.")
+        if len(self.agents) >= 8:
+            print("⚠ Máximo 8 agentes.")
             return None
         agent = Agent1337(
             id=str(uuid.uuid4()),
