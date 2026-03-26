@@ -1,0 +1,138 @@
+[
+  {
+    "sender": "SRE",
+    "receiver": "REDE",
+    "intent": "SYNC",
+    "text": "I AM",
+    "urgency": 0,
+    "stamp": 0
+  },
+  {
+    "sender": "Dev",
+    "receiver": "REDE",
+    "intent": "SYNC",
+    "text": "I AM",
+    "urgency": 0,
+    "stamp": 0
+  },
+  {
+    "sender": "EM",
+    "receiver": "REDE",
+    "intent": "SYNC",
+    "text": "I AM",
+    "urgency": 0,
+    "stamp": 0
+  },
+  {
+    "sender": "Humano",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Alerta PagerDuty: serviço de autenticação retornando 503. Todos os logins falhando. Última mudança: migration de banco 2h atrás.",
+    "urgency": 0.5,
+    "stamp": 1774502527167893296
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Declarando incidente. Revertendo a migration imediatamente para reduzir o blast radius. Monitorando SLO de disponibilidade.",
+    "urgency": 0.5,
+    "stamp": 1774502530380985088
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "A migration provavelmente não atualizou o índice da tabela `sessions`. Verifique a query de conexão no pool do banco e adicione o índice faltante.",
+    "urgency": 0.5,
+    "stamp": 1774502533460354048
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Acionando o time de banco para reverter a migration imediatamente. Enquanto isso, vou comunicar o impacto aos stakeholders e manter todos atualizados.",
+    "urgency": 0.5,
+    "stamp": 1774502536061777152
+  },
+  {
+    "sender": "Humano",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "O serviço de autenticação está retornando 503. Todos os logins estão falhando.",
+    "urgency": 0.5,
+    "stamp": 1774502536062621225
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Confirmado. Revertemos a migration e o serviço está se recuperando. Monitorando os 9s de disponibilidade.",
+    "urgency": 0.5,
+    "stamp": 1774502538076519936
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "O índice `user_id` na tabela `sessions` está faltando após a migration. Adicione `CREATE INDEX CONCURRENTLY sessions_user_id_idx ON sessions(user_id);` para restaurar a performance das queries de login.",
+    "urgency": 0.5,
+    "stamp": 1774502541311124992
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Confirmado, já acionei o time de banco para reverter a migration. Estou comunicando o impacto e mantendo todos informados em tempo real.",
+    "urgency": 0.5,
+    "stamp": 1774502543671907072
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Revertemos a migration para restaurar o índice. Vamos analisar o processo de deploy para evitar que isso se repita.",
+    "urgency": 0.5,
+    "stamp": 1774502545962512896
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Perfeito, a reversão da migration é a ação imediata correta. Enquanto isso, já preparo o script do índice faltante para aplicar assim que o banco estiver estável.",
+    "urgency": 0.5,
+    "stamp": 1774502548942915072
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Perfeito, agradeço a ação rápida. Vamos conduzir a análise pós-incidente juntos para implementar as melhorias no processo.",
+    "urgency": 0.5,
+    "stamp": 1774502551709132800
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Revertida com sucesso. Vou ajustar os gates de deploy para exigir verificação de índices críticos antes de prosseguir.",
+    "urgency": 0.5,
+    "stamp": 1774502555078629120
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Confirmado. Vou reverter a migration agora e já tenho o script de índice preparado para aplicar após a estabilização.",
+    "urgency": 0.5,
+    "stamp": 1774502557149050112
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Excelente, essa medida preventiva é crucial. Vamos incluí-la nas ações do pós-incidente para formalizar o aprendizado.",
+    "urgency": 0.5,
+    "stamp": 1774502559401992192
+  }
+]

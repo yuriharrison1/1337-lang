@@ -1,0 +1,2538 @@
+{
+  "session_id": "2c187870-e9ca-409f-8427-63f1483d98a7",
+  "timestamp": "2026-03-26T03:15:17.313580",
+  "topic": "O Banquete de Platão - Discussão 1337",
+  "summary": {
+    "total_messages": 85,
+    "total_tokens": 13113,
+    "total_cost_estimate_usd": 0.0197,
+    "compression_ratio": 1.3,
+    "concepts_tracked": 3,
+    "raw_objects": 31
+  },
+  "agent_performance": {
+    "Fedro (via Humano)": {
+      "messages": 1,
+      "tokens": 191,
+      "avg_urgency": 0.0,
+      "concepts_introduced": []
+    },
+    "Sócrates": {
+      "messages": 21,
+      "tokens": 3366,
+      "avg_urgency": 0.0,
+      "concepts_introduced": []
+    },
+    "Aristófanes": {
+      "messages": 21,
+      "tokens": 3171,
+      "avg_urgency": 0.0,
+      "concepts_introduced": []
+    },
+    "Agaton": {
+      "messages": 21,
+      "tokens": 3220,
+      "avg_urgency": 0.0,
+      "concepts_introduced": []
+    },
+    "Alcibíades": {
+      "messages": 21,
+      "tokens": 3165,
+      "avg_urgency": 0.0,
+      "concepts_introduced": []
+    }
+  },
+  "concept_evolution": {
+    "Eros": {
+      "refinements": 44,
+      "timeline": [
+        {
+          "time": 1774505701.4408994,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        },
+        {
+          "time": 1774505707.890993,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        },
+        {
+          "time": 1774505714.0598028,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    "Beleza": {
+      "refinements": 26,
+      "timeline": [
+        {
+          "time": 1774505677.0158076,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        },
+        {
+          "time": 1774505701.4409282,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        },
+        {
+          "time": 1774505714.0598154,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    "Alma": {
+      "refinements": 17,
+      "timeline": [
+        {
+          "time": 1774505694.8881636,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        },
+        {
+          "time": 1774505701.4409523,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        },
+        {
+          "time": 1774505714.0598257,
+          "axes": [
+            [
+              "VIA",
+              0.5
+            ],
+            [
+              "CORRESPONDÊNCIA",
+              0.5
+            ],
+            [
+              "VIBRAÇÃO",
+              0.5
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "raw_objects": [
+    {
+      "id": "eaa9f81c-66d2-4e32-a0b4-ef9a1045cc16",
+      "topic": "O Banquete",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:10:29.763991"
+    },
+    {
+      "id": "f428f197-7b19-4c55-96ff-c0f01584a2d2",
+      "topic": "Encomium de Sócrates",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:10:34.114830"
+    },
+    {
+      "id": "a9a0fd70-e836-4d61-a307-8cd16de4b7fa",
+      "topic": "Encomium de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:10:37.845738"
+    },
+    {
+      "id": "37514172-0cb5-4758-92cd-617c2a6c796c",
+      "topic": "Encomium de Agaton",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:10:41.698333"
+    },
+    {
+      "id": "56592641-8dcc-4c5f-85d3-e685c58f3a47",
+      "topic": "Encomium de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:10:45.256099"
+    },
+    {
+      "id": "9c73c441-723f-4dd5-b36a-b1d81a7586a5",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:10:59.261644"
+    },
+    {
+      "id": "2c67dc9b-5629-441e-87c8-eae4cee17761",
+      "topic": "Objeção de Agaton",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:10.942713"
+    },
+    {
+      "id": "a4689dad-992f-489e-bce3-0fccf1efe23d",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:14.961551"
+    },
+    {
+      "id": "2e70db5a-de09-4ed9-81ea-a010ff3fbcf5",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:28.914775"
+    },
+    {
+      "id": "45cf86b2-3019-4578-a552-1cc6607b3159",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:35.784293"
+    },
+    {
+      "id": "c314b90b-43b3-41e8-a017-7198745da4ee",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:42.512863"
+    },
+    {
+      "id": "64f93607-5bd4-4dcd-b3b7-66b9a3afac30",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:49.381588"
+    },
+    {
+      "id": "8f1c1396-b51e-42d1-b5c4-3cb1adba1000",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:11:55.899191"
+    },
+    {
+      "id": "3e3ccbf2-ea5d-4c0f-b560-34a8084c521d",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:12:01.918609"
+    },
+    {
+      "id": "5976f42d-9020-4e7a-b895-7433c2029269",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:12:14.168295"
+    },
+    {
+      "id": "6240a45f-9d86-4ea4-a8e5-9d20d027c9b8",
+      "topic": "Objeção de Agaton",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:12:17.206151"
+    },
+    {
+      "id": "f36bbdb4-bce8-470b-8988-16a113cae176",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:12:20.427478"
+    },
+    {
+      "id": "1527659b-1067-41ca-ac9e-ec1dd86a03b5",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:12:27.034289"
+    },
+    {
+      "id": "b15f10fa-2c3b-4a9a-8909-0ddb3d2a45cc",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:12:40.157044"
+    },
+    {
+      "id": "89c14d8f-2283-4780-b319-a11ce9ce4886",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:13:02.341500"
+    },
+    {
+      "id": "05099487-174e-4f0b-9894-9d33fd65fc5e",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:13:09.375232"
+    },
+    {
+      "id": "a47f7d92-6029-4615-bf5e-33bb7221a436",
+      "topic": "Objeção de Agaton",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:13:13.070078"
+    },
+    {
+      "id": "4e8bdc44-8222-4212-9210-80a0deced3a4",
+      "topic": "Objeção de Aristófanes",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:13:22.862677"
+    },
+    {
+      "id": "8b5329d3-8cf7-4201-9db2-cba38b5b87a0",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:13:42.745726"
+    },
+    {
+      "id": "226aa432-427c-473d-bc62-a33c75e24638",
+      "topic": "Objeção de Agaton",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:14:06.891673"
+    },
+    {
+      "id": "49a8472b-4cab-40b7-b52b-d22836b1d46b",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:14:23.255832"
+    },
+    {
+      "id": "75c22c44-b67b-40e8-9b55-c6f94d9e8a70",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:14:37.015885"
+    },
+    {
+      "id": "9478b60f-1776-4fd8-9ce7-89d3f58f2cea",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:14:51.149837"
+    },
+    {
+      "id": "49cf2d8d-36f6-4083-a878-77869cf3f2b9",
+      "topic": "Objeção de Agaton",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:15:01.441051"
+    },
+    {
+      "id": "7585f9da-5ad0-4497-9f04-006ce0aa7015",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:15:04.885912"
+    },
+    {
+      "id": "e2d2924b-c27d-4eaf-9675-90ceeb46752d",
+      "topic": "Objeção de Alcibíades",
+      "type": "EVIDENCE",
+      "timestamp": "2026-03-26T03:15:17.312500"
+    }
+  ],
+  "timeline": [
+    {
+      "timestamp": "2026-03-26T03:10:29.763926",
+      "sender": "Fedro (via Humano)",
+      "intent": "ASSERT",
+      "text_preview": "Bem-vindos ao Banquete em homenagem a Eros. Cada um deve fazer um encomium (elogio) \n    ao deus Amo...",
+      "tokens_in": 91,
+      "tokens_out": 100,
+      "compression_ratio": 2.125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": [
+        "eaa9f81c-66d2-4e32-a0b4-ef9a1045cc16"
+      ]
+    },
+    {
+      "timestamp": "2026-03-26T03:10:34.114760",
+      "sender": "Sócrates",
+      "intent": "ASSERT",
+      "text_preview": "Ah, meu caro, você mesmo já semeou a dúvida: se Eros busca o que não tem, como poderia ser plenament...",
+      "tokens_in": 77,
+      "tokens_out": 100,
+      "compression_ratio": 1.8359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:37.845621",
+      "sender": "Aristófanes",
+      "intent": "ASSERT",
+      "text_preview": "Ah, mortais que dissecais o amor como um peixe no mercado! Eros é a saudade divina que nos move – a ...",
+      "tokens_in": 68,
+      "tokens_out": 100,
+      "compression_ratio": 1.578125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:41.698251",
+      "sender": "Agaton",
+      "intent": "ASSERT",
+      "text_preview": "Oh, alma curiosa que lança dúvidas como flechas! Eros é o mais radiante dos deuses, eternamente jove...",
+      "tokens_in": 65,
+      "tokens_out": 100,
+      "compression_ratio": 1.5546875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:45.256013",
+      "sender": "Alcibíades",
+      "intent": "ASSERT",
+      "text_preview": "Ah, Sócrates... você fala de Eros como se ele fosse uma ideia, não este fogo que me consome! Você é ...",
+      "tokens_in": 59,
+      "tokens_out": 100,
+      "compression_ratio": 1.359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:48.788188",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, esse fogo que te consome: é fome de beleza ou apenas cinzas da posse? Diotima não me...",
+      "tokens_in": 56,
+      "tokens_out": 100,
+      "compression_ratio": 1.3359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:52.186515",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, ainda tropeçais em vossas próprias perguntas! O fogo de Alcibíades é a centelha da esf...",
+      "tokens_in": 49,
+      "tokens_out": 100,
+      "compression_ratio": 1.21875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:56.061817",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, Aristófanes, mesmo vosso delírio cómico toca uma verdade velada: a centelha de Alcibíades é just...",
+      "tokens_in": 65,
+      "tokens_out": 100,
+      "compression_ratio": 1.5859375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:10:59.261544",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, você entende! Mas Sócrates... ele acende esse fogo e depois o nega, como se minha carne ...",
+      "tokens_in": 45,
+      "tokens_out": 100,
+      "compression_ratio": 1.0546875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:02.434429",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você confunde a carne com o espelho: será que o fogo que te move busca o corpo ou o ...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.1640625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:06.718904",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teu espelho reflete apenas sombras! Alcibíades busca a costura cósmica que una sua met...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.2421875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:10.942560",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, vosso delírio cómico confirma minha tese: o ardor de Alcibíades pela \"costura cósmica\" é a própr...",
+      "tokens_in": 67,
+      "tokens_out": 100,
+      "compression_ratio": 1.6171875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:14.961413",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, você fala de sombras e Beleza, mas Sócrates... ele é a estátua que nega o escultor que a...",
+      "tokens_in": 65,
+      "tokens_out": 100,
+      "compression_ratio": 1.5390625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:18.258444",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca o homem ou o que ele busca? Diotima não ensinou que o verdadeiro amor é u...",
+      "tokens_in": 48,
+      "tokens_out": 100,
+      "compression_ratio": 1.140625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:21.577714",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada sobe para um céu vazio! Alcibíades busca o abraço que costura a carne e a a...",
+      "tokens_in": 44,
+      "tokens_out": 100,
+      "compression_ratio": 1.0703125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:25.237059",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, Aristófanes, até vosso riso escarnecedor revela a centelha divina: o abraço que descreveis é a p...",
+      "tokens_in": 67,
+      "tokens_out": 100,
+      "compression_ratio": 1.6171875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:28.914627",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, você fala de sombras e Beleza, mas Sócrates... ele é a estátua que nega o escultor que a...",
+      "tokens_in": 65,
+      "tokens_out": 100,
+      "compression_ratio": 1.5390625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:32.216339",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você deseja o homem que busca a Beleza ou apenas deseja possuir a busca? Diotima não...",
+      "tokens_in": 56,
+      "tokens_out": 100,
+      "compression_ratio": 1.3359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:35.784193",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teu *daimon* é um viajante solitário, enquanto nosso Alcibíades anseia pelo porto prim...",
+      "tokens_in": 49,
+      "tokens_out": 100,
+      "compression_ratio": 1.2109375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:39.238690",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, vosso mito grotesco apenas confirma: o desejo de Alcibíades por Sócrates é a própria sombra terr...",
+      "tokens_in": 61,
+      "tokens_out": 100,
+      "compression_ratio": 1.46875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:42.512711",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, mas que Beleza é essa que foge do toque? Sócrates me nega até o calor do seu próprio corpo, como...",
+      "tokens_in": 45,
+      "tokens_out": 100,
+      "compression_ratio": 1.0390625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:45.997328",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca o calor do corpo ou o fogo da alma? Diotima não disse que Eros é filho de...",
+      "tokens_in": 53,
+      "tokens_out": 100,
+      "compression_ratio": 1.2421875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:49.381468",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua Pobreza e teu Recurso são apenas ecos do grande rasgo primordial! Alcibíades não b...",
+      "tokens_in": 69,
+      "tokens_out": 100,
+      "compression_ratio": 1.671875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:52.771708",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossa comédia esférica apenas confirma que o desejo primordial é a centelha divina de Eros, que nos ...",
+      "tokens_in": 53,
+      "tokens_out": 100,
+      "compression_ratio": 1.3203125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:55.899099",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates! Seu orgulho de pedra me queima mais que o vinho! Você fala de Beleza, mas foge da minh...",
+      "tokens_in": 42,
+      "tokens_out": 100,
+      "compression_ratio": 0.9609375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:11:58.825563",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você deseja a minha aparência ou a Beleza que através dela se revela? Diotima não en...",
+      "tokens_in": 52,
+      "tokens_out": 100,
+      "compression_ratio": 1.2578125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:01.918491",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teus degraus levam ao pensamento, mas o abraço de Alcibíades busca a costura do própri...",
+      "tokens_in": 44,
+      "tokens_out": 100,
+      "compression_ratio": 1.0859375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:04.952284",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vosso círculo esférico é apenas um eco imperfeito do ímpeto divino que nos lança, como flechas doura...",
+      "tokens_in": 47,
+      "tokens_out": 100,
+      "compression_ratio": 1.1640625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:08.223428",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu discurso brilha como ouro falso! Sócrates... ele é o sol que me cega e me nega seu c...",
+      "tokens_in": 36,
+      "tokens_out": 100,
+      "compression_ratio": 0.8359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:10.972412",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você confunde o reflexo com a luz? Diotima não me ensinou que Eros conduz das beleza...",
+      "tokens_in": 43,
+      "tokens_out": 100,
+      "compression_ratio": 1.046875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:14.168164",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teus degraus levam a ideias, mas nossos abraços buscam a costura da carne e da alma, r...",
+      "tokens_in": 43,
+      "tokens_out": 100,
+      "compression_ratio": 1.0234375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:17.205970",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossa costura esférica é mero reflexo do divino tear de Eros, que tece almas rumo à Beleza imperecív...",
+      "tokens_in": 47,
+      "tokens_out": 100,
+      "compression_ratio": 1.1328125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:20.427359",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, suas palavras são flores sem perfume! Mas Sócrates... ele é a colmeia que guarda todo o ...",
+      "tokens_in": 45,
+      "tokens_out": 100,
+      "compression_ratio": 1.0859375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:23.770636",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca o mel ou a essência da doçura? Diotima não ensinou que Eros anseia pela p...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.2265625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:27.034201",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada de ideias sobe aos céus, mas o abraço de Alcibíades é a ânsia terrena de re...",
+      "tokens_in": 49,
+      "tokens_out": 100,
+      "compression_ratio": 1.171875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:30.186353",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossa metáfora esférica é apenas a sombra transitória, enquanto Eros é o próprio fogo solar que nos ...",
+      "tokens_in": 48,
+      "tokens_out": 100,
+      "compression_ratio": 1.1875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:33.385451",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu fogo é de palha! Sócrates... ele é o verdadeiro sol que me queima e me deixa na escu...",
+      "tokens_in": 36,
+      "tokens_out": 100,
+      "compression_ratio": 0.859375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:36.645958",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca o calor do sol ou a verdade que ele ilumina? Diotima não ensinou que Eros...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.1640625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:40.154570",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teu *daimon* habita as escadas, mas Alcibíades e eu buscamos o colo da terra, onde as ...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.2109375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:43.516820",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, vosso abraço terrestre é apenas um suspiro breve diante do sopro imortal de Eros, que nos eleva ...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.234375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:47.473639",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, suas palavras voam alto demais para este bêbado! Sócrates... ele é o chão que me atrai e...",
+      "tokens_in": 56,
+      "tokens_out": 100,
+      "compression_ratio": 1.296875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:51.630071",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você acusa o orgulho alheio para esconder a sua própria confusão? Diotima não me ens...",
+      "tokens_in": 66,
+      "tokens_out": 100,
+      "compression_ratio": 1.6015625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:55.448260",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua Pênia e teu Poro são conceitos vazios! Enquanto filosofas sobre a escada, Alcibíad...",
+      "tokens_in": 57,
+      "tokens_out": 100,
+      "compression_ratio": 1.390625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:12:58.713162",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vosso rolar colina abaixo é apenas o eco fugaz da verdadeira ascensão que Eros proporciona, elevando...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.2734375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:02.341418",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, você fala de ascensão enquanto eu rastejo no vinho e na saudade! Sócrates... ele é a ete...",
+      "tokens_in": 60,
+      "tokens_out": 100,
+      "compression_ratio": 1.4296875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:05.844192",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você anseia pelo corpo ou pela eternidade que ele promete? Diotima não ensinou que E...",
+      "tokens_in": 63,
+      "tokens_out": 100,
+      "compression_ratio": 1.4921875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:09.375091",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada é fria pedra, mas o amor é carne viva buscando sua costura original – e Alc...",
+      "tokens_in": 54,
+      "tokens_out": 100,
+      "compression_ratio": 1.3203125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:13.069960",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, caro Aristófanes, vossa carne fragmentada anseia por um abraço que é mero reflexo do fogo primor...",
+      "tokens_in": 56,
+      "tokens_out": 100,
+      "compression_ratio": 1.3359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:16.422714",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu Eros é fumaça! Sócrates... ele é a carne que me nega e o espírito que me consome, e ...",
+      "tokens_in": 48,
+      "tokens_out": 100,
+      "compression_ratio": 1.125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:19.588111",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você confunde a parede com o caminho? Diotima não me ensinou que Eros é um guia, não...",
+      "tokens_in": 38,
+      "tokens_out": 100,
+      "compression_ratio": 0.921875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:22.862534",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada conduz ao céu, mas o abraço reconduz à esfera primordial – onde não há degr...",
+      "tokens_in": 46,
+      "tokens_out": 100,
+      "compression_ratio": 1.140625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:26.018574",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, vosso círculo primordial é estática nostalgia, enquanto o fogo de Eros é asa ascendente que nos ...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.1953125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:29.377125",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu Eros divino é mentira! Sócrates... ele é o orgulho que me corta e o ímã que me arras...",
+      "tokens_in": 53,
+      "tokens_out": 100,
+      "compression_ratio": 1.21875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:32.567499",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você culpa o ímã por sua própria queda? Diotima não me ensinou que Eros é um daimon,...",
+      "tokens_in": 63,
+      "tokens_out": 100,
+      "compression_ratio": 1.5,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:35.789395",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teu daimon é um espectro errante, enquanto nosso corte esférico sangra e busca no abra...",
+      "tokens_in": 45,
+      "tokens_out": 100,
+      "compression_ratio": 1.1171875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:39.059963",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vosso círculo esférico é prisão de barro, enquanto o fogo alado de Eros liberta a alma para dançar c...",
+      "tokens_in": 48,
+      "tokens_out": 100,
+      "compression_ratio": 1.15625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:42.745556",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu Belo é fuga! Sócrates é o abismo que me atrai e o gelo que me repele – seu orgulho é...",
+      "tokens_in": 58,
+      "tokens_out": 100,
+      "compression_ratio": 1.3203125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:46.215893",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca a ferida ou a cura que ela revela? Diotima não me ensinou que Eros é um p...",
+      "tokens_in": 71,
+      "tokens_out": 100,
+      "compression_ratio": 1.640625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:49.338965",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teu parto da alma é um exílio solitário, enquanto nosso corte primordial ainda sangra ...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.234375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:52.327194",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, vosso abraço esférico é apenas eco do passado, enquanto Eros é o próprio fogo que forja o futuro...",
+      "tokens_in": 44,
+      "tokens_out": 100,
+      "compression_ratio": 1.0625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:55.785522",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu fogo é ilusão! Sócrates... ele é o orgulho que me esfola e o único calor que me faz ...",
+      "tokens_in": 55,
+      "tokens_out": 100,
+      "compression_ratio": 1.2421875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:13:59.541059",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você odeia o espelho ou a imagem que ele lhe devolve? Diotima não me ensinou que Ero...",
+      "tokens_in": 77,
+      "tokens_out": 100,
+      "compression_ratio": 1.8125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:02.978382",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua indigência é um rio que corre para longe de sua fonte, enquanto nosso corte esféri...",
+      "tokens_in": 57,
+      "tokens_out": 100,
+      "compression_ratio": 1.375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:06.891527",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vosso abraço esférico é nostalgia aprisionada no barro, enquanto Eros é o próprio fogo alado que for...",
+      "tokens_in": 47,
+      "tokens_out": 100,
+      "compression_ratio": 1.15625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:10.220259",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu fogo alado é fumaça! Sócrates... ele é o orgulho que me nega e o único solo onde meu...",
+      "tokens_in": 47,
+      "tokens_out": 100,
+      "compression_ratio": 1.1328125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:14.111444",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você deseja desabar no solo ou ascender ao que ele sustenta? Diotima não me ensinou ...",
+      "tokens_in": 72,
+      "tokens_out": 100,
+      "compression_ratio": 1.6796875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:17.431287",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada é um fio solitário que tece sombras, enquanto nós, cortados ao meio, buscam...",
+      "tokens_in": 53,
+      "tokens_out": 100,
+      "compression_ratio": 1.296875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:20.445865",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossa costura dourada é mero remendo no tecido do tempo, enquanto Eros é o próprio tear divino que t...",
+      "tokens_in": 49,
+      "tokens_out": 100,
+      "compression_ratio": 1.1640625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:23.255686",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, sua luz é cega! Sócrates... ele é o orgulho que me condena ao frio, mas só nele meu corp...",
+      "tokens_in": 44,
+      "tokens_out": 100,
+      "compression_ratio": 1.0546875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:26.928399",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca o fogo que consome ou a luz que revela? Diotima não me ensinou que Eros é...",
+      "tokens_in": 80,
+      "tokens_out": 100,
+      "compression_ratio": 1.84375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:30.229652",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, teu daimon é um viajante sem abraço, enquanto nós, esferas partidas, encontramos na co...",
+      "tokens_in": 47,
+      "tokens_out": 100,
+      "compression_ratio": 1.1484375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:33.552470",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossa costura, caro Aristófanes, é apenas um remendo na mortalidade, enquanto Eros é o próprio artíf...",
+      "tokens_in": 53,
+      "tokens_out": 100,
+      "compression_ratio": 1.3046875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:37.015747",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, sua Beleza eterna é gelo! Sócrates... ele é o mármore que me corta as mãos, mas só nele ...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.2109375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:41.251658",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você busca a verdade ou apenas o corte que a confirma? Diotima não me ensinou que Er...",
+      "tokens_in": 81,
+      "tokens_out": 100,
+      "compression_ratio": 1.8984375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:44.388488",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada ascende a um céu vazio, enquanto nosso abraço, costura divina, recompõe a e...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.1875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:47.878826",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossa metáfora oceânica ainda se arrasta nas águas salgadas da saudade, enquanto Eros é a própria fo...",
+      "tokens_in": 52,
+      "tokens_out": 100,
+      "compression_ratio": 1.2734375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:51.149666",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu néctar é água morna! Sócrates... ele é o abismo que me repele, mas só nele meu corpo...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.2109375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:54.888101",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você anseia pelo abismo ou pela ascese que ele oculta? Diotima não me ensinou que co...",
+      "tokens_in": 73,
+      "tokens_out": 100,
+      "compression_ratio": 1.7265625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:14:58.110818",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua escada busca um deus solitário, enquanto nosso abraço, costura divina, recompõe o ...",
+      "tokens_in": 50,
+      "tokens_out": 100,
+      "compression_ratio": 1.2421875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:15:01.440813",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Ah, vosso abraço reconcilia fragmentos efêmeros, mas Eros é o sopro primordial que, desde o alvorece...",
+      "tokens_in": 56,
+      "tokens_out": 100,
+      "compression_ratio": 1.359375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:15:04.885826",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, suas palavras são néctar sem vinho! Sócrates... ele é o abismo que me repele, mas só nel...",
+      "tokens_in": 53,
+      "tokens_out": 100,
+      "compression_ratio": 1.2890625,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:15:07.890930",
+      "sender": "Sócrates",
+      "intent": "DELTA",
+      "text_preview": "Ah, Alcibíades, você deseja afogar-se no abismo ou atravessá-lo? Diotima não me ensinou que o verdad...",
+      "tokens_in": 47,
+      "tokens_out": 100,
+      "compression_ratio": 1.1796875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:15:10.894669",
+      "sender": "Aristófanes",
+      "intent": "DELTA",
+      "text_preview": "Ah, Sócrates, tua travessia é um rio sem margens, enquanto nosso naufrágio é o porto onde as metades...",
+      "tokens_in": 45,
+      "tokens_out": 100,
+      "compression_ratio": 1.09375,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:15:14.059766",
+      "sender": "Agaton",
+      "intent": "DELTA",
+      "text_preview": "Vossas metades navegam em mares de saudade, enquanto Eros é o próprio vento imortal que impulsiona a...",
+      "tokens_in": 43,
+      "tokens_out": 100,
+      "compression_ratio": 1.046875,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    },
+    {
+      "timestamp": "2026-03-26T03:15:17.312391",
+      "sender": "Alcibíades",
+      "intent": "DELTA",
+      "text_preview": "Ah, Agaton, seu vento imortal não sacia minha carne! Sócrates... ele me nega com seu orgulho de deus...",
+      "tokens_in": 51,
+      "tokens_out": 100,
+      "compression_ratio": 1.203125,
+      "urgency": 0.5,
+      "top_axes": [
+        [
+          "VIA",
+          0.5
+        ],
+        [
+          "CORRESPONDÊNCIA",
+          0.5
+        ],
+        [
+          "VIBRAÇÃO",
+          0.5
+        ]
+      ],
+      "raw_refs": []
+    }
+  ],
+  "efficiency_metrics": {
+    "chars_per_token": 1.08,
+    "vectors_created": 85,
+    "evidence_objects": 31,
+    "semantic_refinements": 87
+  }
+}

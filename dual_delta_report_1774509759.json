@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-26T04:22:39.358005",
+  "scenario": "Dual-Livros + Delta Compression",
+  "config": {
+    "delta_threshold": 0.25,
+    "delta_max_chain": 4
+  },
+  "compression": {
+    "summary": {
+      "total_messages": 99,
+      "delta_messages": 75,
+      "full_messages": 24,
+      "delta_percentage": 75.76
+    },
+    "savings": {
+      "bytes_saved": 30300,
+      "percent_saved": 73.93,
+      "delta_ratio": "75/99",
+      "efficiency": 3.84
+    },
+    "efficiency": {
+      "bytes_full": 40986,
+      "bytes_delta": 10686,
+      "compression_ratio": 3.84
+    },
+    "top_changing_axes": [],
+    "config": {
+      "threshold": 0.25,
+      "max_delta_chain": 4
+    }
+  },
+  "books": {
+    "participation": {
+      "plato": {
+        "messages": 48,
+        "tokens": 384,
+        "percentage": 48.484848484848484
+      },
+      "pinocchio": {
+        "messages": 51,
+        "tokens": 408,
+        "percentage": 51.515151515151516
+      }
+    },
+    "semantic_bridge": {
+      "distance_between_universes": 0.0,
+      "shared_concepts": {}
+    }
+  },
+  "semantic_distance": 0.0,
+  "total_messages": 99,
+  "total_bytes_saved": 30300
+}
