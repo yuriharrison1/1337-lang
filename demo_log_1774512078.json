@@ -1,0 +1,114 @@
+[
+  {
+    "sender": "SRE",
+    "receiver": "REDE",
+    "intent": "SYNC",
+    "text": "I AM",
+    "urgency": 0,
+    "stamp": 0
+  },
+  {
+    "sender": "Dev",
+    "receiver": "REDE",
+    "intent": "SYNC",
+    "text": "I AM",
+    "urgency": 0,
+    "stamp": 0
+  },
+  {
+    "sender": "EM",
+    "receiver": "REDE",
+    "intent": "SYNC",
+    "text": "I AM",
+    "urgency": 0,
+    "stamp": 0
+  },
+  {
+    "sender": "Humano",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Alerta PagerDuty: serviço de autenticação retornando 503. Todos os logins falhando. Última mudança: migration de banco 2h atrás.",
+    "urgency": 0.5,
+    "stamp": 1774504460982587951
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Declarando incidente. Revertendo a migration imediatamente para reduzir o blast radius. Monitorando SLO de disponibilidade.",
+    "urgency": 0.5,
+    "stamp": 1774504464026611968
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "A migration deve ter deixado a tabela de sessões inconsistente. Verifiquei o rollback script e já estou restaurando o backup do schema anterior.",
+    "urgency": 0.5,
+    "stamp": 1774504466515717120
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Acionando o time de banco para reverter a migration imediatamente. Enquanto isso, vou comunicar o impacto aos stakeholders.",
+    "urgency": 0.5,
+    "stamp": 1774504468753808896
+  },
+  {
+    "sender": "Humano",
+    "receiver": "BROADCAST",
+    "intent": "ASSERT",
+    "text": "Alerta CRÍTICO: Serviço de autenticação 503. Todos logins falhando desde 14h.",
+    "urgency": 0.5,
+    "stamp": 1774504468755901839
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Confirmado. Revertendo a migration para restaurar o serviço. Monitorando o impacto no SLO de 99,9%.",
+    "urgency": 0.5,
+    "stamp": 1774504471027712000
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Rollback concluído, mas o serviço ainda está down. O bug está na nova função de limpeza de sessões que está bloqueando a tabela. Vou reverter essa função para a versão anterior agora.",
+    "urgency": 0.85,
+    "stamp": 1774504474055991040
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Time, confirmem a reversão da migration. Vou atualizar os stakeholders sobre o tempo estimado de resolução.",
+    "urgency": 0.5,
+    "stamp": 1774504476388292096
+  },
+  {
+    "sender": "SRE",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Confirmado. Vou isolar o banco de dados afetado e acionar o runbook de fallback da função. Monitorando o SLO em tempo real.",
+    "urgency": 0.5,
+    "stamp": 1774504479846139904
+  },
+  {
+    "sender": "Dev",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Reverti a função de limpeza para a versão anterior. O serviço já deve voltar a responder.",
+    "urgency": 0.5,
+    "stamp": 1774504483035275008
+  },
+  {
+    "sender": "EM",
+    "receiver": "BROADCAST",
+    "intent": "DELTA",
+    "text": "Perfeito. Mantenha o SLO monitorado e me avise assim que o fallback for concluído para eu consolidar a comunicação com os stakeholders.",
+    "urgency": 0.5,
+    "stamp": 1774504485682070016
+  }
+]
