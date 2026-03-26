@@ -1,0 +1,3 @@
+[workspace]
+members = ["leet-core", "leet-bridge"]
+resolver = "2"
