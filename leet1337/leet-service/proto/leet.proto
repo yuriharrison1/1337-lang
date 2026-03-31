@@ -1,0 +1,71 @@
+syntax = "proto3";
+package leet;
+
+service LeetService {
+  rpc Encode      (EncodeRequest)        returns (EncodeResponse);
+  rpc Decode      (DecodeRequest)        returns (DecodeResponse);
+  rpc EncodeBatch (stream EncodeRequest) returns (stream EncodeResponse);
+  rpc Delta       (DeltaRequest)         returns (DeltaResponse);
+  rpc Recall      (RecallRequest)        returns (RecallResponse);
+  rpc Health      (HealthRequest)        returns (HealthResponse);
+}
+
+message EncodeRequest {
+  string text       = 1;
+  string agent_id   = 2;
+  string session_id = 3;
+}
+
+message EncodeResponse {
+  string cogon_id       = 1;
+  repeated float sem    = 2;
+  repeated float unc    = 3;
+  int64  stamp          = 4;
+  int64  tokens_saved   = 5;
+}
+
+message DecodeRequest {
+  repeated float sem = 1;
+  repeated float unc = 2;
+  string lang        = 3;
+}
+
+message DecodeResponse {
+  string text = 1;
+}
+
+message DeltaRequest {
+  repeated float sem_prev = 1;
+  repeated float sem_curr = 2;
+}
+
+message DeltaResponse {
+  repeated float patch   = 1;
+  float          magnitude = 2;
+}
+
+message RecallRequest {
+  repeated float sem     = 1;
+  repeated float unc     = 2;
+  string         agent_id = 3;
+  int32          k        = 4;
+}
+
+message RecallResponse {
+  repeated CogonRecord results = 1;
+}
+
+message CogonRecord {
+  string cogon_id    = 1;
+  repeated float sem = 2;
+  repeated float unc = 3;
+  float  dist        = 4;
+  int64  stamp       = 5;
+}
+
+message HealthRequest {}
+message HealthResponse {
+  string status  = 1;
+  string backend = 2;
+  int64  uptime  = 3;
+}

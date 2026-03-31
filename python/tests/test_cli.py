@@ -42,7 +42,8 @@ class TestCliZero:
             pytest.skip("Package not installed")
         
         assert result.returncode == 0
-        assert "0.4.0" in result.stdout
+        import leet
+        assert leet.__version__ in result.stdout
 
     def test_cli_axes(self):
         """Lista 32 eixos."""

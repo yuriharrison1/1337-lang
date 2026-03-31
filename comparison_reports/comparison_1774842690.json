@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-03-30T00:51:30.109300",
+  "topic": "Eros (Amor)",
+  "rounds": 10,
+  "agents": [
+    "S\u00f3crates",
+    "Arist\u00f3fanes",
+    "Agaton",
+    "Alcib\u00edades",
+    "Contador Carlos",
+    "T\u00e9cnico Tiago",
+    "Padre Pedro",
+    "Comunista Carlos"
+  ],
+  "delta_threshold": 0.01,
+  "metrics": {
+    "bytes_1337": 12230,
+    "bytes_english": 7994,
+    "compression_ratio": 0.6536,
+    "cogon_msgs": 8,
+    "delta_msgs": 72,
+    "delta_ratio": 0.9,
+    "bytes_saved_by_delta": 1165,
+    "tokens_english": 1646,
+    "cost_english_usd": 0.004938,
+    "cost_1337_usd": 0.0,
+    "convergence_start": 0.0759,
+    "convergence_end": 0.075,
+    "duration_ms": 30.97
+  },
+  "convergence_history": [
+    0.0759,
+    0.0748,
+    0.0723,
+    0.08,
+    0.075,
+    0.0759,
+    0.0748,
+    0.0723,
+    0.08,
+    0.075
+  ],
+  "rounds_detail": [
+    {
+      "round": 1,
+      "bytes_total": 1328,
+      "delta_count": 0,
+      "messages_count": 8,
+      "axes_changed_avg": 0.0,
+      "mean_pairwise_dist": 0.0759
+    },
+    {
+      "round": 2,
+      "bytes_total": 1218,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 24.25,
+      "mean_pairwise_dist": 0.0748
+    },
+    {
+      "round": 3,
+      "bytes_total": 1268,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 25.5,
+      "mean_pairwise_dist": 0.0723
+    },
+    {
+      "round": 4,
+      "bytes_total": 1158,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 22.75,
+      "mean_pairwise_dist": 0.08
+    },
+    {
+      "round": 5,
+      "bytes_total": 1203,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 23.88,
+      "mean_pairwise_dist": 0.075
+    },
+    {
+      "round": 6,
+      "bytes_total": 1208,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 24.0,
+      "mean_pairwise_dist": 0.0759
+    },
+    {
+      "round": 7,
+      "bytes_total": 1218,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 24.25,
+      "mean_pairwise_dist": 0.0748
+    },
+    {
+      "round": 8,
+      "bytes_total": 1268,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 25.5,
+      "mean_pairwise_dist": 0.0723
+    },
+    {
+      "round": 9,
+      "bytes_total": 1158,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 22.75,
+      "mean_pairwise_dist": 0.08
+    },
+    {
+      "round": 10,
+      "bytes_total": 1203,
+      "delta_count": 8,
+      "messages_count": 8,
+      "axes_changed_avg": 23.88,
+      "mean_pairwise_dist": 0.075
+    }
+  ]
+}

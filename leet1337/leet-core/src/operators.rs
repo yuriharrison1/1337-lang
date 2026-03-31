@@ -93,6 +93,39 @@ pub fn anomaly_score(cogon: &Cogon, history: &[Cogon]) -> LeetResult<f32> {
     dist(cogon, &centroid)
 }
 
+/// SPARSE_DELTA — dimensions that changed beyond `threshold`.
+/// Returns `(axis_index, new_value)` pairs — only axes worth transmitting.
+/// With threshold=0.01 and convergent conversation, typically 2–6 axes change.
+pub fn sparse_delta(prev: &Cogon, curr: &Cogon, threshold: f32) -> LeetResult<Vec<(u8, f32)>> {
+    if prev.sem.len() != FIXED_DIMS || curr.sem.len() != FIXED_DIMS {
+        return Err(LeetError::DimensionMismatch(FIXED_DIMS, prev.sem.len()));
+    }
+    Ok((0..FIXED_DIMS)
+        .filter_map(|i| {
+            let d = curr.sem[i] - prev.sem[i];
+            if d.abs() > threshold {
+                Some((i as u8, curr.sem[i]))
+            } else {
+                None
+            }
+        })
+        .collect())
+}
+
+/// Apply a sparse patch: only updates the specified axes, leaves the rest unchanged.
+pub fn apply_sparse_patch(base: &Cogon, patch: &[(u8, f32)]) -> LeetResult<Cogon> {
+    if base.sem.len() != FIXED_DIMS {
+        return Err(LeetError::DimensionMismatch(FIXED_DIMS, base.sem.len()));
+    }
+    let mut sem = base.sem.clone();
+    for &(idx, val) in patch {
+        if (idx as usize) < FIXED_DIMS {
+            sem[idx as usize] = val.clamp(0.0, 1.0);
+        }
+    }
+    Ok(Cogon::new(sem, base.unc.clone()))
+}
+
 /// apply_patch — add delta patch to base COGON, clamped to [0,1].
 pub fn apply_patch(base: &Cogon, patch: &[f32]) -> LeetResult<Cogon> {
     if base.sem.len() != FIXED_DIMS || patch.len() != FIXED_DIMS {
@@ -213,6 +246,34 @@ mod tests {
             assert!(*s <= 1.0, "Clamped value should be <= 1.0, got {}", s);
             assert!((s - 1.0).abs() < 1e-6, "Should be clamped to 1.0, got {}", s);
         }
+    }
+
+    #[test]
+    fn test_sparse_delta_threshold() {
+        let prev = make_cogon(0.5, 0.1);
+        let mut curr_sem = vec![0.5f32; FIXED_DIMS];
+        curr_sem[0] = 0.52;  // below threshold 0.05 → excluded
+        curr_sem[22] = 0.9;  // above threshold → included
+        curr_sem[5] = 0.1;   // above threshold → included
+        let curr = Cogon::new(curr_sem, vec![0.1f32; FIXED_DIMS]);
+
+        let patch = sparse_delta(&prev, &curr, 0.05).unwrap();
+        let indices: Vec<u8> = patch.iter().map(|&(i, _)| i).collect();
+        assert!(indices.contains(&22), "axis 22 should be included");
+        assert!(indices.contains(&5), "axis 5 should be included");
+        assert!(!indices.contains(&0), "axis 0 change too small, should be excluded");
+        assert!(patch.len() < FIXED_DIMS, "sparse delta should have fewer entries than full vector");
+    }
+
+    #[test]
+    fn test_apply_sparse_patch_roundtrip() {
+        let base = make_cogon(0.5, 0.1);
+        let patch = vec![(22u8, 0.9f32), (5u8, 0.1f32)];
+        let patched = apply_sparse_patch(&base, &patch).unwrap();
+        assert!((patched.sem[22] - 0.9).abs() < 1e-6);
+        assert!((patched.sem[5] - 0.1).abs() < 1e-6);
+        // unchanged axes remain at base value
+        assert!((patched.sem[0] - 0.5).abs() < 1e-6);
     }
 
     #[test]

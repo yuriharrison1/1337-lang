@@ -1,0 +1,264 @@
+{
+  "timestamp": "2026-03-30T00:58:01.238176",
+  "topic": "Eros (Amor)",
+  "rounds": 25,
+  "agents": [
+    "S\u00f3crates",
+    "Fedro",
+    "Paus\u00e2nias",
+    "Erix\u00edmaco",
+    "Arist\u00f3fanes",
+    "Agaton",
+    "Di\u00f3tima",
+    "Alcib\u00edades",
+    "Contador Carlos",
+    "T\u00e9cnico Tiago",
+    "Padre Pedro",
+    "Comunista Carlos"
+  ],
+  "delta_threshold": 0.01,
+  "metrics": {
+    "bytes_1337": 15267,
+    "bytes_english": 31331,
+    "compression_ratio": 2.0522,
+    "cogon_msgs": 56,
+    "delta_msgs": 244,
+    "delta_ratio": 0.8133,
+    "bytes_saved_by_delta": 27845,
+    "tokens_english": 6651,
+    "cost_english_usd": 0.019953,
+    "cost_1337_usd": 0.0,
+    "convergence_start": 0.0532,
+    "convergence_end": 0.0501,
+    "duration_ms": 126.25
+  },
+  "convergence_history": [
+    0.0532,
+    0.0495,
+    0.048,
+    0.0515,
+    0.0501,
+    0.0447,
+    0.0489,
+    0.052,
+    0.0544,
+    0.0528,
+    0.0532,
+    0.0495,
+    0.048,
+    0.0515,
+    0.0501,
+    0.0447,
+    0.0489,
+    0.052,
+    0.0544,
+    0.0528,
+    0.0532,
+    0.0495,
+    0.048,
+    0.0515,
+    0.0501
+  ],
+  "rounds_detail": [
+    {
+      "round": 1,
+      "bytes_total": 1992,
+      "delta_count": 0,
+      "messages_count": 12,
+      "axes_changed_avg": 0.0,
+      "mean_pairwise_dist": 0.0532
+    },
+    {
+      "round": 2,
+      "bytes_total": 432,
+      "delta_count": 7,
+      "messages_count": 12,
+      "axes_changed_avg": 4.14,
+      "mean_pairwise_dist": 0.0495
+    },
+    {
+      "round": 3,
+      "bytes_total": 402,
+      "delta_count": 7,
+      "messages_count": 12,
+      "axes_changed_avg": 3.29,
+      "mean_pairwise_dist": 0.048
+    },
+    {
+      "round": 4,
+      "bytes_total": 525,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.09,
+      "mean_pairwise_dist": 0.0515
+    },
+    {
+      "round": 5,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.0501
+    },
+    {
+      "round": 6,
+      "bytes_total": 642,
+      "delta_count": 12,
+      "messages_count": 12,
+      "axes_changed_avg": 4.5,
+      "mean_pairwise_dist": 0.0447
+    },
+    {
+      "round": 7,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.0489
+    },
+    {
+      "round": 8,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.052
+    },
+    {
+      "round": 9,
+      "bytes_total": 560,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.73,
+      "mean_pairwise_dist": 0.0544
+    },
+    {
+      "round": 10,
+      "bytes_total": 667,
+      "delta_count": 12,
+      "messages_count": 12,
+      "axes_changed_avg": 4.92,
+      "mean_pairwise_dist": 0.0528
+    },
+    {
+      "round": 11,
+      "bytes_total": 560,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.73,
+      "mean_pairwise_dist": 0.0532
+    },
+    {
+      "round": 12,
+      "bytes_total": 432,
+      "delta_count": 7,
+      "messages_count": 12,
+      "axes_changed_avg": 4.14,
+      "mean_pairwise_dist": 0.0495
+    },
+    {
+      "round": 13,
+      "bytes_total": 402,
+      "delta_count": 7,
+      "messages_count": 12,
+      "axes_changed_avg": 3.29,
+      "mean_pairwise_dist": 0.048
+    },
+    {
+      "round": 14,
+      "bytes_total": 525,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.09,
+      "mean_pairwise_dist": 0.0515
+    },
+    {
+      "round": 15,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.0501
+    },
+    {
+      "round": 16,
+      "bytes_total": 642,
+      "delta_count": 12,
+      "messages_count": 12,
+      "axes_changed_avg": 4.5,
+      "mean_pairwise_dist": 0.0447
+    },
+    {
+      "round": 17,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.0489
+    },
+    {
+      "round": 18,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.052
+    },
+    {
+      "round": 19,
+      "bytes_total": 560,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.73,
+      "mean_pairwise_dist": 0.0544
+    },
+    {
+      "round": 20,
+      "bytes_total": 667,
+      "delta_count": 12,
+      "messages_count": 12,
+      "axes_changed_avg": 4.92,
+      "mean_pairwise_dist": 0.0528
+    },
+    {
+      "round": 21,
+      "bytes_total": 560,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.73,
+      "mean_pairwise_dist": 0.0532
+    },
+    {
+      "round": 22,
+      "bytes_total": 432,
+      "delta_count": 7,
+      "messages_count": 12,
+      "axes_changed_avg": 4.14,
+      "mean_pairwise_dist": 0.0495
+    },
+    {
+      "round": 23,
+      "bytes_total": 402,
+      "delta_count": 7,
+      "messages_count": 12,
+      "axes_changed_avg": 3.29,
+      "mean_pairwise_dist": 0.048
+    },
+    {
+      "round": 24,
+      "bytes_total": 525,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 3.09,
+      "mean_pairwise_dist": 0.0515
+    },
+    {
+      "round": 25,
+      "bytes_total": 620,
+      "delta_count": 11,
+      "messages_count": 12,
+      "axes_changed_avg": 4.82,
+      "mean_pairwise_dist": 0.0501
+    }
+  ]
+}

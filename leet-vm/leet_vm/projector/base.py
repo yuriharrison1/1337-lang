@@ -1,0 +1,6 @@
+from typing import Protocol
+from leet_vm.types import Cogon
+
+class Projector(Protocol):
+    async def project(self, text: str, agent_id: str = "") -> Cogon: ...
+    async def decode(self, cogon: Cogon) -> str: ...

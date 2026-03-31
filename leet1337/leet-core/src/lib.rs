@@ -4,6 +4,7 @@ pub mod ffi;
 pub mod operators;
 pub mod types;
 pub mod validate;
+pub mod wire;
 
 #[cfg(feature = "python")]
 pub mod python;
@@ -13,7 +14,7 @@ pub use types::{
     Anchor, CanonicalSpace, Cogon, Dag, Edge, EdgeType, EmergentRegistration, Hash, Id, Intent,
     Msg1337, Payload, Raw, RawRole, Receiver, Scalar, SemanticVector, Surface,
 };
-pub use operators::{anomaly_score, apply_patch, blend, delta, dist, focus};
+pub use operators::{anomaly_score, apply_patch, apply_sparse_patch, blend, delta, dist, focus, sparse_delta};
 pub use validate::Validator;
 
 pub const FIXED_DIMS: usize = 32;

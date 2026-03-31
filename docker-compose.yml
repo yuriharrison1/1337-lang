@@ -1,0 +1,115 @@
+# 1337 Service — Docker Compose
+#
+# Uso:
+#   docker-compose up -d    # Inicia serviço
+#   docker-compose logs -f  # Acompanha logs
+#   docker-compose down     # Para serviço
+
+version: "3.8"
+
+services:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # leet-service — Serviço principal gRPC + ZeroMQ
+  # ═════════════════════════════════════════════════════════════════════════════
+  leet-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leet-service
+    restart: unless-stopped
+    ports:
+      - "50051:50051"  # gRPC
+      - "5555:5555"    # ZeroMQ REQ/REP
+      - "5556:5556"    # ZeroMQ PUB/SUB
+      - "5557:5557"    # ZeroMQ PUSH/PULL
+      - "5558:5558"    # ZeroMQ ROUTER
+    environment:
+      - LEET_PORT=50051
+      - LEET_BACKEND=simd
+      - LEET_STORE=redis://redis:6379
+      - LEET_LOG_LEVEL=info
+      - LEET_BATCH_WINDOW=10
+      - LEET_BATCH_MAX=64
+      - LEET_EMBED_MODEL=mock
+      - RUST_LOG=info
+    depends_on:
+      - redis
+    networks:
+      - leet-network
+    healthcheck:
+      test: ["CMD", "/app/leet-service", "--health-check"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # redis — Cache e store para COGONs
+  # ═════════════════════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7-alpine
+    container_name: leet-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - leet-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # prometheus — Métricas (opcional)
+  # ═════════════════════════════════════════════════════════════════════════════
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: leet-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - leet-network
+    profiles:
+      - monitoring
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # grafana — Dashboards (opcional)
+  # ═════════════════════════════════════════════════════════════════════════════
+  grafana:
+    image: grafana/grafana:latest
+    container_name: leet-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=leet1337
+    networks:
+      - leet-network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  leet-network:
+    driver: bridge

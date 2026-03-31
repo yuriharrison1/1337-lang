@@ -1,0 +1,882 @@
+{
+  "timestamp": "2026-03-29T23:57:22.233086",
+  "config": {
+    "rounds": 5,
+    "backend_1337": "local",
+    "backend_english": "mock",
+    "cache_type": "memory",
+    "cache_ttl": 3600,
+    "context_profile": "philosophical",
+    "track_raw_objects": true,
+    "track_inheritance": true,
+    "track_compression": true,
+    "max_inheritance_depth": 4,
+    "enable_evidence_chains": true,
+    "save_reports": true,
+    "report_dir": "./comparison_reports",
+    "verbose": true
+  },
+  "comparison": {
+    "1337": {
+      "start_time": 1774839442.215314,
+      "end_time": 1774839442.2311568,
+      "total_duration_ms": 15.842914581298828,
+      "avg_round_duration_ms": 0.0,
+      "tokens_input": 533,
+      "tokens_output": 6000,
+      "tokens_total": 6533,
+      "cost_estimate_usd": 0.013066000000000001,
+      "text_chars_sent": 2472,
+      "vectors_created": 40,
+      "compression_ratio": 0.4828125,
+      "bytes_saved": -2648,
+      "raw_evidence_created": 40,
+      "raw_artifacts_created": 0,
+      "raw_traces_created": 0,
+      "raw_bridges_created": 0,
+      "inheritance_chains": [],
+      "max_inheritance_depth": 0,
+      "message_count": 40,
+      "unique_concepts": 0,
+      "semantic_convergence": 0.0,
+      "anomaly_detections": 0,
+      "validation_errors": 0,
+      "agent_contributions": {
+        "socrates": {
+          "name": "S\u00f3crates",
+          "role": "Fil\u00f3sofo",
+          "messages": 5,
+          "tokens": 823,
+          "concepts_introduced": []
+        },
+        "aristophanes": {
+          "name": "Arist\u00f3fanes",
+          "role": "Poeta/Comediante",
+          "messages": 5,
+          "tokens": 822,
+          "concepts_introduced": []
+        },
+        "agathon": {
+          "name": "Agaton",
+          "role": "Poeta Tr\u00e1gico",
+          "messages": 5,
+          "tokens": 818,
+          "concepts_introduced": []
+        },
+        "alcibiades": {
+          "name": "Alcib\u00edades",
+          "role": "Pol\u00edtico/Bebado",
+          "messages": 5,
+          "tokens": 819,
+          "concepts_introduced": []
+        },
+        "accountant": {
+          "name": "Contador Carlos",
+          "role": "Contador",
+          "messages": 5,
+          "tokens": 815,
+          "concepts_introduced": []
+        },
+        "tech_guy": {
+          "name": "T\u00e9cnico Tiago",
+          "role": "T\u00e9cnico de TI",
+          "messages": 5,
+          "tokens": 813,
+          "concepts_introduced": []
+        },
+        "priest": {
+          "name": "Padre Pedro",
+          "role": "Padre",
+          "messages": 5,
+          "tokens": 812,
+          "concepts_introduced": []
+        },
+        "communist": {
+          "name": "Comunista Carlos",
+          "role": "Ativista Comunista",
+          "messages": 5,
+          "tokens": 811,
+          "concepts_introduced": []
+        }
+      },
+      "timeline": [
+        {
+          "round": 1,
+          "sender": "S\u00f3crates",
+          "intent": "ASSERT",
+          "content_preview": "Mas o que \u00e9 Eros (Amor) verdadeiramente? Defina-me seus atri...",
+          "tokens": 14,
+          "duration_ms": 0.69,
+          "compression": 0.6,
+          "validation_error": null
+        },
+        {
+          "round": 2,
+          "sender": "Arist\u00f3fanes",
+          "intent": "ASSERT",
+          "content_preview": "Deixe-me contar o mito: os humanos eram esf\u00e9ricos, e Eros (A...",
+          "tokens": 16,
+          "duration_ms": 0.6,
+          "compression": 0.59,
+          "validation_error": null
+        },
+        {
+          "round": 3,
+          "sender": "Agaton",
+          "intent": "ASSERT",
+          "content_preview": "Elogiemos Eros (Amor)! \u00c9 o mais belo dos conceitos, eterno e...",
+          "tokens": 15,
+          "duration_ms": 0.4,
+          "compression": 0.52,
+          "validation_error": null
+        },
+        {
+          "round": 4,
+          "sender": "Alcib\u00edades",
+          "intent": "ASSERT",
+          "content_preview": "*hic* S\u00f3crates... voc\u00ea fala de Eros (Amor) mas me rejeita!",
+          "tokens": 13,
+          "duration_ms": 0.26,
+          "compression": 0.45,
+          "validation_error": null
+        },
+        {
+          "round": 5,
+          "sender": "Contador Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) precisa ser audit\u00e1vel. Qual a fonte dessa afirma...",
+          "tokens": 13,
+          "duration_ms": 0.25,
+          "compression": 0.5,
+          "validation_error": null
+        },
+        {
+          "round": 6,
+          "sender": "T\u00e9cnico Tiago",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) \u00e9 um sistema. Precisa identificar os componentes...",
+          "tokens": 14,
+          "duration_ms": 0.22,
+          "compression": 0.53,
+          "validation_error": null
+        },
+        {
+          "round": 7,
+          "sender": "Padre Pedro",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) reflete a gl\u00f3ria de Deus. \u00c9 um mist\u00e9rio sagrado.",
+          "tokens": 14,
+          "duration_ms": 0.22,
+          "compression": 0.47,
+          "validation_error": null
+        },
+        {
+          "round": 8,
+          "sender": "Comunista Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) \u00e9 produto das rela\u00e7\u00f5es de produ\u00e7\u00e3o! Lute pela re...",
+          "tokens": 14,
+          "duration_ms": 0.32,
+          "compression": 0.53,
+          "validation_error": null
+        },
+        {
+          "round": 9,
+          "sender": "S\u00f3crates",
+          "intent": "ASSERT",
+          "content_preview": "Voc\u00ea diz que Eros (Amor) \u00e9 bom, mas \u00e9 bom em si ou por suas ...",
+          "tokens": 20,
+          "duration_ms": 0.46,
+          "compression": 0.58,
+          "validation_error": null
+        },
+        {
+          "round": 10,
+          "sender": "Arist\u00f3fanes",
+          "intent": "ASSERT",
+          "content_preview": "Risos e l\u00e1grimas se misturam quando falamos de Eros (Amor).",
+          "tokens": 13,
+          "duration_ms": 0.32,
+          "compression": 0.46,
+          "validation_error": null
+        },
+        {
+          "round": 11,
+          "sender": "Agaton",
+          "intent": "ASSERT",
+          "content_preview": "Na trag\u00e9dia, Eros (Amor) \u00e9 o her\u00f3i que sofre para alcan\u00e7ar a...",
+          "tokens": 16,
+          "duration_ms": 0.44,
+          "compression": 0.53,
+          "validation_error": null
+        },
+        {
+          "round": 12,
+          "sender": "Alcib\u00edades",
+          "intent": "ASSERT",
+          "content_preview": "Eu sei o que \u00e9 Eros (Amor)! \u00c9 f\u00edsico, carnal, aqui e agora!",
+          "tokens": 16,
+          "duration_ms": 0.33,
+          "compression": 0.46,
+          "validation_error": null
+        },
+        {
+          "round": 13,
+          "sender": "Contador Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Lan\u00e7ando Eros (Amor) no d\u00e9bito e no cr\u00e9dito - precisa balanc...",
+          "tokens": 14,
+          "duration_ms": 0.35,
+          "compression": 0.5,
+          "validation_error": null
+        },
+        {
+          "round": 14,
+          "sender": "T\u00e9cnico Tiago",
+          "intent": "ASSERT",
+          "content_preview": "Debugando Eros (Amor): o erro est\u00e1 na camada de abstra\u00e7\u00e3o.",
+          "tokens": 13,
+          "duration_ms": 0.39,
+          "compression": 0.45,
+          "validation_error": null
+        },
+        {
+          "round": 15,
+          "sender": "Padre Pedro",
+          "intent": "ASSERT",
+          "content_preview": "A Escritura nos ensina sobre Eros (Amor). Venham \u00e0 f\u00e9!",
+          "tokens": 13,
+          "duration_ms": 0.28,
+          "compression": 0.42,
+          "validation_error": null
+        },
+        {
+          "round": 16,
+          "sender": "Comunista Carlos",
+          "intent": "ASSERT",
+          "content_preview": "A burguesia distorce Eros (Amor) para oprimir o proletariado...",
+          "tokens": 11,
+          "duration_ms": 0.37,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 17,
+          "sender": "S\u00f3crates",
+          "intent": "ASSERT",
+          "content_preview": "Permita-me questionar: Eros (Amor) pode ser ensinado ou \u00e9 in...",
+          "tokens": 13,
+          "duration_ms": 0.38,
+          "compression": 0.5,
+          "validation_error": null
+        },
+        {
+          "round": 18,
+          "sender": "Arist\u00f3fanes",
+          "intent": "ASSERT",
+          "content_preview": "Como Zeus dividiu os andr\u00f3ginos, Eros (Amor) nos divide e un...",
+          "tokens": 14,
+          "duration_ms": 0.4,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 19,
+          "sender": "Agaton",
+          "intent": "ASSERT",
+          "content_preview": "Como poeta, vejo Eros (Amor) nas formas perfeitas da naturez...",
+          "tokens": 13,
+          "duration_ms": 0.42,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 20,
+          "sender": "Alcib\u00edades",
+          "intent": "ASSERT",
+          "content_preview": "Confesso: amo Eros (Amor) e odeio quem n\u00e3o entende isso.",
+          "tokens": 13,
+          "duration_ms": 0.4,
+          "compression": 0.44,
+          "validation_error": null
+        },
+        {
+          "round": 21,
+          "sender": "Contador Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Os n\u00fameros sobre Eros (Amor) n\u00e3o mentem. 2+2=4 sempre.",
+          "tokens": 11,
+          "duration_ms": 0.85,
+          "compression": 0.42,
+          "validation_error": null
+        },
+        {
+          "round": 22,
+          "sender": "T\u00e9cnico Tiago",
+          "intent": "ASSERT",
+          "content_preview": "Escalabilidade de Eros (Amor) \u00e9 cr\u00edtica. Precisamos de cache...",
+          "tokens": 11,
+          "duration_ms": 0.44,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 23,
+          "sender": "Padre Pedro",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) \u00e9 prova do amor divino. Aceitem-na com humildade...",
+          "tokens": 13,
+          "duration_ms": 0.47,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 24,
+          "sender": "Comunista Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) s\u00f3 ser\u00e1 verdadeiro quando as classes forem aboli...",
+          "tokens": 13,
+          "duration_ms": 0.36,
+          "compression": 0.5,
+          "validation_error": null
+        },
+        {
+          "round": 25,
+          "sender": "S\u00f3crates",
+          "intent": "ASSERT",
+          "content_preview": "Diotima me ensinou que Eros (Amor) \u00e9 escada para o belo em s...",
+          "tokens": 16,
+          "duration_ms": 0.6,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 26,
+          "sender": "Arist\u00f3fanes",
+          "intent": "ASSERT",
+          "content_preview": "A poesia de Eros (Amor) \u00e9 como as nuvens - sempre em movimen...",
+          "tokens": 16,
+          "duration_ms": 0.41,
+          "compression": 0.49,
+          "validation_error": null
+        },
+        {
+          "round": 27,
+          "sender": "Agaton",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) \u00e9 jovem, delicado, sempre fugindo mas sempre pre...",
+          "tokens": 13,
+          "duration_ms": 0.42,
+          "compression": 0.52,
+          "validation_error": null
+        },
+        {
+          "round": 28,
+          "sender": "Alcib\u00edades",
+          "intent": "ASSERT",
+          "content_preview": "*bebe* Vamos falar a verdade sobre Eros (Amor), sem m\u00e1scaras...",
+          "tokens": 13,
+          "duration_ms": 0.23,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 29,
+          "sender": "Contador Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Comprovante fiscal de Eros (Amor), por favor. Sem evid\u00eancia,...",
+          "tokens": 14,
+          "duration_ms": 0.22,
+          "compression": 0.56,
+          "validation_error": null
+        },
+        {
+          "round": 30,
+          "sender": "T\u00e9cnico Tiago",
+          "intent": "ASSERT",
+          "content_preview": "Eros (Amor) tem um bug. Vou abrir um ticket e investigar log...",
+          "tokens": 15,
+          "duration_ms": 0.2,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 31,
+          "sender": "Padre Pedro",
+          "intent": "ASSERT",
+          "content_preview": "N\u00e3o questionemos Eros (Amor), mas aceitemos como d\u00e1diva divi...",
+          "tokens": 11,
+          "duration_ms": 0.24,
+          "compression": 0.49,
+          "validation_error": null
+        },
+        {
+          "round": 32,
+          "sender": "Comunista Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Trabalhadores de todo mundo, unam-se sobre Eros (Amor)!",
+          "tokens": 10,
+          "duration_ms": 0.19,
+          "compression": 0.43,
+          "validation_error": null
+        },
+        {
+          "round": 33,
+          "sender": "S\u00f3crates",
+          "intent": "ASSERT",
+          "content_preview": "A mai\u00eautica revelar\u00e1 a verdade sobre Eros (Amor).",
+          "tokens": 10,
+          "duration_ms": 0.21,
+          "compression": 0.38,
+          "validation_error": null
+        },
+        {
+          "round": 34,
+          "sender": "Arist\u00f3fanes",
+          "intent": "ASSERT",
+          "content_preview": "Eis a hist\u00f3ria: Eros (Amor) nasceu da necessidade de complet...",
+          "tokens": 13,
+          "duration_ms": 0.2,
+          "compression": 0.5,
+          "validation_error": null
+        },
+        {
+          "round": 35,
+          "sender": "Agaton",
+          "intent": "ASSERT",
+          "content_preview": "A ret\u00f3rica eleva Eros (Amor) aos c\u00e9us do Olimpo!",
+          "tokens": 11,
+          "duration_ms": 0.22,
+          "compression": 0.38,
+          "validation_error": null
+        },
+        {
+          "round": 36,
+          "sender": "Alcib\u00edades",
+          "intent": "ASSERT",
+          "content_preview": "S\u00f3crates \u00e9 como Eros (Amor) - me seduz e me abandona.",
+          "tokens": 14,
+          "duration_ms": 0.2,
+          "compression": 0.41,
+          "validation_error": null
+        },
+        {
+          "round": 37,
+          "sender": "Contador Carlos",
+          "intent": "ASSERT",
+          "content_preview": "Deprecia\u00e7\u00e3o de Eros (Amor) ao longo do tempo: c\u00e1lculo linear...",
+          "tokens": 13,
+          "duration_ms": 0.21,
+          "compression": 0.48,
+          "validation_error": null
+        },
+        {
+          "round": 38,
+          "sender": "T\u00e9cnico Tiago",
+          "intent": "ASSERT",
+          "content_preview": "Solu\u00e7\u00e3o t\u00e9cnica para Eros (Amor): restart no servi\u00e7o.",
+          "tokens": 10,
+          "duration_ms": 0.21,
+          "compression": 0.41,
+          "validation_error": null
+        },
+        {
+          "round": 39,
+          "sender": "Padre Pedro",
+          "intent": "ASSERT",
+          "content_preview": "A Igreja tem dogmas claros sobre Eros (Amor). Sigam-nos.",
+          "tokens": 11,
+          "duration_ms": 0.21,
+          "compression": 0.44,
+          "validation_error": null
+        },
+        {
+          "round": 40,
+          "sender": "Comunista Carlos",
+          "intent": "ASSERT",
+          "content_preview": "A dial\u00e9tica materialista explica Eros (Amor) pela luta de cl...",
+          "tokens": 13,
+          "duration_ms": 0.19,
+          "compression": 0.52,
+          "validation_error": null
+        }
+      ]
+    },
+    "english": {
+      "start_time": 1774839442.2312043,
+      "end_time": 1774839442.2319353,
+      "total_duration_ms": 0.7309913635253906,
+      "avg_round_duration_ms": 0.0,
+      "tokens_input": 548,
+      "tokens_output": 6000,
+      "tokens_total": 6548,
+      "cost_estimate_usd": 0.013096,
+      "text_chars_sent": 2505,
+      "vectors_created": 0,
+      "compression_ratio": 0.0,
+      "bytes_saved": 0,
+      "raw_evidence_created": 0,
+      "raw_artifacts_created": 0,
+      "raw_traces_created": 0,
+      "raw_bridges_created": 0,
+      "inheritance_chains": [],
+      "max_inheritance_depth": 0,
+      "message_count": 40,
+      "unique_concepts": 0,
+      "semantic_convergence": 0.0,
+      "anomaly_detections": 0,
+      "validation_errors": 0,
+      "agent_contributions": {
+        "socrates": {
+          "name": "S\u00f3crates",
+          "role": "Fil\u00f3sofo",
+          "messages": 5,
+          "tokens": 827,
+          "concepts_introduced": []
+        },
+        "aristophanes": {
+          "name": "Arist\u00f3fanes",
+          "role": "Poeta/Comediante",
+          "messages": 5,
+          "tokens": 823,
+          "concepts_introduced": []
+        },
+        "agathon": {
+          "name": "Agaton",
+          "role": "Poeta Tr\u00e1gico",
+          "messages": 5,
+          "tokens": 824,
+          "concepts_introduced": []
+        },
+        "alcibiades": {
+          "name": "Alcib\u00edades",
+          "role": "Pol\u00edtico/Bebado",
+          "messages": 5,
+          "tokens": 821,
+          "concepts_introduced": []
+        },
+        "accountant": {
+          "name": "Contador Carlos",
+          "role": "Contador",
+          "messages": 5,
+          "tokens": 814,
+          "concepts_introduced": []
+        },
+        "tech_guy": {
+          "name": "T\u00e9cnico Tiago",
+          "role": "T\u00e9cnico de TI",
+          "messages": 5,
+          "tokens": 813,
+          "concepts_introduced": []
+        },
+        "priest": {
+          "name": "Padre Pedro",
+          "role": "Padre",
+          "messages": 5,
+          "tokens": 818,
+          "concepts_introduced": []
+        },
+        "communist": {
+          "name": "Comunista Carlos",
+          "role": "Ativista Comunista",
+          "messages": 5,
+          "tokens": 808,
+          "concepts_introduced": []
+        }
+      },
+      "timeline": [
+        {
+          "round": 1,
+          "sender": "S\u00f3crates",
+          "content_preview": "But what is Eros (Amor) truly? Define for me its essential a...",
+          "tokens": 15,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 2,
+          "sender": "Arist\u00f3fanes",
+          "content_preview": "Let me tell the myth: humans were spherical, and Eros (Amor)...",
+          "tokens": 16,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 3,
+          "sender": "Agaton",
+          "content_preview": "Let us praise Eros (Amor)! It is the most beautiful of conce...",
+          "tokens": 19,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 4,
+          "sender": "Alcib\u00edades",
+          "content_preview": "*hic* Socrates... you speak of Eros (Amor) but reject me!",
+          "tokens": 13,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 5,
+          "sender": "Contador Carlos",
+          "content_preview": "Eros (Amor) needs to be auditable. What is the source of thi...",
+          "tokens": 16,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 6,
+          "sender": "T\u00e9cnico Tiago",
+          "content_preview": "Eros (Amor) is a system. Need to identify components and API...",
+          "tokens": 14,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 7,
+          "sender": "Padre Pedro",
+          "content_preview": "Eros (Amor) reflects the glory of God. It is a sacred myster...",
+          "tokens": 15,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 8,
+          "sender": "Comunista Carlos",
+          "content_preview": "Eros (Amor) is a product of production relations! Fight for ...",
+          "tokens": 14,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 9,
+          "sender": "S\u00f3crates",
+          "content_preview": "You say Eros (Amor) is good, but is it good in itself or for...",
+          "tokens": 20,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 10,
+          "sender": "Arist\u00f3fanes",
+          "content_preview": "Laughter and tears mingle when we speak of Eros (Amor).",
+          "tokens": 13,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 11,
+          "sender": "Agaton",
+          "content_preview": "In tragedy, Eros (Amor) is the hero who suffers to achieve b...",
+          "tokens": 15,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 12,
+          "sender": "Alcib\u00edades",
+          "content_preview": "I know what Eros (Amor) is! It is physical, carnal, here and...",
+          "tokens": 16,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 13,
+          "sender": "Contador Carlos",
+          "content_preview": "Recording Eros (Amor) in debit and credit - must balance.",
+          "tokens": 13,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 14,
+          "sender": "T\u00e9cnico Tiago",
+          "content_preview": "Debugging Eros (Amor): the error is in the abstraction layer...",
+          "tokens": 13,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 15,
+          "sender": "Padre Pedro",
+          "content_preview": "Scripture teaches us about Eros (Amor). Come to faith!",
+          "tokens": 11,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 16,
+          "sender": "Comunista Carlos",
+          "content_preview": "The bourgeoisie distorts Eros (Amor) to oppress the proletar...",
+          "tokens": 11,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 17,
+          "sender": "S\u00f3crates",
+          "content_preview": "Allow me to question: can Eros (Amor) be taught or is it inn...",
+          "tokens": 16,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 18,
+          "sender": "Arist\u00f3fanes",
+          "content_preview": "As Zeus divided the androgynes, Eros (Amor) divides and unit...",
+          "tokens": 14,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 19,
+          "sender": "Agaton",
+          "content_preview": "As a poet, I see Eros (Amor) in the perfect forms of nature.",
+          "tokens": 16,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 20,
+          "sender": "Alcib\u00edades",
+          "content_preview": "I confess: I love Eros (Amor) and hate those who don't under...",
+          "tokens": 15,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 21,
+          "sender": "Contador Carlos",
+          "content_preview": "The numbers about Eros (Amor) don't lie. 2+2=4 always.",
+          "tokens": 11,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 22,
+          "sender": "T\u00e9cnico Tiago",
+          "content_preview": "Scalability of Eros (Amor) is critical. We need cache.",
+          "tokens": 11,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 23,
+          "sender": "Padre Pedro",
+          "content_preview": "Eros (Amor) is proof of divine love. Accept it with humility...",
+          "tokens": 14,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 24,
+          "sender": "Comunista Carlos",
+          "content_preview": "Eros (Amor) will only be true when classes are abolished!",
+          "tokens": 13,
+          "duration_ms": 0.0
+        },
+        {
+          "round": 25,
+          "sender": "S\u00f3crates",
+          "content_preview": "Diotima taught me that Eros (Amor) is a ladder to beauty its...",
+          "tokens": 15,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 26,
+          "sender": "Arist\u00f3fanes",
+          "content_preview": "The poetry of Eros (Amor) is like clouds - always moving.",
+          "tokens": 14,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 27,
+          "sender": "Agaton",
+          "content_preview": "Eros (Amor) is young, delicate, always fleeing but always pr...",
+          "tokens": 13,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 28,
+          "sender": "Alcib\u00edades",
+          "content_preview": "*drinks* Let's speak the truth about Eros (Amor), without ma...",
+          "tokens": 13,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 29,
+          "sender": "Contador Carlos",
+          "content_preview": "Fiscal receipt for Eros (Amor), please. Without evidence, it...",
+          "tokens": 14,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 30,
+          "sender": "T\u00e9cnico Tiago",
+          "content_preview": "Eros (Amor) has a bug. I'll open a ticket and investigate lo...",
+          "tokens": 15,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 31,
+          "sender": "Padre Pedro",
+          "content_preview": "Let us not question Eros (Amor), but accept it as divine gif...",
+          "tokens": 15,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 32,
+          "sender": "Comunista Carlos",
+          "content_preview": "Workers of the world, unite around Eros (Amor)!",
+          "tokens": 10,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 33,
+          "sender": "S\u00f3crates",
+          "content_preview": "The maieutic will reveal the truth about Eros (Amor).",
+          "tokens": 11,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 34,
+          "sender": "Arist\u00f3fanes",
+          "content_preview": "Here is the story: Eros (Amor) was born from the need for co...",
+          "tokens": 16,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 35,
+          "sender": "Agaton",
+          "content_preview": "Rhetoric elevates Eros (Amor) to the heavens of Olympus!",
+          "tokens": 11,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 36,
+          "sender": "Alcib\u00edades",
+          "content_preview": "Socrates is like Eros (Amor) - he seduces and abandons me.",
+          "tokens": 14,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 37,
+          "sender": "Contador Carlos",
+          "content_preview": "Depreciation of Eros (Amor) over time: linear calculation.",
+          "tokens": 10,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 38,
+          "sender": "T\u00e9cnico Tiago",
+          "content_preview": "Technical solution for Eros (Amor): restart the service.",
+          "tokens": 10,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 39,
+          "sender": "Padre Pedro",
+          "content_preview": "The Church has clear dogmas about Eros (Amor). Follow them.",
+          "tokens": 13,
+          "duration_ms": 0.01
+        },
+        {
+          "round": 40,
+          "sender": "Comunista Carlos",
+          "content_preview": "Dialectical materialism explains Eros (Amor) through class s...",
+          "tokens": 10,
+          "duration_ms": 0.02
+        }
+      ]
+    }
+  },
+  "agents": [
+    "S\u00f3crates",
+    "Arist\u00f3fanes",
+    "Agaton",
+    "Alcib\u00edades",
+    "Contador Carlos",
+    "T\u00e9cnico Tiago",
+    "Padre Pedro",
+    "Comunista Carlos"
+  ],
+  "topic": "O Banquete de Plat\u00e3o - Amor (Eros)"
+}
