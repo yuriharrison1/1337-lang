@@ -7,3 +7,6 @@ pub mod transport;
 
 pub use c5::{CanonicalSpace, C5Handshake};
 pub use transport::{Transport, ZmqTransport, ZmqTransportBuilder};
+
+#[cfg(test)]
+mod tests;

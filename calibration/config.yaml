@@ -1,0 +1,46 @@
+# Calibration pipeline configuration
+
+dataset:
+  size: 2000                    # number of texts to score
+  languages: ["pt", "en"]      # text languages
+  seed_path: "data/seed_texts.txt"
+  output_path: "data/dataset.jsonl"
+  categories:                   # semantic categories to cover
+    - technical
+    - emotional
+    - abstract
+    - concrete
+    - temporal
+    - causal
+    - social
+    - scientific
+    - philosophical
+    - practical
+
+embedding:
+  model: "mock"                 # "mock" (SHA256, no API) | "all-MiniLM-L6-v2"
+  dimension: 128                # mock=128; sentence-transformers=384
+
+llm:
+  provider: "mock"              # "mock" | "openai" | "anthropic" | "deepseek"
+  model: "deepseek/deepseek-chat"
+  temperature: 0.3
+  max_retries: 3
+
+training:
+  method: "ridge"               # ridge | lasso | elastic_net
+  alpha: 0.01                   # regularization strength
+  test_split: 0.2
+  random_state: 1337
+
+evaluation:
+  coherence_threshold: 0.5      # minimum acceptable coherence score
+  benchmark_pairs: 5            # number of similarity pairs to test
+
+export:
+  w_npy_path: "data/W.npy"
+  w_bin_path: "data/W.bin"
+  service_path: "../leet1337/leet-service/W.bin"
+  format: "f32_le"              # little-endian float32 (no header for legacy compat)
+  rows: 128
+  cols: 32

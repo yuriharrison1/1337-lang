@@ -44,3 +44,19 @@ pub fn run() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::run;
+    use leet_core::axes::CANONICAL_AXES;
+
+    #[test]
+    fn test_axes_run_succeeds() {
+        assert!(run().is_ok());
+    }
+
+    #[test]
+    fn test_canonical_axes_count() {
+        assert_eq!(CANONICAL_AXES.len(), 32, "protocol requires exactly 32 axes");
+    }
+}

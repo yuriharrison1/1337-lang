@@ -101,3 +101,43 @@ fn interpret_key_axis(code: &str, val: f32) -> String {
         _ => format!("{:.3}", val),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::run;
+
+    fn sem_json_32(val: f32) -> String {
+        let v: Vec<f32> = vec![val; 32];
+        serde_json::to_string(&v).unwrap()
+    }
+
+    #[test]
+    fn test_decode_valid_32_floats() {
+        let json = sem_json_32(0.5);
+        assert!(run(&json).is_ok(), "decode should succeed with 32 floats");
+    }
+
+    #[test]
+    fn test_decode_wrong_dim_fails() {
+        let small: Vec<f32> = vec![0.5; 16];
+        let json = serde_json::to_string(&small).unwrap();
+        assert!(run(&json).is_err(), "decode should fail with 16 floats");
+    }
+
+    #[test]
+    fn test_decode_empty_array_fails() {
+        assert!(run("[]").is_err(), "decode should fail with empty array");
+    }
+
+    #[test]
+    fn test_decode_invalid_json_fails() {
+        assert!(run("not json at all").is_err(), "decode should fail with invalid JSON");
+    }
+
+    #[test]
+    fn test_decode_extreme_values_accepted() {
+        let vals: Vec<f32> = (0..32).map(|i| if i % 2 == 0 { 0.0 } else { 1.0 }).collect();
+        let json = serde_json::to_string(&vals).unwrap();
+        assert!(run(&json).is_ok(), "decode should accept values at extremes");
+    }
+}

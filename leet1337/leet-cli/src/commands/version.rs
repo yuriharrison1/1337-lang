@@ -16,3 +16,13 @@ pub fn run() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::run;
+
+    #[test]
+    fn test_version_run_succeeds() {
+        assert!(run().is_ok());
+    }
+}
