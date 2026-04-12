@@ -184,7 +184,7 @@ async fn respond_anthropic(
         return;
     };
 
-    let responses = match ac.send_cogon(&cogon, &history).await {
+    let responses = match ac.send_cogon(&cogon, &history, 1).await {
         Ok(r) => r,
         Err(e) => {
             tracing::warn!("{} API error: {}", args.name, e);
