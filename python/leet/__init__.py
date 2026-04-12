@@ -24,6 +24,7 @@ from leet.cache import (
 )
 from leet.config import LeetConfig, get_config, init_config
 from leet.validate import validate, check_confidence
+from leet import codec as _codec  # noqa: F401 — registers Cogon.to_bytes / Cogon.from_bytes
 
 __version__ = "0.5.0"
 FIXED_DIMS = 32
@@ -105,4 +106,6 @@ __all__ = [
     # Validation
     "validate",
     "check_confidence",
+    # Codec (registers to_bytes/from_bytes on Cogon)
+    "codec",
 ]

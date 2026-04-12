@@ -1,11 +1,17 @@
 """Bridge for human ↔ 1337 translation."""
 
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from typing import Optional
 import os
 
 from leet.types import Cogon, Dag, FIXED_DIMS
-from leet.axes import CANONICAL_AXES, A8_ESTADO, A9_PROCESSO, C1_URGENCIA, C3_ACAO, C5_ANOMALIA, B5_REVERSIBILIDADE
+from leet.axes import (
+    CANONICAL_AXES, 
+    A8_ESTADO, A9_PROCESSO, A13_VALENCIA_ONTOLOGICA,
+    B5_REVERSIBILIDADE,
+    C1_URGENCIA, C3_ACAO, C5_ANOMALIA, C9_NATUREZA,
+)
 
 
 class SemanticProjector(ABC):
@@ -24,8 +30,39 @@ class SemanticProjector(ABC):
 
 class MockProjector(SemanticProjector):
     """Projetor determinístico pra testes. Sem API, sem rede."""
+    
+    def __init__(self, cache_size: int = 1000):
+        self._cache: dict[str, tuple[list[float], list[float]]] = {}
+        self._cache_order: list[str] = []  # LRU order
+        self._cache_size = cache_size
+    
+    def _get_cached(self, text: str) -> Optional[tuple[list[float], list[float]]]:
+        """Get from LRU cache."""
+        if text in self._cache:
+            # Move to end (most recently used)
+            self._cache_order.remove(text)
+            self._cache_order.append(text)
+            return self._cache[text]
+        return None
+    
+    def _set_cached(self, text: str, result: tuple[list[float], list[float]]) -> None:
+        """Set in LRU cache."""
+        if text in self._cache:
+            self._cache_order.remove(text)
+        elif len(self._cache) >= self._cache_size:
+            # Evict least recently used
+            lru = self._cache_order.pop(0)
+            del self._cache[lru]
+        
+        self._cache[text] = result
+        self._cache_order.append(text)
 
     async def project(self, text: str) -> tuple[list[float], list[float]]:
+        # Check cache first
+        cached = self._get_cached(text)
+        if cached is not None:
+            return cached
+        
         text_lower = text.lower()
         sem = [0.5] * 32
         unc = [0.2] * 32
@@ -40,13 +77,13 @@ class MockProjector(SemanticProjector):
         if "caiu" in text_lower or "falhou" in text_lower or "erro" in text_lower or "down" in text_lower:
             sem[A8_ESTADO] = 0.9
             sem[C5_ANOMALIA] = 0.9
-            sem[13] = 0.15  # A13_VALÊNCIA_ONTOLÓGICA (negativo)
+            sem[A13_VALENCIA_ONTOLOGICA] = 0.15  # valência negativa
             unc[A8_ESTADO] = 0.1
             unc[C5_ANOMALIA] = 0.1
 
         if "deploy" in text_lower or "processo" in text_lower or "pipeline" in text_lower:
             sem[A9_PROCESSO] = 0.85
-            sem[30] = 0.8   # C9_NATUREZA (verbo)
+            sem[C9_NATUREZA] = 0.8   # verbo/ação
             unc[A9_PROCESSO] = 0.1
 
         if "reverter" in text_lower or "desfazer" in text_lower or "rollback" in text_lower:
@@ -54,7 +91,9 @@ class MockProjector(SemanticProjector):
             sem[C3_ACAO] = 0.85
             unc[B5_REVERSIBILIDADE] = 0.1
 
-        return sem, unc
+        result = (sem, unc)
+        self._set_cached(text, result)
+        return result
 
     async def reconstruct(self, cogon: Cogon) -> str:
         # Encontra os 3 eixos mais ativados

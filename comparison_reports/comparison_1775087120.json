@@ -1,0 +1,197 @@
+{
+  "timestamp": "2026-04-01T20:45:20.941367",
+  "topic": "Eros (Amor)",
+  "rounds": 3,
+  "agents": [
+    "S\u00f3crates",
+    "Fedro",
+    "Paus\u00e2nias",
+    "Erix\u00edmaco",
+    "Arist\u00f3fanes",
+    "Agaton",
+    "Di\u00f3tima",
+    "Alcib\u00edades",
+    "Contador Carlos",
+    "T\u00e9cnico Tiago",
+    "Padre Pedro",
+    "Comunista Carlos",
+    "Matem\u00e1tico Euler",
+    "Pin\u00f3quio",
+    "Dr. Who"
+  ],
+  "deepseek_used": false,
+  "metrics": {
+    "bytes_1337": 3741,
+    "bytes_en": 4797,
+    "compression": 1.2823,
+    "cogon_msgs": 22,
+    "delta_msgs": 23,
+    "delta_ratio": 0.5111,
+    "avg_axes_changed": 3.83,
+    "bytes_saved_delta": 2665,
+    "tokens_in": 1036,
+    "tokens_out": 0,
+    "tokens_total": 1036,
+    "cost_english_usd": 0.00028,
+    "cost_1337_usd": 0.0,
+    "duration_ms": 13.32,
+    "throughput_msgs_s": 3379.2
+  },
+  "convergence_history": [
+    0.0616,
+    0.0598,
+    0.0518
+  ],
+  "per_agent": {
+    "socrates": {
+      "bytes_1337": 258,
+      "bytes_en": 276,
+      "tokens_in": 60,
+      "tokens_out": 0,
+      "cost_usd": 1.6e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.07
+    },
+    "phaedrus": {
+      "bytes_1337": 268,
+      "bytes_en": 297,
+      "tokens_in": 68,
+      "tokens_out": 0,
+      "cost_usd": 1.8e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.108
+    },
+    "pausanias": {
+      "bytes_1337": 221,
+      "bytes_en": 286,
+      "tokens_in": 65,
+      "tokens_out": 0,
+      "cost_usd": 1.8e-05,
+      "msgs": 3,
+      "delta": 1,
+      "compression": 1.294
+    },
+    "eryximachus": {
+      "bytes_1337": 258,
+      "bytes_en": 297,
+      "tokens_in": 62,
+      "tokens_out": 0,
+      "cost_usd": 1.7e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.151
+    },
+    "aristophanes": {
+      "bytes_1337": 258,
+      "bytes_en": 334,
+      "tokens_in": 73,
+      "tokens_out": 0,
+      "cost_usd": 2e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.295
+    },
+    "agathon": {
+      "bytes_1337": 308,
+      "bytes_en": 310,
+      "tokens_in": 70,
+      "tokens_out": 0,
+      "cost_usd": 1.9e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.006
+    },
+    "diotima": {
+      "bytes_1337": 248,
+      "bytes_en": 303,
+      "tokens_in": 74,
+      "tokens_out": 0,
+      "cost_usd": 2e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.222
+    },
+    "alcibiades": {
+      "bytes_1337": 236,
+      "bytes_en": 310,
+      "tokens_in": 71,
+      "tokens_out": 0,
+      "cost_usd": 1.9e-05,
+      "msgs": 3,
+      "delta": 1,
+      "compression": 1.314
+    },
+    "accountant": {
+      "bytes_1337": 263,
+      "bytes_en": 310,
+      "tokens_in": 53,
+      "tokens_out": 0,
+      "cost_usd": 1.4e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.179
+    },
+    "tech_guy": {
+      "bytes_1337": 194,
+      "bytes_en": 284,
+      "tokens_in": 57,
+      "tokens_out": 0,
+      "cost_usd": 1.5e-05,
+      "msgs": 3,
+      "delta": 0,
+      "compression": 1.464
+    },
+    "priest": {
+      "bytes_1337": 283,
+      "bytes_en": 305,
+      "tokens_in": 69,
+      "tokens_out": 0,
+      "cost_usd": 1.9e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.078
+    },
+    "communist": {
+      "bytes_1337": 258,
+      "bytes_en": 305,
+      "tokens_in": 57,
+      "tokens_out": 0,
+      "cost_usd": 1.5e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.182
+    },
+    "mathematician": {
+      "bytes_1337": 268,
+      "bytes_en": 403,
+      "tokens_in": 92,
+      "tokens_out": 0,
+      "cost_usd": 2.5e-05,
+      "msgs": 3,
+      "delta": 2,
+      "compression": 1.504
+    },
+    "pinocchio": {
+      "bytes_1337": 226,
+      "bytes_en": 429,
+      "tokens_in": 95,
+      "tokens_out": 0,
+      "cost_usd": 2.6e-05,
+      "msgs": 3,
+      "delta": 1,
+      "compression": 1.898
+    },
+    "drwho": {
+      "bytes_1337": 194,
+      "bytes_en": 348,
+      "tokens_in": 70,
+      "tokens_out": 0,
+      "cost_usd": 1.9e-05,
+      "msgs": 3,
+      "delta": 0,
+      "compression": 1.794
+    }
+  }
+}

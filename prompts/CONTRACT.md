@@ -35,16 +35,16 @@
 
 ---
 
-## PROMPT_01 — LEET-CORE (Rust Foundation)
+## PROMPT_01 — LEET-CORE + TRADUTOR (Rust Foundation + Bridge)
 
 ### Entregáveis
 - `leet-core/` — Crate Rust com tipos, operadores, validação R1–R21, C ABI FFI, PyO3
-- `leet-bridge/` — SemanticProjector trait + MockProjector + HumanBridge
-- `python/leet/` — Pacote Python wrapper com CLI básica
+- `leet-bridge/` — Tradutor completo: SemanticProjector trait, MockProjector (heurísticas por eixo), HumanBridge (text→cogon/dag/msg), leet_to_human (cogon/dag/msg→text), prompt templates para LLMs
+- `python/leet/` — Pacote Python com MockProjector, AnthropicProjector, CLI completa
 - `net1337.py` — Simulador multi-agente interativo
 - `SKILL.md` — Contexto completo do projeto para Claude Code
 
-### Tarefas Detalhadas
+### Tarefas Detalhadas — leet-core
 - [ ] `T01.01` — Criar SKILL.md com spec v0.4 completa
 - [ ] `T01.02` — Cargo workspace setup (leet-core, leet-bridge)
 - [ ] `T01.03` — leet-core/src/types.rs — Cogon, Edge, Dag, Msg1337, RawField, Intent, EdgeType
@@ -54,25 +54,41 @@
 - [ ] `T01.07` — leet-core/src/error.rs — LeetError enum com todos os erros tipados
 - [ ] `T01.08` — leet-core/src/ffi.rs — C ABI: leet_cogon_zero(), leet_blend(), leet_dist(), leet_validate()
 - [ ] `T01.09` — leet-core/src/python.rs — PyO3 bindings: PyCogon, PyDag, py_blend(), py_dist()
-- [ ] `T01.10` — leet-bridge/src/projector.rs — trait SemanticProjector + MockProjector (heurísticas sem LLM)
-- [ ] `T01.11` — leet-bridge/src/human_bridge.rs — text_to_cogon(), text_to_msg(), cogon_to_text()
-- [ ] `T01.12` — python/leet/types.py — dataclasses Cogon, Edge, Dag, Msg1337
-- [ ] `T01.13` — python/leet/axes.py — CANONICAL_AXES com todos os 32 eixos
-- [ ] `T01.14` — python/leet/operators.py — blend(), focus(), delta(), dist(), anomaly_score()
-- [ ] `T01.15` — python/leet/validate.py — validate_cogon(), validate_dag(), validate_msg()
-- [ ] `T01.16` — python/leet/bridge.py — MockProjector Python + AnthropicProjector stub
-- [ ] `T01.17` — python/leet/cli.py — Comandos: encode, decode, zero, blend, dist, axes, validate
-- [ ] `T01.18` — net1337.py — Simulador IRC-style com agentes autônomos
-- [ ] `T01.19` — Testes Rust: cargo test --workspace (mínimo 40 testes)
-- [ ] `T01.20` — Testes Python: pytest tests/ -v (mínimo 25 testes)
-- [ ] `T01.21` — Atualizar CONTRACT.md com status
-- [ ] `T01.22` — Commit + push
+
+### Tarefas Detalhadas — leet-bridge (Tradutor)
+- [ ] `T01.10` — leet-bridge/src/error.rs — BridgeError enum (EmptyInput, ProjectionFailed, ReconstructionFailed, ValidationFailed, JsonParse)
+- [ ] `T01.11` — leet-bridge/src/projector.rs — trait SemanticProjector (project, reconstruct, reconstruct_dag)
+- [ ] `T01.12` — leet-bridge/src/projector.rs — MockProjector com heurísticas por eixo (keywords para URGÊNCIA, ANOMALIA, AÇÃO, PROCESSO, SISTEMA, ESTADO, IMPACTO, AFETO, VALOR, COMPLETUDE, REVERSIBILIDADE, CARGA, VETOR TEMPORAL, NATUREZA, VALÊNCIA DE AÇÃO) + fallback SHA256 hash
+- [ ] `T01.13` — leet-bridge/src/prompts.rs — projection_prompt(text) com todos os 32 eixos listados + reconstruction_prompt(sem, unc)
+- [ ] `T01.14` — leet-bridge/src/human_to_1337.rs — HumanBridge<P> com text_to_cogon(), text_to_dag() (split por sentenças, CONDICIONA edges), text_to_msg() (envelope completo com c5 e surface)
+- [ ] `T01.15` — leet-bridge/src/leet_to_human.rs — cogon_to_text(), dag_to_text() (leaf→root com conectores por edge type), msg_to_text() (header com intent + urgência)
+- [ ] `T01.16` — Testes bridge Rust: mínimo 15 testes (text_to_cogon urgente/sistema/ação/emocional/genérico, text_to_dag single/multi, text_to_msg envelope, cogon_to_text roundtrip, dag_to_text, mock determinístico, prompt templates completos)
+
+### Tarefas Detalhadas — Python
+- [ ] `T01.17` — python/leet/types.py — dataclasses Cogon, Edge, Dag, Msg1337
+- [ ] `T01.18` — python/leet/axes.py — CANONICAL_AXES com todos os 32 eixos
+- [ ] `T01.19` — python/leet/operators.py — blend(), focus(), delta(), dist(), anomaly_score()
+- [ ] `T01.20` — python/leet/validate.py — validate_cogon(), validate_dag(), validate_msg()
+- [ ] `T01.21` — python/leet/bridge.py — MockProjector (mesmas heurísticas do Rust), AnthropicProjector (com prompt completo dos 32 eixos), encode(), decode()
+- [ ] `T01.22` — python/leet/cli.py — Comandos completos: encode, decode, zero, blend, dist, axes, validate
+- [ ] `T01.23` — net1337.py — Simulador IRC-style com 3 agentes autônomos
+
+### Tarefas Detalhadas — Testes e Finalização
+- [ ] `T01.24` — Testes Rust: cargo test --workspace (mínimo 55 testes: 40 core + 15 bridge)
+- [ ] `T01.25` — Testes Python: pytest tests/ -v (mínimo 25 testes)
+- [ ] `T01.26` — Atualizar CONTRACT.md com status
+- [ ] `T01.27` — Commit + push
 
 ### Critérios de Aceite
 - `cargo build --workspace` sem warnings
-- `cargo test --workspace` — todos passam
+- `cargo test --workspace` — todos passam (≥55 testes)
+- MockProjector: "urgente" → sem[22]>0.8, "servidor caiu" → sem[8]>0.7 + sem[26]>0.7
+- HumanBridge: text_to_dag("A. B.") → 2 nós + 1 edge CONDICIONA
+- Prompt templates: projection_prompt() lista todos os 32 eixos com descrições
+- cogon_to_text() + dag_to_text() produzem texto legível
 - `pip install -e python/` funciona
 - `leet zero` / `leet encode "texto"` / `leet axes` funcionam
+- AnthropicProjector tem prompt completo (mesmo sem API key pra testar)
 - `python net1337.py` inicia sem erros
 - Taskwarrior atualizado
 
@@ -236,7 +252,7 @@
 
 | Métrica | Target |
 |---------|--------|
-| Testes Rust total | ≥ 75 |
+| Testes Rust total | ≥ 90 |
 | Testes Python total | ≥ 85 |
 | Cobertura de regras R1–R21 | 100% |
 | Token reduction (benchmark) | ≥ 60% |

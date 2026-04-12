@@ -11,7 +11,18 @@ def blend(c1: Cogon, c2: Cogon, alpha: float) -> Cogon:
     
     sem = α·c1.sem + (1-α)·c2.sem
     unc = max(c1.unc, c2.unc)  # incerteza conservadora
+    
+    Args:
+        c1: Primeiro COGON
+        c2: Segundo COGON
+        alpha: Peso de interpolação [0.0, 1.0]
+        
+    Raises:
+        ValueError: Se alpha fora do range [0, 1]
     """
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError(f"alpha must be in [0.0, 1.0], got {alpha}")
+    
     sem = [alpha * s1 + (1 - alpha) * s2 
            for s1, s2 in zip(c1.sem, c2.sem)]
     unc = [max(u1, u2) for u1, u2 in zip(c1.unc, c2.unc)]
@@ -68,10 +79,12 @@ def anomaly_score(cogon: Cogon, history: list[Cogon]) -> float:
     """
     Distância média do centroide histórico.
     
-    Retorna 1.0 se histórico vazio.
+    Retorna 0.5 (valor neutro) se histórico vazio, pois não há 
+    baseline para comparação. Anomalia máxima (1.0) só faz sentido
+    quando temos histórico para comparar.
     """
     if not history:
-        return 1.0
+        return 0.5  # neutro: sem baseline
     
     # Calcula centroide
     n = len(history)

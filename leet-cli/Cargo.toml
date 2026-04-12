@@ -1,0 +1,21 @@
+[package]
+name = "leet-cli"
+version = "0.5.0"
+edition = "2021"
+
+[[bin]]
+name = "leet"
+path = "src/main.rs"
+
+[dependencies]
+leet-core = { path = "../leet-core" }
+leet-bridge = { path = "../leet-bridge" }
+leet-service = { path = "../leet-service" }
+clap = { version = "4", features = ["derive"] }
+crossterm = "0.27"
+serde_json = "1"
+colored = "2"
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]

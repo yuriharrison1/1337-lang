@@ -23,10 +23,12 @@ def validate(msg: Msg1337) -> Optional[str]:
         _r9_evidence_coherence,
         _r10_vector_dims,
         _r11_zone_emergent_append_only,
+        _r12_emergent_no_reuse,
         _r14_dag_parents_first,
         _r17_canonical_order,
         _r19_inheritance_depth,
         _r20_cogon_zero_first,
+        _r21_bridge_no_exposure,
     ]
     
     for validator in validators:
@@ -50,14 +52,11 @@ def check_confidence(msg: Msg1337) -> list[tuple[str, int, float]]:
             if u > threshold:
                 warnings.append((cogon_id, i, u))
     
-    if isinstance(msg.payload, Payload):
-        payload = msg.payload
-    else:
-        payload = msg.payload
-        
-    if hasattr(payload, 'sem'):  # Cogon
+    payload = msg.payload
+
+    if isinstance(payload, Cogon):
         check_cogon(payload, payload.id)
-    elif hasattr(payload, 'nodes'):  # Dag
+    elif isinstance(payload, Dag):
         for node in payload.nodes:
             check_cogon(node, node.id)
     
@@ -134,7 +133,7 @@ def _r7_zone_emergent_c5(msg: Msg1337) -> Optional[str]:
     """R7: zone_emergent só referencia IDs do handshake C5."""
     # A zona emergente é definida durante o handshake C5
     # Aqui verificamos apenas se o align_hash está presente quando há zone_emergent
-    if msg.c5 and msg.c5.zone_emergent:
+    if msg.c5.zone_emergent:
         if not msg.c5.align_hash:
             return "R7: zone_emergent requires C5 align_hash"
     return None
@@ -198,7 +197,7 @@ def _r10_vector_dims(msg: Msg1337) -> Optional[str]:
 
 def _r11_zone_emergent_append_only(msg: Msg1337) -> Optional[str]:
     """R11: Zona Emergente append-only a partir do índice 32."""
-    if msg.c5 and msg.c5.zone_emergent:
+    if msg.c5.zone_emergent:
         # Verificar se todas as chaves na zona emergente são >= 32
         for key in msg.c5.zone_emergent.keys():
             try:
@@ -211,11 +210,23 @@ def _r11_zone_emergent_append_only(msg: Msg1337) -> Optional[str]:
     return None
 
 
-# R12: Deprecação mantém índice com deprecated=true. Nunca deleta.
-# Esta é uma regra de design, não de validação runtime.
+def _r12_emergent_no_reuse(msg: Msg1337) -> Optional[str]:
+    """R12: Eixos emergentes nunca deletados — índices devem ser monotonicamente crescentes."""
+    if msg.c5.zone_emergent:
+        seen: set[int] = set()
+        for key in msg.c5.zone_emergent.keys():
+            try:
+                idx = int(key)
+                if idx in seen:
+                    return f"R12: zone_emergent index {idx} duplicado (reutilização proibida)"
+                seen.add(idx)
+            except ValueError:
+                pass  # Chaves simbólicas são permitidas
+    return None
+
 
 # R13: Atalho emergente requer mesmo align_hash nos dois agentes.
-# Verificado durante o handshake C5, não na mensagem.
+# Requer estado de ambos os agentes — não verificável em mensagem única.
 
 
 def _r14_dag_parents_first(msg: Msg1337) -> Optional[str]:
@@ -245,10 +256,10 @@ def _r14_dag_parents_first(msg: Msg1337) -> Optional[str]:
 
 
 # R15: Mesma precedência → esquerda pra direita.
-# Regra de parser/operadores, não de validação de mensagem.
+# Regra de ordem de avaliação de operadores — não verificável em mensagem.
 
 # R16: FOCUS antes de BLEND. BLEND full-space explícito.
-# Regra de parser/operadores, não de validação de mensagem.
+# Regra de ordem de aplicação de operadores — não verificável em mensagem.
 
 
 def _r17_canonical_order(msg: Msg1337) -> Optional[str]:
@@ -266,7 +277,7 @@ def _r17_canonical_order(msg: Msg1337) -> Optional[str]:
 
 
 # R18: Herança OO: específico vence geral.
-# Regra de resolução de herança, não de validação de mensagem.
+# Regra de resolução de conflito entre COGONs herdados — não verificável em mensagem única.
 
 
 def _r19_inheritance_depth(msg: Msg1337) -> Optional[str]:
@@ -328,5 +339,27 @@ def _r20_cogon_zero_first(msg: Msg1337) -> Optional[str]:
     return None
 
 
-# R21: BRIDGE nunca expõe interior da rede 1337.
-# Regra de segurança do bridge, não de validação de mensagem.
+def _r21_bridge_no_exposure(msg: Msg1337) -> Optional[str]:
+    """R21: BRIDGE nunca expõe campos internos 1337 para sistemas externos.
+
+    Verifica que o campo raw.content não contém chaves internas do protocolo
+    (sem, unc, stamp, cogon_id) que indicariam vazamento de internals.
+    """
+    _INTERNAL_KEYS = frozenset({"sem", "unc", "stamp", "cogon_id", "align_hash", "zone_fixed"})
+
+    def check_cogon(cogon: Cogon) -> Optional[str]:
+        if cogon.raw and isinstance(cogon.raw.content, dict):
+            exposed = _INTERNAL_KEYS & cogon.raw.content.keys()
+            if exposed:
+                return f"R21: raw.content expõe campos internos 1337: {sorted(exposed)}"
+        return None
+
+    payload = msg.payload
+    if isinstance(payload, Dag):
+        for node in payload.nodes:
+            result = check_cogon(node)
+            if result:
+                return result
+    else:
+        return check_cogon(payload)
+    return None

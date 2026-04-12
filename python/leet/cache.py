@@ -18,7 +18,7 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Any, Callable
+from typing import Optional, Any, Callable, Union
 from collections import OrderedDict
 
 
@@ -80,6 +80,31 @@ class CacheBackend(ABC):
     def cleanup(self) -> int:
         """Remove entradas expiradas. Retorna número removido."""
         pass
+
+
+class AsyncCacheBackend(ABC):
+    """Interface para backends assíncronos (ex: Redis)."""
+
+    @abstractmethod
+    async def get(self, key: str) -> Optional[Any]: ...
+
+    @abstractmethod
+    async def set(self, key: str, value: Any, ttl_seconds: float) -> None: ...
+
+    @abstractmethod
+    async def delete(self, key: str) -> None: ...
+
+    @abstractmethod
+    async def clear(self) -> None: ...
+
+    @abstractmethod
+    async def keys(self) -> list[str]: ...
+
+    @abstractmethod
+    async def size(self) -> int: ...
+
+    @abstractmethod
+    async def cleanup(self) -> int: ...
 
 
 class MemoryCache(CacheBackend):
@@ -265,7 +290,7 @@ class SQLiteCache(CacheBackend):
                 return cursor.rowcount
 
 
-class RedisCache(CacheBackend):
+class RedisCache(AsyncCacheBackend):
     """Cache usando Redis."""
     
     def __init__(self, redis_url: str = "redis://localhost:6379", key_prefix: str = "leet:"):
@@ -633,6 +658,8 @@ class Cache:
     """
     Cache unificado com múltiplos backends.
     
+    Suporta backends síncronos (memory, sqlite) e assíncronos (redis).
+    
     Example:
         >>> # Cache em memória
         >>> cache = Cache(backend="memory", max_size=1000)
@@ -640,9 +667,13 @@ class Cache:
         >>> # Cache persistente
         >>> cache = Cache(backend="sqlite", path=".cache.db")
         >>> 
-        >>> # Uso
+        >>> # Uso síncrono
         >>> cache.set("key", value, ttl_seconds=3600)
         >>> value = cache.get("key")
+        >>> 
+        >>> # Uso assíncrono (com Redis)
+        >>> await cache.aset("key", value)
+        >>> value = await cache.aget("key")
     """
     
     def __init__(
@@ -654,16 +685,18 @@ class Cache:
     ):
         """
         Args:
-            backend: 'memory', 'sqlite', 'redis'
+            backend: 'memory', 'sqlite', 'redis', 'mongodb'
             max_size: Tamanho máximo (para memory)
             ttl_seconds: TTL padrão
             **backend_kwargs: Argumentos específicos do backend
         """
         self.backend_type = backend
         self.default_ttl = ttl_seconds
+        self._backend: Union[CacheBackend, AsyncCacheBackend]
+        self._is_async = False
         
         if backend == "memory":
-            self._backend: CacheBackend = MemoryCache(max_size=max_size)
+            self._backend = MemoryCache(max_size=max_size)
         elif backend == "sqlite":
             path = backend_kwargs.get("path", ".leet_cache.db")
             self._backend = SQLiteCache(db_path=path)
@@ -671,6 +704,7 @@ class Cache:
             url = backend_kwargs.get("url", "redis://localhost:6379")
             prefix = backend_kwargs.get("key_prefix", "leet:")
             self._backend = RedisCache(redis_url=url, key_prefix=prefix)
+            self._is_async = True
         elif backend == "mongodb":
             uri = backend_kwargs.get("uri", "mongodb://localhost:27017")
             db = backend_kwargs.get("db_name", "leet_cache")
@@ -693,53 +727,134 @@ class Cache:
             return hashlib.sha256(combined.encode()).hexdigest()
         return combined
     
+    def _run_async(self, coro) -> Any:
+        """Executa coroutine async de forma síncrona em thread dedicada.
+
+        Usar thread própria evita conflito com qualquer event loop já em
+        execução (ex: FastAPI, Jupyter), pois asyncio.run() cria um loop
+        fresh naquela thread.
+        """
+        import asyncio
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(asyncio.run, coro).result()
+    
     def get(self, key: str) -> Optional[Any]:
-        """Obtém valor do cache."""
-        if hasattr(self._backend, 'get'):
-            return self._backend.get(key)
-        raise RuntimeError("Backend não suporta operação síncrona")
+        """Obtém valor do cache (síncrono)."""
+        if self._is_async:
+            return self._run_async(self._backend.get(key))
+        return self._backend.get(key)
     
     async def aget(self, key: str) -> Optional[Any]:
         """Obtém valor do cache (async)."""
-        if hasattr(self._backend, 'get'):
-            import asyncio
-            return await asyncio.get_event_loop().run_in_executor(
-                None, self._backend.get, key
-            )
-        raise RuntimeError("Backend não suporta operação assíncrona")
+        if self._is_async:
+            return await self._backend.get(key)
+        # Backend síncrono - executa em executor
+        import asyncio
+        return await asyncio.get_event_loop().run_in_executor(
+            None, self._backend.get, key
+        )
     
     def set(self, key: str, value: Any, ttl_seconds: Optional[float] = None) -> None:
-        """Define valor no cache."""
+        """Define valor no cache (síncrono)."""
         ttl = ttl_seconds or self.default_ttl
-        self._backend.set(key, value, ttl)
+        if self._is_async:
+            self._run_async(self._backend.set(key, value, ttl))
+        else:
+            self._backend.set(key, value, ttl)
     
     async def aset(self, key: str, value: Any, ttl_seconds: Optional[float] = None) -> None:
         """Define valor no cache (async)."""
-        import asyncio
         ttl = ttl_seconds or self.default_ttl
-        await asyncio.get_event_loop().run_in_executor(
-            None, self._backend.set, key, value, ttl
-        )
+        if self._is_async:
+            await self._backend.set(key, value, ttl)
+        else:
+            import asyncio
+            await asyncio.get_event_loop().run_in_executor(
+                None, self._backend.set, key, value, ttl
+            )
     
     def delete(self, key: str) -> None:
-        """Remove valor do cache."""
-        self._backend.delete(key)
+        """Remove valor do cache (síncrono)."""
+        if self._is_async:
+            self._run_async(self._backend.delete(key))
+        else:
+            self._backend.delete(key)
+    
+    async def adelete(self, key: str) -> None:
+        """Remove valor do cache (async)."""
+        if self._is_async:
+            await self._backend.delete(key)
+        else:
+            import asyncio
+            await asyncio.get_event_loop().run_in_executor(
+                None, self._backend.delete, key
+            )
     
     def clear(self) -> None:
-        """Limpa todo o cache."""
-        self._backend.clear()
+        """Limpa todo o cache (síncrono)."""
+        if self._is_async:
+            self._run_async(self._backend.clear())
+        else:
+            self._backend.clear()
+    
+    async def aclear(self) -> None:
+        """Limpa todo o cache (async)."""
+        if self._is_async:
+            await self._backend.clear()
+        else:
+            import asyncio
+            await asyncio.get_event_loop().run_in_executor(
+                None, self._backend.clear
+            )
     
     def keys(self) -> list[str]:
-        """Retorna todas as chaves."""
+        """Retorna todas as chaves (síncrono)."""
+        if self._is_async:
+            return self._run_async(self._backend.keys())
         return self._backend.keys()
     
+    async def akeys(self) -> list[str]:
+        """Retorna todas as chaves (async)."""
+        if self._is_async:
+            return await self._backend.keys()
+        else:
+            import asyncio
+            return await asyncio.get_event_loop().run_in_executor(
+                None, self._backend.keys
+            )
+    
     def size(self) -> int:
-        """Retorna número de entradas."""
+        """Retorna número de entradas (síncrono)."""
+        if self._is_async:
+            return self._run_async(self._backend.size())
         return self._backend.size()
     
+    async def asize(self) -> int:
+        """Retorna número de entradas (async)."""
+        if self._is_async:
+            return await self._backend.size()
+        else:
+            import asyncio
+            return await asyncio.get_event_loop().run_in_executor(
+                None, self._backend.size
+            )
+    
     def cleanup(self) -> int:
-        """Remove entradas expiradas."""
+        """Remove entradas expiradas (síncrono)."""
+        if self._is_async:
+            return self._run_async(self._backend.cleanup())
         return self._backend.cleanup()
+    
+    async def acleanup(self) -> int:
+        """Remove entradas expiradas (async)."""
+        if self._is_async:
+            return await self._backend.cleanup()
+        else:
+            import asyncio
+            return await asyncio.get_event_loop().run_in_executor(
+                None, self._backend.cleanup
+            )
     
     # Métodos utilitários para casos de uso comuns
     

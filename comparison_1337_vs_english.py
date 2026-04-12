@@ -14,6 +14,7 @@ Uso:
 
 import os, sys, json, uuid, time, struct, hashlib, argparse, threading
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, List, Dict, Tuple
 from datetime import datetime
 from collections import defaultdict
@@ -21,10 +22,14 @@ from itertools import combinations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ── path setup ────────────────────────────────────────────────────────────────
+# Usa o diretório do script como âncora — funciona independente de onde é chamado
+_REPO_ROOT = Path(__file__).resolve().parent
+_PYTHON_SDK = _REPO_ROOT / "python"
+
 for p in list(sys.path):
     if 'leet-py' in p or 'leet-vm' in p:
         sys.path.remove(p)
-sys.path.insert(0, '/home/yuri/Projetos/1337/python')
+sys.path.insert(0, str(_PYTHON_SDK))
 
 from leet import Cogon, dist as leet_dist, FIXED_DIMS
 from leet.axes import (
@@ -183,8 +188,7 @@ def project_text(text: str, base_sem: List[float]) -> Cogon:
         noise = ((h >> (i % 32)) & 0x0F) / 0x0F * 0.01 - 0.005
         sem[i] = max(0.0, min(1.0, sem[i] + noise))
     unc = recompute_unc(sem)
-    return Cogon(id=str(uuid.uuid4()), sem=sem, unc=unc,
-                 stamp=int(time.time() * 1e9))
+    return Cogon.new(sem=sem, unc=unc)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

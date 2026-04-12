@@ -1,0 +1,34 @@
+[Unit]
+Description=1337 Translation Service — Semantic Substrate
+Documentation=https://github.com/1337-project/1337
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/mkdir -p /run/leet
+ExecStart=/usr/local/bin/leet-server --tcp 0.0.0.0:1337 --unix /run/leet/leet.sock
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+
+# Environment
+Environment=RUST_LOG=info
+# Set LEET_API_KEY via /etc/leet/env or EnvironmentFile
+EnvironmentFile=-/etc/leet/env
+
+# Runtime directory — systemd creates /run/leet with mode 0755
+RuntimeDirectory=leet
+RuntimeDirectoryMode=0755
+
+# Security
+User=leet
+Group=leet
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/leet /var/log/leet
+
+[Install]
+WantedBy=multi-user.target

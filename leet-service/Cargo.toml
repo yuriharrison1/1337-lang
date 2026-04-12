@@ -1,0 +1,35 @@
+[package]
+name = "leet-service"
+version = "0.5.1"
+edition = "2021"
+
+[dependencies]
+leet-core = { path = "../leet-core" }
+leet-bridge = { path = "../leet-bridge" }
+tonic = "0.11"
+prost = "0.12"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "net"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bincode = "1"
+uuid = { version = "1", features = ["v4"] }
+sha2 = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+parking_lot = "0.12"
+rusqlite = { version = "0.31", features = ["bundled"] }
+futures-core = "0.3"
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json"] }
+
+[[bin]]
+name = "leet-server"
+path = "src/bin/leet-server.rs"
+
+[[bin]]
+name = "leet-agent"
+path = "src/bin/leet-agent.rs"
+
+[build-dependencies]
+tonic-build = "0.11"

@@ -11,10 +11,11 @@ Permite processar múltiplos textos/COGONs de forma eficiente com:
 from __future__ import annotations
 
 import asyncio
+import time
+import logging
 from dataclasses import dataclass, field
 from typing import Callable, TypeVar, Generic, AsyncIterator, Optional, Any
 from collections import deque
-import logging
 
 from leet.types import Cogon
 from leet.bridge import SemanticProjector
@@ -86,8 +87,6 @@ class BatchProcessor(Generic[T, R]):
     
     async def _process_one(self, index: int, item: T) -> BatchResult[T, R]:
         """Processa um item com controle de concorrência."""
-        import time
-        
         start = time.perf_counter()
         
         async with self._semaphore:
@@ -373,8 +372,6 @@ class StreamingBatcher:
     
     async def _process_one(self, index: int, item: T) -> BatchResult[T, R]:
         """Processa um item."""
-        import time
-        
         start = time.perf_counter()
         
         try:

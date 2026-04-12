@@ -1,0 +1,33 @@
+[Unit]
+Description=1337 Agent %i — Semantic Network Participant
+Documentation=https://github.com/1337-project/1337
+After=leet-service.service
+Requires=leet-service.service
+PartOf=leet-service.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/leet-agent \
+    --name %i \
+    --role-file /etc/leet/agents/%i.role \
+    --server /run/leet/leet.sock \
+    --llm anthropic
+
+Restart=on-failure
+RestartSec=3
+
+# Environment
+Environment=RUST_LOG=info
+EnvironmentFile=-/etc/leet/env
+
+# Security — same user as leet-service so it can access the socket
+User=leet
+Group=leet
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/leet
+
+[Install]
+WantedBy=leet-service.service

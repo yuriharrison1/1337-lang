@@ -73,10 +73,10 @@ class TestFocus:
 
 class TestAnomalyScore:
     def test_anomaly_score_empty(self):
-        """Histórico vazio retorna 1.0."""
+        """Histórico vazio retorna 0.5 (neutro, sem baseline)."""
         c = Cogon.new(sem=[0.5] * 32, unc=[0.1] * 32)
         score = anomaly_score(c, [])
-        assert score == 1.0
+        assert score == 0.5
 
     def test_anomaly_score_normal(self):
         """COGON igual ao histórico tem score baixo."""

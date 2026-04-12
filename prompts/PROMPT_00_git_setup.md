@@ -121,22 +121,12 @@ cat > CONTRACT.md << 'HEREDOC'
 
 ## COMPONENTES E TAREFAS
 
-### PROMPT_01 — LEET-CORE (Rust Foundation)
-- [ ] T01.01 — SKILL.md com spec v0.4 completa
-- [ ] T01.02 — Cargo workspace setup
-- [ ] T01.03 — types.rs (Cogon, Edge, Dag, Msg1337, RawField, Intent, EdgeType)
-- [ ] T01.04 — axes.rs (32 eixos com metadados)
-- [ ] T01.05 — operators.rs (FOCUS, DELTA, BLEND, DIST, ANOMALY_SCORE)
-- [ ] T01.06 — validate.rs (R1–R21)
-- [ ] T01.07 — error.rs (LeetError enum)
-- [ ] T01.08 — ffi.rs (C ABI)
-- [ ] T01.09 — python.rs (PyO3)
-- [ ] T01.10 — projector.rs (trait + MockProjector)
-- [ ] T01.11 — human_bridge.rs
-- [ ] T01.12–T01.17 — Python wrapper completo + CLI
-- [ ] T01.18 — net1337.py simulador
-- [ ] T01.19 — Testes Rust (≥40)
-- [ ] T01.20 — Testes Python (≥25)
+### PROMPT_01 — LEET-CORE + TRADUTOR (Rust Foundation + Bridge)
+- [ ] T01.01–T01.09 — leet-core (types, axes, operators, validate, error, ffi, pyo3)
+- [ ] T01.10–T01.16 — leet-bridge tradutor (BridgeError, SemanticProjector, MockProjector heurísticas, prompts.rs, HumanBridge, leet_to_human, testes bridge ≥15)
+- [ ] T01.17–T01.22 — Python (types, axes, operators, validate, bridge+AnthropicProjector, CLI)
+- [ ] T01.23 — net1337.py simulador
+- [ ] T01.24–T01.25 — Testes (Rust ≥55, Python ≥25)
 
 ### PROMPT_02 — LEET-SERVICE (gRPC · Rust · Tokio)
 - [ ] T02.01 — leet.proto
@@ -229,17 +219,22 @@ task add project:1337 priority:H due:eow +prompt01 "T01.06 — validate.rs (R1�
 task add project:1337 priority:H due:eow +prompt01 "T01.07 — error.rs (LeetError)"
 task add project:1337 priority:H due:eow +prompt01 "T01.08 — ffi.rs (C ABI)"
 task add project:1337 priority:H due:eow +prompt01 "T01.09 — python.rs (PyO3)"
-task add project:1337 priority:H due:eow +prompt01 "T01.10 — projector.rs (trait + Mock)"
-task add project:1337 priority:H due:eow +prompt01 "T01.11 — human_bridge.rs"
-task add project:1337 priority:M due:eow +prompt01 "T01.12 — Python types.py"
-task add project:1337 priority:M due:eow +prompt01 "T01.13 — Python axes.py"
-task add project:1337 priority:M due:eow +prompt01 "T01.14 — Python operators.py"
-task add project:1337 priority:M due:eow +prompt01 "T01.15 — Python validate.py"
-task add project:1337 priority:M due:eow +prompt01 "T01.16 — Python bridge.py"
-task add project:1337 priority:M due:eow +prompt01 "T01.17 — Python cli.py"
-task add project:1337 priority:M due:eow +prompt01 "T01.18 — net1337.py simulador"
-task add project:1337 priority:H due:eow +prompt01 "T01.19 — Testes Rust (≥40)"
-task add project:1337 priority:H due:eow +prompt01 "T01.20 — Testes Python (≥25)"
+task add project:1337 priority:H due:eow +prompt01 "T01.10 — bridge error.rs (BridgeError)"
+task add project:1337 priority:H due:eow +prompt01 "T01.11 — projector.rs (trait SemanticProjector)"
+task add project:1337 priority:H due:eow +prompt01 "T01.12 — MockProjector (heurísticas por eixo + SHA256 fallback)"
+task add project:1337 priority:H due:eow +prompt01 "T01.13 — prompts.rs (projection_prompt + reconstruction_prompt)"
+task add project:1337 priority:H due:eow +prompt01 "T01.14 — human_to_1337.rs (text_to_cogon, text_to_dag, text_to_msg)"
+task add project:1337 priority:H due:eow +prompt01 "T01.15 — leet_to_human.rs (cogon_to_text, dag_to_text, msg_to_text)"
+task add project:1337 priority:H due:eow +prompt01 "T01.16 — Testes bridge Rust (≥15)"
+task add project:1337 priority:M due:eow +prompt01 "T01.17 — Python types.py"
+task add project:1337 priority:M due:eow +prompt01 "T01.18 — Python axes.py"
+task add project:1337 priority:M due:eow +prompt01 "T01.19 — Python operators.py"
+task add project:1337 priority:M due:eow +prompt01 "T01.20 — Python validate.py"
+task add project:1337 priority:H due:eow +prompt01 "T01.21 — Python bridge.py (MockProjector + AnthropicProjector completo)"
+task add project:1337 priority:M due:eow +prompt01 "T01.22 — Python cli.py (todos os comandos implementados)"
+task add project:1337 priority:M due:eow +prompt01 "T01.23 — net1337.py simulador"
+task add project:1337 priority:H due:eow +prompt01 "T01.24 — Testes Rust (≥55: 40 core + 15 bridge)"
+task add project:1337 priority:H due:eow +prompt01 "T01.25 — Testes Python (≥25)"
 
 # ─── PROMPT_02 tasks ───
 task add project:1337 priority:H +prompt02 "T02.01 — leet.proto"

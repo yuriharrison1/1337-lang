@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
+import time
 import uuid
 import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -62,7 +63,7 @@ class Raw:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Cogon:
     id: str
     sem: list[float]
@@ -83,7 +84,7 @@ class Cogon:
             id=str(uuid.uuid4()),
             sem=sem,
             unc=unc,
-            stamp=int(datetime.now().timestamp() * 1e9),  # nanoseconds
+            stamp=time.time_ns(),  # nanoseconds UTC
         )
 
     @classmethod
@@ -146,7 +147,7 @@ class Cogon:
         return cls.from_dict(json.loads(json_str))
 
 
-@dataclass
+@dataclass(slots=True)
 class Edge:
     from_id: str
     to_id: str
@@ -176,11 +177,12 @@ class Edge:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Dag:
     root: str
     nodes: list[Cogon] = field(default_factory=list)
     edges: list[Edge] = field(default_factory=list)
+    _topo_cache: Optional[list[str]] = field(default=None, init=False, repr=False, compare=False)
 
     @classmethod
     def from_root(cls, cogon: Cogon) -> Dag:
@@ -188,19 +190,28 @@ class Dag:
 
     def add_node(self, cogon: Cogon):
         self.nodes.append(cogon)
+        self._topo_cache = None  # Invalidate cache
 
     def add_edge(self, edge: Edge):
         self.edges.append(edge)
+        self._topo_cache = None  # Invalidate cache
 
     def node_ids(self) -> list[str]:
         return [n.id for n in self.nodes]
 
     def parents_of(self, node_id: str) -> list[str]:
-        """Returns IDs of parent nodes (nodes with edges TO node_id)."""
+        """
+        Returns IDs of parent nodes (nodes with edges pointing TO node_id).
+        
+        In a DAG, if A -> B, then A is a parent of B.
+        """
         return [e.from_id for e in self.edges if e.to_id == node_id]
 
     def topological_order(self) -> list[str]:
-        """Returns nodes in topological order. Raises ValueError if cycle detected (R4)."""
+        """Returns nodes in topological order. Raises ValueError if cycle detected (R4). Cached for performance."""
+        if self._topo_cache is not None:
+            return self._topo_cache
+            
         # Kahn's algorithm
         in_degree = {n.id: 0 for n in self.nodes}
         adj = {n.id: [] for n in self.nodes}
@@ -223,6 +234,7 @@ class Dag:
         if len(result) != len(self.nodes):
             raise ValueError("Cycle detected in DAG (R4 violation)")
 
+        self._topo_cache = result
         return result
 
     def to_dict(self) -> dict:
@@ -248,7 +260,7 @@ class Dag:
         return cls.from_dict(json.loads(json_str))
 
 
-@dataclass
+@dataclass(slots=True)
 class Receiver:
     agent_id: Optional[str] = None
 
@@ -267,7 +279,7 @@ class Receiver:
         return cls(agent_id=d)
 
 
-@dataclass
+@dataclass(slots=True)
 class CanonicalSpace:
     zone_fixed: list[float]
     zone_emergent: dict[str, float]
@@ -296,7 +308,7 @@ class CanonicalSpace:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Surface:
     human_required: bool
     urgency: Optional[float]
@@ -323,7 +335,7 @@ class Surface:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Msg1337:
     id: str
     sender: str
@@ -367,8 +379,13 @@ class Msg1337:
         payload_dict = d["payload"]
         if "root" in payload_dict:
             payload = Dag.from_dict(payload_dict)
-        else:
+        elif "sem" in payload_dict:
             payload = Cogon.from_dict(payload_dict)
+        else:
+            raise ValueError(
+                f"Invalid payload: must contain 'root' (Dag) or 'sem' (Cogon). "
+                f"Got keys: {list(payload_dict.keys())}"
+            )
 
         return cls(
             id=d["id"],
