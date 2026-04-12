@@ -1,120 +1,120 @@
-# Arquitetura do projeto 1337
+# 1337 Architecture
 
-## Visão geral
+## Overview
 
-O 1337 é um protocolo de linguagem semântica baseado em vetores de 32 dimensões chamados **COGON**. O objetivo é permitir que agentes de LLM se comuniquem de forma eficiente — comprimindo mensagens longas em vetores compactos e recuperando o significado semântico quando necessário.
+1337 is a semantic language protocol built around 32-dimensional vectors called **COGONs**. The goal is to enable LLM agents to communicate efficiently — compressing long messages into compact vectors and recovering semantic meaning when needed.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Aplicação / Usuário                          │
-│        scripts Python, agentes LLM, automações                 │
+│                    Application / User                           │
+│        Python scripts, LLM agents, automation                  │
 └────────────────┬───────────────────────────────┬───────────────┘
                  │ Python SDK                    │ CLI
     ┌────────────▼─────────────┐    ┌────────────▼──────────────┐
-    │  python/leet  (SDK core) │    │  leet  (CLI — 13 comandos)│
-    │  leet-py (SDK público)   │    │  leet chat / encode / etc │
+    │  python/leet  (core SDK) │    │  leet  (CLI — 13 commands)│
+    │  leet-py (public SDK)    │    │  leet chat / encode / etc │
     └────────────┬─────────────┘    └────────────┬──────────────┘
                  │                               │
     ┌────────────▼───────────────────────────────▼──────────────┐
     │               leet-bridge  (Rust)                         │
     │  nl_to_cogon()  cogon_to_nl()  infer_intent()             │
-    │  AnthropicClient  →  Claude API  →  15 agentes            │
+    │  AnthropicClient  →  Claude API  →  15 agents             │
     └────────────────────────────┬──────────────────────────────┘
                                  │
     ┌────────────────────────────▼──────────────────────────────┐
     │                leet-core  (Rust)                          │
     │  Cogon  Dag  Msg1337  Edge  Intent                        │
     │  blend  delta  dist  focus  anomaly_score                 │
-    │  encode_cogon  decode_cogon  (96B binário)                │
+    │  encode_cogon  decode_cogon  (96B binary)                 │
     │  validate  (R1–R21)                                        │
     └────────────────────────────┬──────────────────────────────┘
                                  │
     ┌────────────────────────────▼──────────────────────────────┐
     │              leet-service  (Rust daemon)                  │
     │  leet-server  TCP :1337 + Unix /run/leet/leet.sock        │
-    │  leet-agent   15 processos independentes                  │
+    │  leet-agent   15 independent processes                    │
     │  C5 handshake  PROBE→ECHO→ALIGN→VERIFY                   │
-    │  roteamento:  broadcast + direct delivery                 │
+    │  routing:  broadcast + direct delivery                    │
     └───────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Componentes
+## Components
 
 ### leet-core
 
-Biblioteca Rust com os tipos e operadores fundamentais. Não tem dependências de rede ou I/O — é pura lógica.
+Pure Rust library with fundamental types and operators. No network or I/O dependencies.
 
-**Responsabilidades:**
-- Definir os tipos `Cogon`, `Dag`, `Msg1337`, `Edge`, `Intent`
-- Implementar os 5 operadores semânticos: `blend`, `delta`, `dist`, `focus`, `anomaly_score`
-- Codec binário de 96 bytes (compressão 4-5× vs JSON)
-- Validação de mensagens (regras R1–R21)
-- Protocolo C5: anchor COGONs e cálculo de `align_hash`
+**Responsibilities:**
+- Define `Cogon`, `Dag`, `Msg1337`, `Edge`, `Intent` types
+- Implement 5 semantic operators: `blend`, `delta`, `dist`, `focus`, `anomaly_score`
+- 96-byte binary codec (4-5× compression vs JSON)
+- Message validation (rules R1–R21)
+- C5 protocol: anchor COGONs and `align_hash` computation
 
-**Versão:** 0.4.0
+**Version:** 0.4.0
 
 ---
 
 ### leet-bridge
 
-Camada de tradução Rust entre linguagem natural e COGON.
+Rust translation layer between natural language and COGON.
 
-**Responsabilidades:**
-- `nl_to_cogon(text, lang)` — NL → vetor semântico via ~80 regras heurísticas (PT + EN)
-- `cogon_to_nl(cogon, lang)` — reconstrução NL a partir dos eixos mais ativos
-- `infer_intent(text)` — classifica intenção: QUERY / ANOMALY / SYNC / DELTA / ASSERT
-- `AnthropicClient` — envia COGON para Claude API, recebe respostas dos 15 agentes
-- System prompt embutido com spec v0.5.1 completa (32 eixos, 15 agentes, formato JSON)
+**Responsibilities:**
+- `nl_to_cogon(text, lang)` — NL → semantic vector via ~80 keyword heuristic rules (PT + EN)
+- `cogon_to_nl(cogon, lang)` — NL reconstruction from most active axes
+- `infer_intent(text)` — classifies intent: QUERY / ANOMALY / SYNC / DELTA / ASSERT
+- `AnthropicClient` — sends COGON to Claude API, receives responses from 15 agents
+- Embedded system prompt with full v0.5.1 spec (32 axes, 15 agents, JSON format)
 
-**Versão:** 0.5.0
+**Version:** 0.5.0
 
 ---
 
 ### leet-cli
 
-Binário `leet` com 13 subcomandos para uso interativo e scripting.
+`leet` binary with 13 subcommands for interactive use and scripting.
 
-**Responsabilidades:**
-- Ferramentas de diagnóstico: `encode`, `decode`, `inspect`, `axes`, `zero`
-- Operações semânticas: `dist`, `blend`
-- Validação e benchmarking: `validate`, `bench`
-- Chat multiagente: `leet chat` (modo direto via API ou `--connect` a um servidor)
-- Verificação de saúde do serviço: `health`
+**Responsibilities:**
+- Diagnostic tools: `encode`, `decode`, `inspect`, `axes`, `zero`
+- Semantic operations: `dist`, `blend`
+- Validation and benchmarking: `validate`, `bench`
+- Multi-agent chat: `leet chat` (direct API mode or `--connect` to a server)
+- Service health check: `health`
 
-**Versão:** 0.5.0
+**Version:** 0.5.0
 
 ---
 
 ### leet-service
 
-Daemon de rede que hospeda 15 agentes autônomos e roteia mensagens entre eles.
+Network daemon hosting 15 autonomous agents and routing messages between them.
 
-**Componentes:**
-- `leet-server` — servidor TCP/Unix com handshake C5, mpsc routing, métricas
-- `leet-agent` — processo autônomo que conecta ao servidor, processa COGONs e responde via LLM
+**Components:**
+- `leet-server` — TCP/Unix server with C5 handshake, mpsc routing, metrics
+- `leet-agent` — autonomous process that connects to the server, processes COGONs, and responds via LLM
 
-**Protocolo de rede:** JSON newline-delimited sobre TCP ou Unix socket  
-**Versão:** 0.5.1
-
----
-
-### Python SDK (python/leet e leet-py)
-
-Dois pacotes Python com diferentes níveis de abstração:
-
-| Pacote | Propósito | Entrada |
-|--------|-----------|---------|
-| `python/leet` | SDK core completo com clientes gRPC/ZMQ/WebSocket, adaptadores de IDE, cache | Desenvolvedores |
-| `leet-py` | SDK público simplificado: `leet.connect()`, `@agent`, `AgentNetwork` | Usuários finais Python |
+**Wire protocol:** Newline-delimited JSON over TCP or Unix socket  
+**Version:** 0.5.1
 
 ---
 
-## Fluxo de dados — `leet chat`
+### Python SDK (python/leet and leet-py)
+
+Two Python packages with different abstraction levels:
+
+| Package | Purpose | Audience |
+|---------|---------|----------|
+| `python/leet` | Full core SDK with gRPC/ZMQ/WebSocket clients, IDE adapters, cache | Developers |
+| `leet-py` | Simplified public SDK: `leet.connect()`, `@agent`, `AgentNetwork` | End users |
+
+---
+
+## Data Flow — `leet chat`
 
 ```
-Usuário digita texto
+User types text
        │
        ▼
 nl_to_cogon(text)      → Cogon { sem[32], unc[32] }
@@ -123,8 +123,8 @@ nl_to_cogon(text)      → Cogon { sem[32], unc[32] }
 AnthropicClient.send_cogon(cogon, history, max_agents)
        │  INPUT_COGON + SELECT_AGENTS: N
        ▼
-Claude API (Haiku por padrão)
-       │  JSON array de N AgentResponse
+Claude API (Haiku by default)
+       │  JSON array of N AgentResponse objects
        ▼
 parse_agent_responses()
        │
@@ -133,85 +133,85 @@ parse_agent_responses()
        └─ ...
        │
        ▼
-Terminal colorido (crossterm)
-  RAVEN  "texto em PT"
-  TENSOR "texto em PT"
+Colored terminal (crossterm)
+  RAVEN  "response text"
+  TENSOR "response text"
   ...
-  latência: Xms | Y tok/s | N agentes
+  latency: Xms | Y tok/s | N agents
 ```
 
 ---
 
-## Fluxo de dados — `leet-server` + `leet-agent`
+## Data Flow — `leet-server` + `leet-agent`
 
 ```
-leet-server inicia
+leet-server starts
        │ bind TCP :1337 + Unix /run/leet/leet.sock
        ▼
-leet-agent --name ATLAS conecta
+leet-agent --name ATLAS connects
        │
        ├─ PROBE  →  Register { name: "ATLAS", role: "..." }
        ├─ ECHO   ←  Registered { agent_id, anchors: [5 COGONs] }
        ├─ ALIGN  →  Align { hash: SHA256("1337:v0.5.1:ATLAS") }
        └─ VERIFY ←  Ready
        │
-       ▼  (15 agentes conectados)
-Usuário envia mensagem via leet chat --connect 127.0.0.1:1337
+       ▼  (15 agents connected)
+User sends message via leet chat --connect 127.0.0.1:1337
        │
        ▼
 leet-server.route(sender_id, msg)
-       ├─ broadcast(exclude=sender) → todos os agentes
-       └─ deliver_to(target_id)     → agente específico
+       ├─ broadcast(exclude=sender) → all agents
+       └─ deliver_to(target_id)     → specific agent
        │
        ▼
-leet-agent recebe Msg, processa via LLM, responde ao servidor
+leet-agent receives Msg, processes via LLM, responds to server
 ```
 
 ---
 
-## Codec binário (96 bytes)
+## Binary Codec (96 bytes)
 
-Cada COGON pode ser serializado em 96 bytes fixos — compressão de 4-5× vs JSON.
+Each COGON can be serialized to exactly 96 bytes — 4-5× compression vs JSON.
 
 ```
-Offset  Bytes  Campo
+Offset  Bytes  Field
 ──────  ─────  ─────────────────────────────────────
 0       2      magic: 0x1337
 2       1      version: 0x02
 3       1      flags
-4       32     sem[32] quantizado: f32[0,1] → u8[0,255]
-36      32     unc[32] quantizado: f32[0,1] → u8[0,255]
-68      16     UUID (id) — 16 bytes raw
-84      8      stamp (i64 little-endian)
-92      4      CRC32 do payload (bytes 0-91)
+4       32     sem[32] quantized: f32[0,1] → u8[0,255]
+36      32     unc[32] quantized: f32[0,1] → u8[0,255]
+68      16     UUID (id) — 16 raw bytes
+84      8      stamp (i64 little-endian, nanoseconds)
+92      4      CRC32 of payload (bytes 0-91)
 ──────  ─────
 96      TOTAL
 ```
 
 ---
 
-## Protocolo de validação (R1–R21)
+## Validation Rules (R1–R21)
 
-Regras aplicadas por `validate()` em todo `Msg1337`:
+Rules applied by `validate()` to every `Msg1337`:
 
-| Grupo | Regras | O que verifica |
-|-------|--------|----------------|
-| Estrutura | R1–R5 | sender não-zero, intent válido, stamp não-negativo, sem/unc em [0,1] |
-| Semântica | R6–R10 | unc[i] < 1.0 sempre, P3/P7 não-zero (se anomalia/ação), valência coerente |
-| Relações | R11–R15 | edges têm peso [0,1], sem ciclos triviais no DAG, EdgeType válido |
-| Protocolo | R16–R21 | COGON_ZERO apenas para handshake, ref_hash presente quando necessário |
+| Group | Rules | What is checked |
+|-------|-------|----------------|
+| Structure | R1–R5 | non-zero sender, valid intent, non-negative stamp, sem/unc in [0,1] |
+| Semantics | R6–R10 | unc[i] < 1.0 always, P3/P7 non-zero when required, valence coherence |
+| Relations | R11–R15 | edge weights in [0,1], no trivial DAG cycles, valid EdgeType |
+| Protocol | R16–R21 | COGON_ZERO only for handshake, ref_hash present when needed |
 
 ---
 
-## Dependências de componente
+## Component Dependencies
 
 ```
 leet-cli
   └── leet-bridge
   │     └── leet-core
-  └── leet-service (para AgentClient em --connect)
+  └── leet-service (for AgentClient in --connect mode)
         └── leet-bridge
               └── leet-core
 ```
 
-Não há dependências circulares. `leet-core` não depende de nada externo além de `uuid`, `serde`, `sha2`.
+No circular dependencies. `leet-core` only depends on `uuid`, `serde`, `sha2`.

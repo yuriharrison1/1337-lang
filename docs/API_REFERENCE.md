@@ -1,8 +1,8 @@
-# Referência de API — 1337
+# API Reference — 1337
 
 ## leet-core
 
-### Tipos principais
+### Core Types
 
 #### `Cogon`
 
@@ -42,11 +42,11 @@ pub struct Edge {
 }
 
 pub enum EdgeType {
-    CAUSA,        // A causa B
-    CONDICIONA,   // A condiciona B
-    CONTRADIZ,    // A contradiz B
-    REFINA,       // A refina B
-    EMERGE,       // B emerge de A
+    CAUSA,        // A causes B
+    CONDICIONA,   // A conditions B
+    CONTRADIZ,    // A contradicts B
+    REFINA,       // A refines B
+    EMERGE,       // B emerges from A
 }
 ```
 
@@ -77,12 +77,12 @@ impl Msg1337 {
 
 ```rust
 pub enum Intent {
-    ASSERT,   // afirmação informativa
-    QUERY,    // pedido de informação
-    DELTA,    // mudança de estado
-    SYNC,     // sincronização
-    ANOMALY,  // reporte de erro
-    ACK,      // confirmação
+    ASSERT,   // informational statement
+    QUERY,    // request for information
+    DELTA,    // state change
+    SYNC,     // synchronization
+    ANOMALY,  // error report
+    ACK,      // acknowledgement
 }
 ```
 
@@ -98,83 +98,83 @@ pub enum Receiver {
 
 ---
 
-### Operadores semânticos
+### Semantic Operators
 
 ```rust
-// Interpola dois COGONs: alpha * a + (1-alpha) * b
+// Interpolate two COGONs: alpha * a + (1-alpha) * b
 pub fn blend(a: &Cogon, b: &Cogon, alpha: f32) -> Cogon
 
-// Diferença semântica: b.sem[i] - a.sem[i]
+// Semantic difference: b.sem[i] - a.sem[i]
 pub fn delta(a: &Cogon, b: &Cogon) -> Cogon
 
-// Distância cosseno entre dois COGONs: resultado em [0.0, 2.0]
+// Cosine distance between two COGONs: result in [0.0, 2.0]
 pub fn dist(a: &Cogon, b: &Cogon) -> f32
 
-// Amplifica os N eixos mais ativos, suprime os demais
+// Amplify the N most active axes, suppress the rest
 pub fn focus(cogon: &Cogon, top_n: usize) -> Cogon
 
-// Score de anomalia: média dos eixos de desvio (P3, G8, etc.)
+// Anomaly score: average of deviation axes (P3, G8, etc.)
 pub fn anomaly_score(cogon: &Cogon) -> f32
 ```
 
-**Exemplo:**
+**Example:**
 
 ```rust
 use leet_core::{blend, delta, dist, focus, anomaly_score};
 
-let a = nl_to_cogon("sistema estável", "pt");
-let b = nl_to_cogon("sistema crítico", "pt");
+let a = nl_to_cogon("stable system", "en");
+let b = nl_to_cogon("critical system", "en");
 
-let distancia = dist(&a, &b);          // ex: 0.78
-let mistura   = blend(&a, &b, 0.5);    // ponto médio semântico
-let mudanca   = delta(&a, &b);         // o que mudou de a para b
-let score     = anomaly_score(&b);     // ex: 0.82 (alta anomalia)
-let focado    = focus(&b, 6);          // amplifica top-6 eixos
+let distance = dist(&a, &b);          // e.g. 0.78
+let midpoint  = blend(&a, &b, 0.5);   // semantic midpoint
+let change    = delta(&a, &b);         // what changed from a to b
+let score     = anomaly_score(&b);     // e.g. 0.82 (high anomaly)
+let focused   = focus(&b, 6);          // amplify top-6 axes
 ```
 
 ---
 
-### Codec binário
+### Binary Codec
 
 ```rust
-// Serializa um Cogon em 96 bytes fixos
+// Serialize a Cogon into exactly 96 bytes
 pub fn encode_cogon(cogon: &Cogon) -> [u8; 96]
 
-// Desserializa — erro se CRC32 inválido ou magic incorreto
+// Deserialize — error if CRC32 invalid or magic incorrect
 pub fn decode_cogon(bytes: &[u8]) -> Result<Cogon, LeetError>
 
-// Tamanho fixo (sempre 96)
+// Fixed size (always 96)
 pub fn binary_size() -> usize
 
-// Retorna (tamanho_binário, tamanho_json) para comparação
+// Returns (binary_size, json_size) for comparison
 pub fn compare_sizes(cogon: &Cogon) -> (usize, usize)
 ```
 
 ---
 
-### Validação
+### Validation
 
 ```rust
-// Valida Msg1337 contra as regras R1–R21
-// Retorna Ok(()) ou Err(LeetError::ValidationFailed { rule, message })
+// Validate Msg1337 against rules R1–R21
+// Returns Ok(()) or Err(LeetError::ValidationFailed { rule, message })
 pub fn validate(msg: &Msg1337) -> Result<(), LeetError>
 
-// Verifica se unc[i] <= max_unc para todo i
+// Check if unc[i] <= max_unc for all i
 pub fn check_confidence(cogon: &Cogon, max_unc: f32) -> bool
 ```
 
 ---
 
-### Protocolo C5
+### C5 Protocol
 
 ```rust
-// Retorna COGON âncora: 0=presence, 1=absence, 2=change, 3=agency, 4=uncertainty
+// Return anchor COGON: 0=presence, 1=absence, 2=change, 3=agency, 4=uncertainty
 pub fn anchor_cogon(index: usize) -> Cogon
 
-// Retorna todos os 5 COGONs âncora
+// Return all 5 anchor COGONs
 pub fn all_anchors() -> [Cogon; 5]
 
-// SHA256("1337:v0.5.1:" + agent_name) como [u8; 32]
+// SHA256("1337:v0.5.1:" + agent_name) as [u8; 32]
 pub fn compute_align_hash(agent_name: &str) -> [u8; 32]
 
 pub const ANCHOR_NAMES: [&str; 5] = [
@@ -186,43 +186,43 @@ pub const ANCHOR_NAMES: [&str; 5] = [
 
 ## leet-bridge
 
-### Tradução NL ↔ COGON
+### NL ↔ COGON Translation
 
 ```rust
-// Projeta texto (PT ou EN) para COGON via ~80 regras heurísticas de keywords
+// Project text (PT or EN) into a COGON via ~80 keyword heuristic rules
 pub fn nl_to_cogon(text: &str, lang: &str) -> Cogon
 
-// Reconstrói texto natural a partir dos eixos mais ativados
+// Reconstruct natural text from the most activated axes
 pub fn cogon_to_nl(cogon: &Cogon, lang: &str) -> String
 
-// Infere intenção: QUERY | ANOMALY | DELTA | SYNC | ASSERT
+// Infer intent: QUERY | ANOMALY | DELTA | SYNC | ASSERT
 pub fn infer_intent(text: &str) -> Intent
 ```
 
-**Exemplo:**
+**Example:**
 
 ```rust
 use leet_bridge::{nl_to_cogon, cogon_to_nl, infer_intent};
 
-let cogon  = nl_to_cogon("Sistema crítico! Falha detectada.", "pt");
-let intent = infer_intent("Sistema crítico! Falha detectada.");
+let cogon  = nl_to_cogon("Critical system! Failure detected.", "en");
+let intent = infer_intent("Critical system! Failure detected.");
 // intent == Intent::ANOMALY
 
-let texto = cogon_to_nl(&cogon, "pt");
-// "urgente, anomalia, ação necessária"
+let text = cogon_to_nl(&cogon, "en");
+// "urgent, anomaly, action required"
 ```
 
 ### AnthropicClient
 
 ```rust
-pub struct AnthropicClient { /* privado */ }
+pub struct AnthropicClient { /* private */ }
 
 impl AnthropicClient {
-    // Lê LEET_API_KEY (obrigatório) e LEET_MODEL do ambiente
-    // Modelo padrão: claude-haiku-4-5-20251001
+    // Reads LEET_API_KEY (required) and LEET_MODEL from environment
+    // Default model: claude-haiku-4-5-20251001
     pub fn new() -> Result<Self, AnthropicError>
 
-    // Envia COGON para Claude e recebe respostas de max_agents agentes (1–6)
+    // Send COGON to Claude and receive responses from max_agents agents (1–6)
     pub async fn send_cogon(
         &self,
         cogon: &Cogon,
@@ -235,8 +235,8 @@ pub struct AgentResponse {
     pub agent:  String,   // "ATLAS", "RAVEN", etc.
     pub cogon:  Cogon,
     pub intent: Intent,
-    pub nl_pt:  String,
-    pub nl_en:  String,
+    pub nl_pt:  String,   // response in Portuguese
+    pub nl_en:  String,   // response in English
 }
 
 pub enum AnthropicError {
@@ -254,13 +254,13 @@ pub enum AnthropicError {
 ### AgentClient
 
 ```rust
-pub struct AgentClient { /* parcialmente privado */ }
+pub struct AgentClient { /* partially private */ }
 
 impl AgentClient {
     pub fn new(id: Uuid, name: &str, role: &str) -> Self
 
-    // Conecta e executa handshake C5 completo
-    // addr: "127.0.0.1:1337" ou "/run/leet/leet.sock"
+    // Connect and execute the full C5 handshake
+    // addr: "127.0.0.1:1337" or "/run/leet/leet.sock"
     pub async fn connect(&mut self, addr: &str) -> Result<(), AgentError>
 
     pub async fn send_nl(&mut self, text: &str) -> Result<(), AgentError>
@@ -293,27 +293,27 @@ impl LeetServer {
 
 ---
 
-## Variáveis de ambiente
+## Environment Variables
 
 ### Rust (leet-cli, leet-bridge, leet-service)
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `LEET_API_KEY` | — | Chave Anthropic para `leet chat` e `leet-agent --llm anthropic` |
-| `LEET_MODEL` | `claude-haiku-4-5-20251001` | Modelo Claude usado pelo chat e agentes |
-| `LEET_PORT` | `50051` | Porta do servidor gRPC (legado) |
-| `LEET_STORE` | `memory` | Backend: `memory` ou `sqlite` |
-| `LEET_SQLITE_PATH` | `.leet_store.db` | Caminho do banco SQLite |
-| `LEET_LOG` | `info` | Nível de log |
-| `RUST_LOG` | — | Override do tracing filter (ex: `leet_service=debug`) |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LEET_API_KEY` | — | Anthropic key for `leet chat` and `leet-agent --llm anthropic` |
+| `LEET_MODEL` | `claude-haiku-4-5-20251001` | Claude model used by chat and agents |
+| `LEET_PORT` | `50051` | gRPC server port (legacy) |
+| `LEET_STORE` | `memory` | Storage backend: `memory` or `sqlite` |
+| `LEET_SQLITE_PATH` | `.leet_store.db` | SQLite database path |
+| `LEET_LOG` | `info` | Log level |
+| `RUST_LOG` | — | Tracing filter override (e.g. `leet_service=debug`) |
 
 ### Python (python/leet)
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `LEET_SERVER_HOST` | `localhost` | Host do servidor gRPC |
-| `LEET_SERVER_PORT` | `50051` | Porta do servidor gRPC |
-| `LEET_RETRY_ENABLED` | `true` | Habilita retry automático |
-| `LEET_PROJECTION_BACKEND` | `anthropic` | Backend de projeção |
-| `LEET_PROJECTION_ANTHROPIC_API_KEY` | — | Chave Anthropic para projeção Python |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LEET_SERVER_HOST` | `localhost` | gRPC server host |
+| `LEET_SERVER_PORT` | `50051` | gRPC server port |
+| `LEET_RETRY_ENABLED` | `true` | Enable automatic retry |
+| `LEET_PROJECTION_BACKEND` | `anthropic` | Projection backend |
+| `LEET_PROJECTION_ANTHROPIC_API_KEY` | — | Anthropic key for Python projection |
 | `LEET_CACHE_BACKEND` | `memory` | Cache: `memory`, `sqlite`, `redis`, `mongo` |

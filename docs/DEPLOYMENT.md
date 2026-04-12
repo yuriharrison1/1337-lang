@@ -1,35 +1,35 @@
 # Deployment — 1337
 
-## Visão geral
+## Overview
 
-O 1337 pode ser implantado de três formas:
+1337 can be deployed in three ways:
 
-| Modo | Componentes | Caso de uso |
-|------|------------|-------------|
-| **CLI standalone** | `leet` + `LEET_API_KEY` | Uso pessoal, scripts |
-| **Servidor local** | `leet-server` + `leet-agent` × N | Dev/staging, rede local |
-| **Produção (systemd)** | `leet-service.service` + `leet-agent@.service` | Servidores Linux |
+| Mode | Components | Use case |
+|------|-----------|----------|
+| **Standalone CLI** | `leet` + `LEET_API_KEY` | Personal use, scripts |
+| **Local server** | `leet-server` + `leet-agent` × N | Dev/staging, local network |
+| **Production (systemd)** | `leet-service.service` + `leet-agent@.service` | Linux servers |
 
 ---
 
-## Compilação para produção
+## Build for Production
 
 ```bash
 cargo build --release -p leet-cli -p leet-service
 
-# Binários gerados:
+# Generated binaries:
 ls -la target/release/leet target/release/leet-server target/release/leet-agent
 ```
 
 ---
 
-## Modo servidor local (desenvolvimento)
+## Local Server Mode (Development)
 
 ```bash
-# Terminal 1: iniciar servidor
+# Terminal 1: start server
 ./target/release/leet-server --tcp 127.0.0.1:1337
 
-# Terminal 2: conectar agentes
+# Terminal 2: connect agents
 for agent in ATLAS RAVEN TENSOR PULSE FORGE; do
     LEET_API_KEY=$LEET_API_KEY \
     ./target/release/leet-agent --name "$agent" --llm anthropic &
@@ -41,36 +41,36 @@ LEET_API_KEY=$LEET_API_KEY ./target/release/leet chat --connect 127.0.0.1:1337
 
 ---
 
-## Deployment systemd (produção)
+## systemd Deployment (Production)
 
-### Pré-requisitos
+### Prerequisites
 
-- Linux com systemd
-- Rust toolchain (para compilar)
-- `sudo` com privilégios
+- Linux with systemd
+- Rust toolchain (for building)
+- `sudo` privileges
 
-### Setup automático
+### Automated Setup
 
 ```bash
 sudo bash deploy/systemd/setup.sh
 ```
 
-O script executa:
-1. Cria usuário `leet` (sem shell, sem home)
-2. Cria diretórios: `/etc/leet/`, `/etc/leet/agents/`, `/var/log/leet/`
-3. Gera arquivos de role para cada agente em `/etc/leet/agents/<NOME>.role`
-4. Cria `/etc/leet/env` (arquivo de ambiente — edite para adicionar `LEET_API_KEY`)
-5. Compila com `cargo build --release`
-6. Copia binários para `/usr/local/bin/`
-7. Instala e habilita `leet-service.service`
+The script:
+1. Creates the `leet` user (no shell, no home)
+2. Creates directories: `/etc/leet/`, `/etc/leet/agents/`, `/var/log/leet/`
+3. Generates role files for each agent in `/etc/leet/agents/<NAME>.role`
+4. Creates `/etc/leet/env` (environment file — edit to add `LEET_API_KEY`)
+5. Builds with `cargo build --release`
+6. Copies binaries to `/usr/local/bin/`
+7. Installs and enables `leet-service.service`
 
-### Configurar a chave API
+### Configure the API Key
 
 ```bash
 sudo nano /etc/leet/env
 ```
 
-Adicione:
+Add:
 ```bash
 LEET_API_KEY=sk-ant-...
 LEET_MODEL=claude-haiku-4-5-20251001
@@ -82,31 +82,31 @@ sudo chmod 600 /etc/leet/env
 sudo chown leet:leet /etc/leet/env
 ```
 
-### Gerenciar o serviço
+### Manage the Service
 
 ```bash
-# Iniciar servidor
+# Start server
 sudo systemctl start leet-service
 sudo systemctl status leet-service
 
-# Iniciar agentes individualmente
+# Start agents individually
 sudo systemctl start leet-agent@ATLAS
 sudo systemctl start leet-agent@RAVEN
 sudo systemctl start leet-agent@TENSOR
 
-# Iniciar todos os 15 agentes
+# Start all 15 agents
 for a in ATLAS CIPHER FORGE NEXUS ORACLE PULSE RAVEN SPARK TENSOR VORTEX ZERO FLUX ECHO DRIFT PRISM; do
     sudo systemctl start leet-agent@$a
 done
 
-# Habilitar na inicialização
+# Enable at boot
 sudo systemctl enable leet-service
-sudo systemctl enable leet-agent@ATLAS  # exemplo
+sudo systemctl enable leet-agent@ATLAS
 
-# Recarregar configuração (sem restart)
+# Reload config (without restart)
 sudo systemctl reload leet-service
 
-# Parar tudo
+# Stop everything
 sudo systemctl stop 'leet-agent@*'
 sudo systemctl stop leet-service
 ```
@@ -114,17 +114,14 @@ sudo systemctl stop leet-service
 ### Logs
 
 ```bash
-# Servidor
+# Server logs
 journalctl -u leet-service -f
 
-# Agente específico
+# Specific agent
 journalctl -u leet-agent@ATLAS -f
 
-# Todos os agentes
+# All agents
 journalctl -u 'leet-agent@*' -f
-
-# Desde o início (com nível debug)
-RUST_LOG=debug journalctl -u leet-service --no-pager
 ```
 
 ### Teardown
@@ -133,11 +130,11 @@ RUST_LOG=debug journalctl -u leet-service --no-pager
 sudo bash deploy/systemd/teardown.sh
 ```
 
-Remove units, para serviços e opcionalmente remove binários.
+Removes units, stops services, and optionally removes binaries.
 
 ---
 
-## Estrutura do unit `leet-service.service`
+## Unit File: `leet-service.service`
 
 ```ini
 [Unit]
@@ -151,9 +148,9 @@ Restart=on-failure
 RestartSec=5
 
 Environment=RUST_LOG=info
-EnvironmentFile=-/etc/leet/env   # opcional, não falha se ausente
+EnvironmentFile=-/etc/leet/env   # optional, does not fail if missing
 
-RuntimeDirectory=leet            # systemd cria /run/leet automaticamente
+RuntimeDirectory=leet            # systemd creates /run/leet automatically
 User=leet
 Group=leet
 NoNewPrivileges=true
@@ -164,9 +161,9 @@ ProtectSystem=strict
 WantedBy=multi-user.target
 ```
 
-## Estrutura do unit `leet-agent@.service`
+## Unit File: `leet-agent@.service`
 
-O `%i` é substituído pelo nome do agente na instanciação (`leet-agent@ATLAS.service` → `%i=ATLAS`).
+`%i` is substituted with the agent name at instantiation (`leet-agent@ATLAS.service` → `%i=ATLAS`).
 
 ```ini
 [Unit]
@@ -195,7 +192,7 @@ WantedBy=leet-service.service
 
 ---
 
-## Monitoramento
+## Monitoring
 
 ### Health check
 
@@ -203,60 +200,58 @@ WantedBy=leet-service.service
 leet health --url 127.0.0.1:1337
 ```
 
-### Métricas do servidor
+### Server metrics
 
-O servidor expõe métricas via log estruturado. Com `RUST_LOG=info`:
+The server exposes metrics via structured logs. With `RUST_LOG=info`:
 
 ```
-[INFO] agente ATLAS conectado (id=abc123, total=1)
-[INFO] mensagem roteada: ATLAS → broadcast (12 agentes)
-[INFO] métricas: total_msgs=1024, agentes_peak=15, nl_tokens=8432
+[INFO] agent ATLAS connected (id=abc123, total=1)
+[INFO] message routed: ATLAS → broadcast (12 agents)
+[INFO] metrics: total_msgs=1024, agents_peak=15, nl_tokens=8432
 ```
 
-### Script de verificação rápida
+### Quick check script
 
 ```bash
 #!/bin/bash
-# check-leet.sh
 echo "=== leet-service ==="
 systemctl is-active leet-service
 
-echo "=== Agentes conectados ==="
-# conta linhas "conectado" no log dos últimos 5 minutos
-journalctl -u leet-service --since "5 min ago" | grep "conectado" | wc -l
+echo "=== Connected agents ==="
+journalctl -u leet-service --since "5 min ago" | grep "connected" | wc -l
 
 echo "=== Health ==="
-leet health --url 127.0.0.1:1337 2>/dev/null || echo "não acessível"
+leet health --url 127.0.0.1:1337 2>/dev/null || echo "not reachable"
 ```
 
 ---
 
-## Segurança
+## Security
 
-### Isolamento systemd
+### systemd Isolation
 
-Os units usam:
-- `User=leet` — processo não-root dedicado
-- `NoNewPrivileges=true` — impede escalada de privilégio
-- `PrivateTmp=true` — `/tmp` isolado
-- `ProtectSystem=strict` — sistema de arquivos somente-leitura
-- `ReadWritePaths=/run/leet /var/log/leet` — apenas o necessário
+The units use:
+- `User=leet` — dedicated non-root process
+- `NoNewPrivileges=true` — prevents privilege escalation
+- `PrivateTmp=true` — isolated `/tmp`
+- `ProtectSystem=strict` — read-only filesystem
+- `ReadWritePaths=/run/leet /var/log/leet` — only what is needed
 
-### A chave `LEET_API_KEY`
+### The `LEET_API_KEY`
 
-- Armazenada em `/etc/leet/env` com permissão `600` (somente leet)
-- Não é logada pelo servidor
-- Nunca commitada — adicione `/etc/leet/env` ao `.gitignore`
+- Stored in `/etc/leet/env` with permission `600` (leet-only)
+- Never logged by the server
+- Never committed — add `/etc/leet/env` to `.gitignore`
 
 ### Firewall
 
-O `leet-server` escuta em `0.0.0.0:1337` por padrão. Em produção, restrinja:
+`leet-server` listens on `0.0.0.0:1337` by default. In production, restrict access:
 
 ```bash
-# Apenas localhost
+# Localhost only
 leet-server --tcp 127.0.0.1:1337
 
-# Ou firewall
+# Or via firewall
 sudo ufw allow from 10.0.0.0/8 to any port 1337
 sudo ufw deny 1337
 ```

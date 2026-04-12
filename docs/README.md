@@ -1,23 +1,23 @@
-# 1337 — linguagem nativa de comunicação inter-agentes
+# 1337 — Native Inter-Agent Communication Language
 
-## O que é
+## What It Is
 
-1337 é um protocolo de comunicação projetado para agentes de IA. Em vez de trocar mensagens em linguagem natural verbosa, agentes 1337 codificam cada conceito como um **COGON** — um vetor semântico de 32 dimensões com um vetor de incerteza companheiro. Essa representação é compacta, semanticamente precisa e computacionalmente barata.
+1337 is a communication protocol designed for AI agents. Instead of exchanging verbose natural language or JSON, 1337 agents encode each concept as a **COGON** — a 32-dimensional semantic vector with a companion uncertainty vector. This representation is compact, semantically precise, and computationally cheap.
 
-O protocolo resolve um problema concreto: quando dois agentes precisam coordenar ações, enviar o texto completo "o sistema de autenticação caiu com urgência máxima, precisa de rollback imediato no serviço de login" é caro em tokens e ambíguo. Em 1337, esse conceito vira 256 bytes com eixos `G8_URGENCIA=0.95`, `P3_ANOMALIA=0.90`, `G4_REVERSIBILIDADE=0.90` já ativados.
+The protocol solves a concrete problem: when two agents need to coordinate actions, sending the full text "the authentication system is down with maximum urgency, needs immediate rollback on the login service" is expensive in tokens and ambiguous. In 1337, that concept becomes 256 bytes with axes `G8_URGENCIA=0.95`, `P3_ANOMALIA=0.90`, `G4_REVERSIBILIDADE=0.90` already activated.
 
 ---
 
-## Arquitetura
+## Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                  Aplicação / Usuário                       │
+│                  Application / User                        │
 └────────────────┬────────────────────────┬──────────────────┘
                  │ Python SDK             │ CLI
     ┌────────────▼──────────┐  ┌──────────▼────────────────┐
-    │  leet-py (SDK público)│  │  leet  (13 comandos)      │
-    │  python/leet (SDK core│  │  encode decode chat ...   │
+    │  leet-py (public SDK) │  │  leet  (13 commands)      │
+    │  python/leet (core)   │  │  encode decode chat ...   │
     └────────────┬──────────┘  └──────────┬────────────────┘
                  │                        │
     ┌────────────▼────────────────────────▼────────────────┐
@@ -33,24 +33,24 @@ O protocolo resolve um problema concreto: quando dois agentes precisam coordenar
     ┌────────────────────────▼─────────────────────────────┐
     │               leet-service (Rust daemon)             │
     │  leet-server  TCP :1337 + Unix socket                │
-    │  leet-agent   15 processos independentes             │
+    │  leet-agent   15 independent processes               │
     │  C5 handshake  PROBE→ECHO→ALIGN→VERIFY               │
     └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Início rápido
+## Quick Start
 
 ### CLI (Rust)
 
 ```bash
 cargo build --release -p leet-cli
 
-# Projetar texto em COGON
-./target/release/leet encode "sistema crítico, falha detectada"
+# Project text into a COGON
+./target/release/leet encode "critical system failure detected"
 
-# Chat multiagente com 15 agentes IA
+# Multi-agent chat with 15 AI agents
 export LEET_API_KEY=sk-ant-...
 ./target/release/leet chat
 ```
@@ -68,46 +68,46 @@ print(a.sem[:4])  # [1.0, 1.0, 1.0, 1.0]
 
 ---
 
-## Compressão
+## Compression
 
-| Formato | Bytes típicos |
-|---------|--------------|
-| Texto natural | ~400B |
-| JSON COGON | ~480B |
-| **Codec binário (96B)** | **96B — 4× menor** |
-| SparseDelta (n=4 eixos) | 37B — 10× menor |
+| Format | Typical bytes |
+|--------|--------------|
+| Natural language text | ~400B |
+| COGON JSON | ~480B |
+| **Binary codec (96B)** | **96B — 4× smaller** |
+| SparseDelta (n=4 axes) | 37B — 10× smaller |
 
 ---
 
-## Testes
+## Tests
 
 ```bash
 # Rust workspace
 cargo test --workspace
-# 97 testes: leet-core(30) + leet-bridge(16) + leet-cli(21) + leet-service(30)
+# 97 tests: leet-core(30) + leet-bridge(16) + leet-cli(21) + leet-service(30)
 ```
 
 ---
 
-## Documentação
+## Documentation
 
-| Documento | Conteúdo |
-|-----------|---------|
-| [USER_GUIDE.md](USER_GUIDE.md) | Guia completo do usuário — CLI, chat, modo distribuído |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Arquitetura detalhada de cada componente |
-| [PROTOCOL.md](PROTOCOL.md) | Especificação COGON v0.5.1 — 32 eixos, handshake C5 |
-| [API_REFERENCE.md](API_REFERENCE.md) | Referência de API — Rust e Python |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Deployment com systemd para produção |
+| Document | Contents |
+|----------|---------|
+| [USER_GUIDE.md](USER_GUIDE.md) | Full user guide — CLI, chat, distributed mode |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Component architecture and data flow |
+| [PROTOCOL.md](PROTOCOL.md) | COGON v0.5.1 spec — 32 axes, C5 handshake |
+| [API_REFERENCE.md](API_REFERENCE.md) | Full Rust and Python API reference |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment with systemd |
 
 ---
 
 ## Status
 
-| Componente | Testes | Versão |
-|-----------|--------|--------|
+| Component | Tests | Version |
+|-----------|-------|---------|
 | leet-core (Rust) | 30 ✓ | 0.4.0 |
 | leet-bridge (Rust) | 16 ✓ | 0.5.0 |
 | leet-service (Rust) | 30 ✓ | 0.5.1 |
 | leet-cli (Rust) | 21 ✓ | 0.5.0 |
-| python/leet (SDK core) | — | 0.5.0 |
-| leet-py (SDK público) | — | 0.5.0 |
+| python/leet (core SDK) | — | 0.5.0 |
+| leet-py (public SDK) | — | 0.5.0 |
