@@ -24,43 +24,43 @@ impl BridgeProjector for MockProjector {
         let mut sem: SemVec = [0.5_f32; 32];
         let mut unc: SemVec = [0.2_f32; 32];
 
-        // A8_ESTADO / C5_ANOMALIA — error/down keywords
+        // D1_ESTADO / P3_ANOMALIA — error/down keywords
         if lower.contains("caiu")
             || lower.contains("falhou")
             || lower.contains("erro")
             || lower.contains("down")
         {
-            sem[8] = 0.9;   // A8_ESTADO
-            sem[26] = 0.9;  // C5_ANOMALIA
-            sem[13] = 0.15; // A13_VALENCIA_ONTOLOGICA (negative)
+            sem[8] = 0.9;   // D1_ESTADO
+            sem[26] = 0.9;  // P3_ANOMALIA
+            sem[13] = 0.15; // D6_VALENCIA_ONT (negative)
             unc[8] = 0.1;
             unc[26] = 0.1;
         }
 
-        // A9_PROCESSO / C9_NATUREZA — process keywords
+        // D2_PROCESSO / P7_ACAO — process keywords
         if lower.contains("deploy")
             || lower.contains("processo")
             || lower.contains("pipeline")
         {
-            sem[9] = 0.85;  // A9_PROCESSO
-            sem[30] = 0.8;  // C9_NATUREZA (verb/action)
+            sem[9] = 0.85;  // D2_PROCESSO
+            sem[30] = 0.8;  // P7_ACAO (active process)
             unc[9] = 0.1;
         }
 
-        // B5_REVERSIBILIDADE / C3_ACAO — rollback keywords
+        // G4_REVERSIBILIDADE / P7_ACAO — rollback keywords
         if lower.contains("reverter")
             || lower.contains("desfazer")
             || lower.contains("rollback")
         {
-            sem[17] = 0.9;  // B5_REVERSIBILIDADE
-            sem[24] = 0.85; // C3_ACAO
-            unc[17] = 0.1;
+            sem[19] = 0.9;  // G4_REVERSIBILIDADE
+            sem[30] = 0.85; // P7_ACAO
+            unc[19] = 0.1;
         }
 
-        // C1_URGENCIA — urgency keywords
+        // G8_URGENCIA — urgency keywords
         if lower.contains("urgente") || lower.contains("crítico") || lower.contains("agora") {
-            sem[22] = 0.95; // C1_URGENCIA
-            unc[22] = 0.05;
+            sem[23] = 0.95; // G8_URGENCIA
+            unc[23] = 0.05;
         }
 
         Ok(Cogon {
@@ -108,9 +108,9 @@ mod tests {
     fn test_mock_project_error_keywords() {
         let proj = MockProjector;
         let cogon = proj.project("o servidor caiu").unwrap();
-        assert!(cogon.sem[8] > 0.8);  // A8_ESTADO
-        assert!(cogon.sem[26] > 0.8); // C5_ANOMALIA
-        assert!(cogon.sem[13] < 0.3); // A13 negative
+        assert!(cogon.sem[8] > 0.8);  // D1_ESTADO
+        assert!(cogon.sem[26] > 0.8); // P3_ANOMALIA
+        assert!(cogon.sem[13] < 0.3); // D6_VALENCIA_ONT negative
     }
 
     #[test]

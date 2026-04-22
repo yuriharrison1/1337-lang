@@ -59,37 +59,37 @@ fn test_canonical_axes_count() {
 }
 
 #[test]
-fn test_axes_first_is_a0_via() {
-    assert_eq!(CANONICAL_AXES[0].code, "A0");
-    assert_eq!(CANONICAL_AXES[0].name, "VIA");
+fn test_axes_first_is_s1_essencia() {
+    assert_eq!(CANONICAL_AXES[0].code, "S1");
+    assert_eq!(CANONICAL_AXES[0].name, "ESSENCIA");
 }
 
 #[test]
-fn test_axes_last_is_c10() {
-    assert_eq!(CANONICAL_AXES[31].code, "C10");
+fn test_axes_last_is_p8() {
+    assert_eq!(CANONICAL_AXES[31].code, "P8");
 }
 
 #[test]
-fn test_axes_c1_urgencia_at_22() {
-    assert_eq!(CANONICAL_AXES[22].code, "C1");
-    assert_eq!(CANONICAL_AXES[22].name, "URGÊNCIA");
+fn test_axes_g8_urgencia_at_23() {
+    assert_eq!(CANONICAL_AXES[23].code, "G8");
+    assert_eq!(CANONICAL_AXES[23].name, "URGENCIA");
 }
 
 // ─── Encode projection tests ──────────────────────────────────────────────────
 
 #[test]
-fn test_encode_urgente_activates_c1() {
+fn test_encode_urgente_activates_g8() {
     let proj = MockProjector;
     let cogon = proj.project("urgente agora").unwrap();
-    assert!(cogon.sem[22] > 0.9, "C1_URGENCIA should be activated");
+    assert!(cogon.sem[23] > 0.9, "G8_URGENCIA should be activated");
 }
 
 #[test]
 fn test_encode_erro_activates_anomalia_and_estado() {
     let proj = MockProjector;
     let cogon = proj.project("erro no sistema").unwrap();
-    assert!(cogon.sem[26] > 0.8); // C5_ANOMALIA
-    assert!(cogon.sem[8] > 0.8);  // A8_ESTADO
+    assert!(cogon.sem[26] > 0.8); // P3_ANOMALIA
+    assert!(cogon.sem[8] > 0.8);  // D1_ESTADO
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn test_encode_neutral_text_baseline() {
 fn test_encode_deploy_activates_processo() {
     let proj = MockProjector;
     let cogon = proj.project("deploy do pipeline").unwrap();
-    assert!(cogon.sem[9] > 0.8); // A9_PROCESSO
+    assert!(cogon.sem[9] > 0.8); // D2_PROCESSO
 }
 
 // ─── Zero tests ───────────────────────────────────────────────────────────────
