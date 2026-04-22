@@ -80,6 +80,12 @@ pub fn valence_axes() -> Vec<&'static AxisInfo> {
     CANONICAL_AXES.iter().filter(|ax| ax.is_valence).collect()
 }
 
+/// Boot vector — the canonical initial zone_fixed for v0.5.1 C5 handshake messages.
+/// Equals COGON_ZERO_SEM: Pilar 4 defaults with per-axis semantic priors.
+pub fn boot_vector() -> crate::types::SemVec {
+    crate::types::COGON_ZERO_SEM
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

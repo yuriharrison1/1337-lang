@@ -1,16 +1,17 @@
-//! Protocol support: 5 anchor COGONs, C5 handshake factory methods.
+//! Protocol support: 5 anchor COGONs, C5 handshake factory methods (v0.5.1).
 //!
-//! This module adds the 1337 v0.5.1 session-layer on top of the core types:
-//!   - Five immutable anchor COGONs used for canonical alignment
-//!   - Msg1337 factory constructors for the C5 handshake phases
-//!   - `compute_align_hash` — deterministic fingerprint per agent
+//! - Five immutable anchor COGONs for canonical alignment
+//! - Msg1337 factory constructors for the C5 handshake phases
+//! - `compute_align_hash` — deterministic fingerprint per agent
 
 use std::collections::HashMap;
 
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::types::{C5Block, Cogon, Intent, Msg1337, Payload, RawField, RawRole, Receiver, SurfaceBlock};
+use crate::types::{
+    C5Block, Cogon, Intent, Msg1337, Payload, RawField, RawRole, Receiver, SurfaceBlock,
+};
 
 // ── Anchor COGONs ─────────────────────────────────────────────────────────────
 
@@ -23,48 +24,85 @@ pub const ANCHOR_NAMES: [&str; 5] = [
     "uncertainty", // Degree of unknowing
 ];
 
-/// Generate the nth anchor COGON.
+/// Generate the nth anchor COGON (v0.5.1 projection).
 ///
 /// Each anchor has a distinctive semantic fingerprint on the 32 axes
-/// so agents can orient themselves in the canonical space.
+/// derived from the v0.5.1 spec § 12 table. Axes not listed default to 0.5.
 pub fn anchor_cogon(index: usize) -> Cogon {
-    let mut sem = [0.3_f32; 32];
+    let mut sem = [0.5_f32; 32];
 
     match index {
         0 => {
-            // presence — S1 ESSENCIA high, D1 ESTADO high, G3 COMPLETUDE high
-            sem[0] = 0.95;  // S1
-            sem[8] = 0.90;  // D1
-            sem[18] = 0.90; // G3
-            sem[13] = 0.75; // D6 VALENCIA_ONT positive
+            // presence
+            sem[0]  = 1.0;  // S1 INTENCAO
+            sem[4]  = 0.0;  // S5 ENTROPIA
+            sem[6]  = 1.0;  // S7 COERENCIA
+            sem[11] = 1.0;  // D4 ESTABILIDADE
+            sem[14] = 1.0;  // D7 CAUSALIDADE
+            sem[16] = 1.0;  // G1 MASSA
+            sem[17] = 0.5;  // G2 ANCORA_TEMPORAL
+            sem[19] = 0.5;  // G4 TEMPORALIDADE (presente)
+            sem[27] = 0.0;  // P4 RUIDO
+            sem[29] = 1.0;  // P6 CONFIANCA
+            sem[30] = 0.0;  // P7 ACAO
         }
         1 => {
-            // absence — S1 low, D1 low, G3 low, D6 negative valence
-            sem[0] = 0.05;
-            sem[8] = 0.05;
-            sem[18] = 0.15;
-            sem[13] = 0.15; // D6 negative
+            // absence
+            sem[0]  = 0.0;  // S1 INTENCAO
+            sem[4]  = 0.0;  // S5 ENTROPIA
+            sem[6]  = 1.0;  // S7 COERENCIA
+            sem[11] = 1.0;  // D4 ESTABILIDADE
+            sem[14] = 0.8;  // D7 CAUSALIDADE
+            sem[16] = 0.3;  // G1 MASSA
+            sem[17] = 0.5;  // G2 ANCORA_TEMPORAL
+            sem[18] = 0.0;  // G3 AFINIDADE (repulsão)
+            sem[19] = 0.5;  // G4 TEMPORALIDADE
+            sem[29] = 1.0;  // P6 CONFIANCA
+            sem[30] = 0.0;  // P7 ACAO
         }
         2 => {
-            // change — S3 VIBRACAO high, D2 PROCESSO high, G2 ANCORA_TEMPORAL future
-            sem[2] = 0.95;  // S3
-            sem[9] = 0.90;  // D2
-            sem[17] = 0.80; // G2 future-leaning
-            sem[14] = 0.70; // D7 CAUSALIDADE
+            // change
+            sem[0]  = 0.5;  // S1 INTENCAO
+            sem[4]  = 0.5;  // S5 ENTROPIA
+            sem[9]  = 1.0;  // D2 TAXA_APRENDIZADO
+            sem[10] = 0.7;  // D3 DECAIMENTO
+            sem[11] = 0.0;  // D4 ESTABILIDADE
+            sem[14] = 0.3;  // D7 CAUSALIDADE
+            sem[15] = 0.0;  // D8 INERCIA
+            sem[17] = 0.3;  // G2 ANCORA_TEMPORAL
+            sem[19] = 0.5;  // G4 TEMPORALIDADE
+            sem[23] = 1.0;  // G8 GRADIENTE
+            sem[30] = 0.3;  // P7 ACAO
         }
         3 => {
-            // agency — S7 GENERO high, S6 CAUSA_EFEITO high, P7 ACAO high
-            sem[6] = 0.90;  // S7
-            sem[5] = 0.90;  // S6
-            sem[30] = 0.90; // P7
-            sem[24] = 0.70; // P1 IMPACTO
+            // agency
+            sem[0]  = 1.0;  // S1 INTENCAO
+            sem[4]  = 0.2;  // S5 ENTROPIA
+            sem[9]  = 0.6;  // D2 TAXA_APRENDIZADO
+            sem[13] = 1.0;  // D6 PROPAGACAO
+            sem[14] = 0.9;  // D7 CAUSALIDADE
+            sem[16] = 0.8;  // G1 MASSA
+            sem[17] = 0.7;  // G2 ANCORA_TEMPORAL
+            sem[18] = 0.8;  // G3 AFINIDADE
+            sem[23] = 0.7;  // G8 GRADIENTE
+            sem[29] = 0.8;  // P6 CONFIANCA
+            sem[30] = 0.9;  // P7 ACAO
         }
         4 => {
-            // uncertainty — G7 VALENCIA_EPIST inconclusive, P3 ANOMALIA high
-            sem[22] = 0.45; // G7 near neutral (inconclusive)
-            sem[26] = 0.80; // P3_ANOMALIA proxies uncertainty  // TODO(07f): revisit
+            // uncertainty
+            sem[4]  = 1.0;  // S5 ENTROPIA
+            sem[5]  = 0.2;  // S6 DENSIDADE
+            sem[6]  = 0.2;  // S7 COERENCIA
+            sem[11] = 0.2;  // D4 ESTABILIDADE
+            sem[14] = 0.1;  // D7 CAUSALIDADE
+            sem[17] = 0.2;  // G2 ANCORA_TEMPORAL
+            sem[22] = 0.1;  // G7 K_INTERACAO
+            sem[24] = 0.9;  // P1 QUANTIZACAO
+            sem[27] = 0.8;  // P4 RUIDO
+            sem[29] = 0.1;  // P6 CONFIANCA
+            sem[30] = 0.0;  // P7 ACAO
         }
-        _ => {} // out of range: baseline sem
+        _ => {} // out of range: all-neutral 0.5
     }
 
     Cogon {
@@ -100,9 +138,6 @@ pub fn all_anchors() -> [Cogon; 5] {
 /// Compute the canonical align_hash for an agent.
 ///
 /// `align_hash = SHA256("1337:v0.5.1:" || agent_name)`
-///
-/// Deterministic: the server can re-derive it to verify the agent knows
-/// the canonical schema without storing any secret.
 pub fn compute_align_hash(agent_name: &str) -> [u8; 32] {
     let mut h = Sha256::new();
     h.update(b"1337:v0.5.1:");
@@ -117,8 +152,6 @@ pub fn compute_align_hash(agent_name: &str) -> [u8; 32] {
 
 impl Msg1337 {
     /// PROBE phase: initial SYNC — "I exist, here is who I am."
-    ///
-    /// Agent name and role are embedded in the payload's raw field.
     pub fn new_sync(agent_id: Uuid, agent_name: &str, role: &str) -> Self {
         let mut cogon = Cogon::zero();
         cogon.id = agent_id;
@@ -141,7 +174,7 @@ impl Msg1337 {
             patch: None,
             payload: Payload::Cogon(cogon),
             c5: C5Block {
-                zone_fixed: [0.5_f32; 32],
+                zone_fixed: crate::axes::boot_vector(),
                 zone_emergent: HashMap::new(),
                 schema_ver: "0.5.1".to_string(),
                 align_hash: [0u8; 32],
@@ -166,7 +199,7 @@ impl Msg1337 {
             patch: None,
             payload: Payload::Cogon(Cogon::zero()),
             c5: C5Block {
-                zone_fixed: [0.5_f32; 32],
+                zone_fixed: crate::axes::boot_vector(),
                 zone_emergent: HashMap::new(),
                 schema_ver: "0.5.1".to_string(),
                 align_hash,
@@ -191,7 +224,7 @@ impl Msg1337 {
             patch: None,
             payload: Payload::Cogon(Cogon::zero()),
             c5: C5Block {
-                zone_fixed: [1.0_f32; 32],
+                zone_fixed: crate::axes::boot_vector(),
                 zone_emergent: HashMap::new(),
                 schema_ver: "0.5.1".to_string(),
                 align_hash: [0u8; 32],
@@ -206,8 +239,6 @@ impl Msg1337 {
     }
 
     /// Build an ASSERT message carrying a text payload in a COGON's raw field.
-    ///
-    /// Used by agents that communicate in natural language.
     pub fn new_nl_message(
         sender_id: Uuid,
         receiver: Receiver,
@@ -224,7 +255,7 @@ impl Msg1337 {
             patch: None,
             payload: Payload::Cogon(cogon),
             c5: C5Block {
-                zone_fixed: [0.5_f32; 32],
+                zone_fixed: crate::axes::boot_vector(),
                 zone_emergent: HashMap::new(),
                 schema_ver: "0.5.1".to_string(),
                 align_hash,
@@ -257,28 +288,43 @@ mod tests {
 
     #[test]
     fn test_anchor_presence_has_high_essencia() {
-        let cogon = anchor_cogon(0);
-        assert!(cogon.sem[0] > 0.8, "presence: S1_ESSENCIA should be > 0.8");
-        assert!(cogon.sem[8] > 0.8, "presence: D1_ESTADO should be > 0.8");
+        let c = anchor_cogon(0);
+        assert_eq!(c.sem[0],  1.0, "S1_INTENCAO");
+        assert_eq!(c.sem[16], 1.0, "G1_MASSA");
+        assert_eq!(c.sem[29], 1.0, "P6_CONFIANCA");
     }
 
     #[test]
     fn test_anchor_absence_has_low_essencia() {
-        let cogon = anchor_cogon(1);
-        assert!(cogon.sem[0] < 0.2, "absence: S1_ESSENCIA should be < 0.2");
+        let c = anchor_cogon(1);
+        assert_eq!(c.sem[0],  0.0, "S1_INTENCAO");
+        assert_eq!(c.sem[18], 0.0, "G3_AFINIDADE (repulsão)");
     }
 
     #[test]
     fn test_anchor_change_has_high_vibracao() {
-        let cogon = anchor_cogon(2);
-        assert!(cogon.sem[2] > 0.8, "change: S3_VIBRACAO should be > 0.8");
+        let c = anchor_cogon(2);
+        assert_eq!(c.sem[9],  1.0, "D2_TAXA_APRENDIZADO");
+        assert_eq!(c.sem[23], 1.0, "G8_GRADIENTE");
+        assert_eq!(c.sem[11], 0.0, "D4_ESTABILIDADE low");
     }
 
     #[test]
     fn test_anchor_uncertainty_has_p3_anomalia() {
-        // TODO(07f): revisit anchor semantics under v0.5.1 — P3_ANOMALIA proxies uncertainty
-        let cogon = anchor_cogon(4);
-        assert!(cogon.sem[26] > 0.5, "uncertainty anchor: P3_ANOMALIA should be > 0.5");
+        let c = anchor_cogon(4);
+        assert_eq!(c.sem[29], 0.1, "P6_CONFIANCA low");
+        assert_eq!(c.sem[4],  1.0, "S5_ENTROPIA max");
+        assert_eq!(c.sem[27], 0.8, "P4_RUIDO high");
+    }
+
+    #[test]
+    fn test_anchors_respect_axis_range_0_1() {
+        for i in 0..5 {
+            let c = anchor_cogon(i);
+            for (j, &v) in c.sem.iter().enumerate() {
+                assert!(v >= 0.0 && v <= 1.0, "anchor {i} sem[{j}]={v} out of range");
+            }
+        }
     }
 
     #[test]
@@ -301,7 +347,6 @@ mod tests {
         let msg = Msg1337::new_sync(agent_id, "ATLAS", "Strategic planner");
         assert_eq!(msg.sender, agent_id);
         assert!(matches!(msg.intent, Intent::Sync));
-        // The agent name should be in the payload's raw field
         if let Payload::Cogon(cogon) = &msg.payload {
             let raw = cogon.raw.as_ref().unwrap();
             let name = raw.content["name"].as_str().unwrap();
@@ -309,6 +354,14 @@ mod tests {
         } else {
             panic!("expected Cogon payload");
         }
+    }
+
+    #[test]
+    fn test_new_sync_uses_boot_vector_for_zone_fixed() {
+        let agent_id = Uuid::new_v4();
+        let msg = Msg1337::new_sync(agent_id, "FORGE", "Builder");
+        assert_eq!(msg.c5.zone_fixed[24], 0.8, "P1_QUANTIZACAO boot");
+        assert_eq!(msg.c5.zone_fixed[22], 0.1, "G7_K_INTERACAO boot");
     }
 
     #[test]
