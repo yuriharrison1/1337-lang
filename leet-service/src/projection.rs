@@ -4,72 +4,62 @@
 
 use leet_core::axes::CANONICAL_AXES;
 
-/// Project human text into (sem[32], unc[32]).
-pub fn project(text: &str, _agent_id: &str) -> (Vec<f32>, Vec<f32>) {
+/// Project human text into sem[32].
+pub fn project(text: &str, _agent_id: &str) -> Vec<f32> {
     let lower = text.to_lowercase();
     let mut sem = vec![0.5_f32; 32];
-    let mut unc = vec![0.2_f32; 32];
 
-    // A8_ESTADO / C5_ANOMALIA — error/down keywords
+    // D1_ESTADO / P3_ANOMALIA — error/down keywords
     if lower.contains("caiu")
         || lower.contains("falhou")
         || lower.contains("erro")
         || lower.contains("down")
         || lower.contains("crash")
     {
-        sem[8] = 0.9;   // A8_ESTADO
-        sem[26] = 0.9;  // C5_ANOMALIA
-        sem[13] = 0.15; // A13_VALENCIA_ONTOLOGICA (negative)
-        unc[8] = 0.1;
-        unc[26] = 0.1;
-        unc[13] = 0.1;
+        sem[8] = 0.9;   // D1_ESTADO
+        sem[26] = 0.9;  // P3_ANOMALIA
+        sem[13] = 0.15; // D6_VALENCIA_ONT (negative)
     }
 
-    // A9_PROCESSO / C9_NATUREZA — process keywords
+    // D2_PROCESSO / P7_ACAO — process keywords
     if lower.contains("deploy")
         || lower.contains("processo")
         || lower.contains("pipeline")
         || lower.contains("rodando")
     {
-        sem[9] = 0.85;  // A9_PROCESSO
-        sem[30] = 0.8;  // C9_NATUREZA (verb/action)
-        unc[9] = 0.1;
-        unc[30] = 0.15;
+        sem[9] = 0.85;  // D2_PROCESSO
+        sem[30] = 0.8;  // P7_ACAO
     }
 
-    // B5_REVERSIBILIDADE / C3_ACAO — rollback keywords
+    // G4_REVERSIBILIDADE / P7_ACAO — rollback keywords
     if lower.contains("reverter")
         || lower.contains("desfazer")
         || lower.contains("rollback")
         || lower.contains("undo")
     {
-        sem[17] = 0.9;  // B5_REVERSIBILIDADE
-        sem[24] = 0.85; // C3_ACAO
-        unc[17] = 0.1;
-        unc[24] = 0.1;
+        sem[19] = 0.9;  // G4_REVERSIBILIDADE
+        sem[30] = 0.85; // P7_ACAO
     }
 
-    // C1_URGENCIA — urgency keywords
+    // G8_URGENCIA — urgency keywords
     if lower.contains("urgente")
         || lower.contains("crítico")
         || lower.contains("agora")
         || lower.contains("imediato")
     {
-        sem[22] = 0.95; // C1_URGENCIA
-        unc[22] = 0.05;
+        sem[23] = 0.95; // G8_URGENCIA
     }
 
-    (sem, unc)
+    sem
 }
 
-/// Reconstruct a text description from sem/unc vectors.
+/// Reconstruct a text description from a sem vector.
 /// Finds the top-3 most activated axes and returns a textual description.
-pub fn reconstruct(sem: &[f32], _unc: &[f32], lang: &str) -> String {
+pub fn reconstruct(sem: &[f32], lang: &str) -> String {
     if sem.is_empty() {
         return "[empty cogon]".to_string();
     }
 
-    // Sort axes by sem value descending
     let mut indexed: Vec<(usize, f32)> = sem
         .iter()
         .enumerate()
@@ -108,12 +98,12 @@ impl Engine {
         Engine
     }
 
-    pub fn project(&self, text: &str, agent_id: &str) -> (Vec<f32>, Vec<f32>) {
+    pub fn project(&self, text: &str, agent_id: &str) -> Vec<f32> {
         project(text, agent_id)
     }
 
-    pub fn reconstruct(&self, sem: &[f32], unc: &[f32], lang: &str) -> String {
-        reconstruct(sem, unc, lang)
+    pub fn reconstruct(&self, sem: &[f32], lang: &str) -> String {
+        reconstruct(sem, lang)
     }
 }
 
@@ -129,29 +119,27 @@ mod tests {
 
     #[test]
     fn test_project_returns_32_dims() {
-        let (sem, unc) = project("hello world", "agent1");
+        let sem = project("hello world", "agent1");
         assert_eq!(sem.len(), 32);
-        assert_eq!(unc.len(), 32);
     }
 
     #[test]
-    fn test_project_urgente_activates_c1() {
-        let (sem, _) = project("urgente agora", "agent1");
-        assert!(sem[22] > 0.9, "C1_URGENCIA should be activated");
+    fn test_project_urgente_activates_g8() {
+        let sem = project("urgente agora", "agent1");
+        assert!(sem[23] > 0.9, "G8_URGENCIA should be activated");
     }
 
     #[test]
     fn test_project_erro_activates_anomalia() {
-        let (sem, _) = project("erro no sistema", "agent1");
-        assert!(sem[26] > 0.8, "C5_ANOMALIA should be activated");
-        assert!(sem[8] > 0.8, "A8_ESTADO should be activated");
+        let sem = project("erro no sistema", "agent1");
+        assert!(sem[26] > 0.8, "P3_ANOMALIA should be activated");
+        assert!(sem[8] > 0.8, "D1_ESTADO should be activated");
     }
 
     #[test]
     fn test_reconstruct_returns_string() {
         let sem = vec![0.5_f32; 32];
-        let unc = vec![0.2_f32; 32];
-        let result = reconstruct(&sem, &unc, "en");
+        let result = reconstruct(&sem, "en");
         assert!(!result.is_empty());
     }
 }

@@ -235,7 +235,7 @@ async fn test_anchor_cogons() {
 
     for (i, cogon) in anchors.iter().enumerate() {
         // All anchor values in range
-        for &v in cogon.sem.iter().chain(cogon.unc.iter()) {
+        for &v in cogon.sem.iter() {
             assert!(v >= 0.0 && v <= 1.0, "anchor {} value out of range: {}", i, v);
         }
         // Each anchor has the correct label in raw

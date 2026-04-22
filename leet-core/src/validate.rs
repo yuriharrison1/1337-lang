@@ -32,24 +32,23 @@ pub fn validate(msg: &Msg1337) -> Result<(), LeetError> {
     Ok(())
 }
 
-/// Returns all low-confidence dimension flags (R5) without failing validation.
+/// Returns low-confidence flag (R5) — triggered when P6_VETOR_TEMPORAL < 0.1.
 pub fn check_confidence(msg: &Msg1337) -> Vec<LeetError> {
     let mut flags = Vec::new();
+    let check = |c: &crate::types::Cogon| {
+        if c.is_low_confidence() {
+            Some(LeetError::R5LowConfidence { dim: 29, value: c.sem[29] })
+        } else {
+            None
+        }
+    };
     match &msg.payload {
         Payload::Cogon(c) => {
-            for (i, &u) in c.unc.iter().enumerate() {
-                if u > 0.9 {
-                    flags.push(LeetError::R5LowConfidence { dim: i, value: u });
-                }
-            }
+            if let Some(e) = check(c) { flags.push(e); }
         }
         Payload::Dag(dag) => {
             for node in &dag.nodes {
-                for (i, &u) in node.unc.iter().enumerate() {
-                    if u > 0.9 {
-                        flags.push(LeetError::R5LowConfidence { dim: i, value: u });
-                    }
-                }
+                if let Some(e) = check(node) { flags.push(e); }
             }
         }
     }
@@ -241,14 +240,8 @@ fn r19_inheritance_depth(msg: &Msg1337) -> Result<(), LeetError> {
 fn r20_cogon_zero_structure(msg: &Msg1337) -> Result<(), LeetError> {
     let check = |cogon: &crate::types::Cogon| -> Result<(), LeetError> {
         if cogon.id == uuid::Uuid::nil() {
-            // This is COGON_ZERO — verify structure
-            if !cogon.sem.iter().all(|&v| v == 1.0) {
-                return Err(LeetError::R20MissingCogonZero);
-            }
-            if !cogon.unc.iter().all(|&v| v == 0.0) {
-                return Err(LeetError::R20MissingCogonZero);
-            }
-            if cogon.stamp != 0 {
+            // This is COGON_ZERO — verify structure using is_zero()
+            if !cogon.is_zero() {
                 return Err(LeetError::R20MissingCogonZero);
             }
         }
@@ -329,7 +322,6 @@ mod tests {
         Cogon {
             id: Uuid::new_v4(),
             sem: [0.5_f32; 32],
-            unc: [0.1_f32; 32],
             stamp: 1_000_000,
             raw: None,
         }
@@ -394,12 +386,19 @@ mod tests {
     }
 
     #[test]
-    fn test_check_confidence_flags() {
+    fn test_check_confidence_no_flag_for_normal() {
+        let msg = base_msg(Payload::Cogon(simple_cogon()));
+        // sem[29] = 0.5 (baseline) — not low confidence
+        let flags = check_confidence(&msg);
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_check_confidence_flag_when_p6_below_threshold() {
         let mut cogon = simple_cogon();
-        cogon.unc[5] = 0.95;
-        cogon.unc[12] = 0.92;
+        cogon.sem[29] = 0.05; // P6_VETOR_TEMPORAL below 0.1
         let msg = base_msg(Payload::Cogon(cogon));
         let flags = check_confidence(&msg);
-        assert_eq!(flags.len(), 2);
+        assert_eq!(flags.len(), 1);
     }
 }

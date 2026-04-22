@@ -174,7 +174,8 @@ fn parse_agent_responses(text: &str) -> Result<Vec<AgentResponse>, String> {
             .to_uppercase();
 
         let sem = parse_f32_array(&item["sem"], &agent, "sem")?;
-        let unc = parse_f32_array(&item["unc"], &agent, "unc")?;
+        // unc field ignored in v0.5.1 — parsed for wire compat but not used
+        let _unc = parse_f32_array(&item["unc"], &agent, "unc").unwrap_or_default();
 
         let intent = match item["intent"].as_str().unwrap_or("ASSERT").to_uppercase().as_str() {
             "QUERY"   => Intent::Query,
@@ -191,7 +192,6 @@ fn parse_agent_responses(text: &str) -> Result<Vec<AgentResponse>, String> {
         let cogon = Cogon {
             id: Uuid::new_v4(),
             sem,
-            unc,
             stamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_nanos() as i64)

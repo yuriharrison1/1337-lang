@@ -4,12 +4,13 @@ use leet_core::types::Cogon;
 
 pub fn run() {
     let zero = Cogon::zero();
-    println!("COGON_ZERO");
-    println!("  id:    {}", zero.id);
-    println!("  stamp: {}", zero.stamp);
-    println!("  sem:   [{}, ..., {}] (all 1.0, 32 dims)", zero.sem[0], zero.sem[31]);
-    println!("  unc:   [{}, ..., {}] (all 0.0, 32 dims)", zero.unc[0], zero.unc[31]);
-    println!("  raw:   None");
+    println!("COGON_ZERO (v0.5.1)");
+    println!("  id:              {}", zero.id);
+    println!("  stamp:           {}", zero.stamp);
+    println!("  sem[0] S1:       {} (ESSENCIA — self-existent)", zero.sem[0]);
+    println!("  sem[13] D6:      {} (VALENCIA_ONT — fully positive)", zero.sem[13]);
+    println!("  sem[29] P6:      {} (VETOR_TEMPORAL — future-oriented)", zero.sem[29]);
+    println!("  raw:             None");
     println!();
     println!("JSON:");
     println!("{}", serde_json::to_string_pretty(&zero).unwrap());
@@ -25,16 +26,16 @@ mod tests {
     }
 
     #[test]
-    fn test_cogon_zero_sem_all_ones() {
+    fn test_cogon_zero_s1_essencia() {
         use leet_core::types::Cogon;
         let z = Cogon::zero();
-        assert!(z.sem.iter().all(|&v| v == 1.0));
+        assert_eq!(z.sem[0], 1.0, "S1_ESSENCIA should be 1.0 in COGON_ZERO");
     }
 
     #[test]
-    fn test_cogon_zero_unc_all_zeros() {
+    fn test_cogon_zero_p6_confianca() {
         use leet_core::types::Cogon;
         let z = Cogon::zero();
-        assert!(z.unc.iter().all(|&v| v == 0.0));
+        assert_eq!(z.sem[29], 1.0, "P6_VETOR_TEMPORAL should be 1.0 in COGON_ZERO");
     }
 }

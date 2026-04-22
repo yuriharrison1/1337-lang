@@ -29,51 +29,47 @@ pub const ANCHOR_NAMES: [&str; 5] = [
 /// so agents can orient themselves in the canonical space.
 pub fn anchor_cogon(index: usize) -> Cogon {
     let mut sem = [0.3_f32; 32];
-    let mut unc = [0.2_f32; 32];
 
     match index {
         0 => {
             // presence — S1 ESSENCIA high, D1 ESTADO high, G3 COMPLETUDE high
-            sem[0] = 0.95; unc[0] = 0.05;  // S1
-            sem[8] = 0.90; unc[8] = 0.05;  // D1
-            sem[18] = 0.90; unc[18] = 0.05; // G3
-            sem[13] = 0.75; unc[13] = 0.1;  // D6 VALENCIA_ONT positive
+            sem[0] = 0.95;  // S1
+            sem[8] = 0.90;  // D1
+            sem[18] = 0.90; // G3
+            sem[13] = 0.75; // D6 VALENCIA_ONT positive
         }
         1 => {
             // absence — S1 low, D1 low, G3 low, D6 negative valence
-            sem[0] = 0.05; unc[0] = 0.05;
-            sem[8] = 0.05; unc[8] = 0.05;
-            sem[18] = 0.15; unc[18] = 0.1;
-            sem[13] = 0.15; unc[13] = 0.1;  // D6 negative
+            sem[0] = 0.05;
+            sem[8] = 0.05;
+            sem[18] = 0.15;
+            sem[13] = 0.15; // D6 negative
         }
         2 => {
             // change — S3 VIBRACAO high, D2 PROCESSO high, G2 ANCORA_TEMPORAL future
-            sem[2] = 0.95; unc[2] = 0.05;  // S3
-            sem[9] = 0.90; unc[9] = 0.05;  // D2
-            sem[17] = 0.80; unc[17] = 0.1;  // G2 future-leaning
-            sem[14] = 0.70; unc[14] = 0.1;  // D7 CAUSALIDADE
+            sem[2] = 0.95;  // S3
+            sem[9] = 0.90;  // D2
+            sem[17] = 0.80; // G2 future-leaning
+            sem[14] = 0.70; // D7 CAUSALIDADE
         }
         3 => {
             // agency — S7 GENERO high, S6 CAUSA_EFEITO high, P7 ACAO high
-            sem[6] = 0.90; unc[6] = 0.05;  // S7
-            sem[5] = 0.90; unc[5] = 0.05;  // S6
-            sem[30] = 0.90; unc[30] = 0.05; // P7
-            sem[24] = 0.70; unc[24] = 0.1;  // P1 IMPACTO
+            sem[6] = 0.90;  // S7
+            sem[5] = 0.90;  // S6
+            sem[30] = 0.90; // P7
+            sem[24] = 0.70; // P1 IMPACTO
         }
         4 => {
-            // uncertainty — G7 VALENCIA_EPIST inconclusive, unc high everywhere
-            sem[22] = 0.45; unc[22] = 0.05; // G7 near neutral (inconclusive)
-            for (i, u) in unc.iter_mut().enumerate() {
-                if i != 22 { *u = 0.75; }
-            }
+            // uncertainty — G7 VALENCIA_EPIST inconclusive, P3 ANOMALIA high
+            sem[22] = 0.45; // G7 near neutral (inconclusive)
+            sem[26] = 0.80; // P3_ANOMALIA proxies uncertainty  // TODO(07f): revisit
         }
-        _ => {} // out of range: baseline sem/unc
+        _ => {} // out of range: baseline sem
     }
 
     Cogon {
         id: Uuid::new_v4(),
         sem,
-        unc,
         stamp: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| d.as_nanos() as i64)
@@ -279,10 +275,10 @@ mod tests {
     }
 
     #[test]
-    fn test_anchor_uncertainty_has_high_unc() {
+    fn test_anchor_uncertainty_has_p3_anomalia() {
+        // TODO(07f): revisit anchor semantics under v0.5.1 — P3_ANOMALIA proxies uncertainty
         let cogon = anchor_cogon(4);
-        let avg_unc: f32 = cogon.unc.iter().sum::<f32>() / 32.0;
-        assert!(avg_unc > 0.5, "uncertainty anchor should have high avg_unc");
+        assert!(cogon.sem[26] > 0.5, "uncertainty anchor: P3_ANOMALIA should be > 0.5");
     }
 
     #[test]

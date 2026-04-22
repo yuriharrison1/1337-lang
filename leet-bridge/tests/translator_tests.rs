@@ -15,14 +15,12 @@ fn test_nl_to_cogon_pt() {
     let cogon = nl_to_cogon(text, "pt");
     let intent = infer_intent(text);
 
-    // The sentence starts with "qual " → Query
     assert!(
         matches!(intent, Intent::Query),
         "expected Intent::Query, got {:?}",
         intent
     );
 
-    // "status" / monitoring keyword → G8_URGENCIA ≥ 0.5
     assert!(
         cogon.sem[G8_URGENCIA] > 0.5,
         "expected G8_URGENCIA > 0.5, got {}",
@@ -30,7 +28,7 @@ fn test_nl_to_cogon_pt() {
     );
 
     // Vectors must stay in [0, 1]
-    for v in cogon.sem.iter().chain(cogon.unc.iter()) {
+    for v in cogon.sem.iter() {
         assert!(*v >= 0.0 && *v <= 1.0, "out-of-range value: {}", v);
     }
 }
@@ -47,7 +45,7 @@ fn test_nl_to_cogon_en() {
         cogon.sem[P3_ANOMALIA]
     );
 
-    for v in cogon.sem.iter().chain(cogon.unc.iter()) {
+    for v in cogon.sem.iter() {
         assert!(*v >= 0.0 && *v <= 1.0, "out-of-range value: {}", v);
     }
 }
@@ -55,11 +53,9 @@ fn test_nl_to_cogon_en() {
 /// COGON with G8=0.9, P7=0.8 → NL (PT) contains "urgente" or "ação".
 #[test]
 fn test_cogon_to_nl() {
-    let mut cogon = Cogon::zero(); // start from COGON_ZERO
-    // Override identity to create a non-zero, specific COGON
+    let mut cogon = Cogon::zero();
     cogon.id = uuid::Uuid::new_v4();
     cogon.sem = [0.3_f32; 32];
-    cogon.unc = [0.2_f32; 32];
     cogon.stamp = 1_000_000;
 
     cogon.sem[G8_URGENCIA] = 0.9;
@@ -78,14 +74,15 @@ fn test_cogon_to_nl() {
     );
 }
 
-/// COGON_ZERO has sem=[1.0;32] and unc=[0.0;32].
+/// COGON_ZERO satisfies is_zero() and has correct v0.5.1 values.
 #[test]
 fn test_cogon_zero() {
     let z = Cogon::zero();
-    assert!(z.sem.iter().all(|&v| v == 1.0), "sem must be all 1.0");
-    assert!(z.unc.iter().all(|&v| v == 0.0), "unc must be all 0.0");
+    assert!(z.is_zero(), "Cogon::zero() must satisfy is_zero()");
     assert_eq!(z.stamp, 0);
     assert!(z.raw.is_none());
+    // v0.5.1: S1_ESSENCIA = 1.0, not all-ones
+    assert_eq!(z.sem[0], 1.0, "S1_ESSENCIA must be 1.0");
 }
 
 /// NL → COGON → NL roundtrip preserves intent and dominant axes.
@@ -96,35 +93,30 @@ fn test_roundtrip() {
     let cogon = nl_to_cogon(text, "pt");
     let intent = infer_intent(text);
 
-    // "crítico" is in the anomaly keyword list
     assert!(
         matches!(intent, Intent::Anomaly),
         "expected Intent::Anomaly, got {:?}",
         intent
     );
 
-    // "crítico" → P3_ANOMALIA ≥ 0.8
     assert!(
         cogon.sem[P3_ANOMALIA] > 0.7,
         "P3_ANOMALIA expected > 0.7, got {}",
         cogon.sem[P3_ANOMALIA]
     );
 
-    // "ação" → P7_ACAO ≥ 0.7
     assert!(
         cogon.sem[P7_ACAO] > 0.7,
         "P7_ACAO expected > 0.7, got {}",
         cogon.sem[P7_ACAO]
     );
 
-    // "crítico" → G8_URGENCIA ≥ 0.7
     assert!(
         cogon.sem[G8_URGENCIA] > 0.7,
         "G8_URGENCIA expected > 0.7, got {}",
         cogon.sem[G8_URGENCIA]
     );
 
-    // Reconstruct and verify dominant axes appear in the output
     let nl = cogon_to_nl(&cogon, "pt");
     let nl_lower = nl.to_lowercase();
     let has_key_concept = nl_lower.contains("urgente")
@@ -177,21 +169,6 @@ fn test_temporal_future() {
 fn test_verification() {
     let cogon = nl_to_cogon("foi confirmado e verificado pelos testes", "pt");
     assert!(cogon.sem[leet_bridge::nl_translator::D8_VERIFICABILIDADE] > 0.8);
-}
-
-/// Hedging words raise overall uncertainty.
-#[test]
-fn test_uncertainty_hedge() {
-    let base = nl_to_cogon("o sistema está operacional", "pt");
-    let hedged = nl_to_cogon("talvez o sistema esteja operacional", "pt");
-    let base_avg: f32 = base.unc.iter().sum::<f32>() / 32.0;
-    let hedged_avg: f32 = hedged.unc.iter().sum::<f32>() / 32.0;
-    assert!(
-        hedged_avg > base_avg,
-        "hedged text should have higher avg unc: {} vs {}",
-        hedged_avg,
-        base_avg
-    );
 }
 
 /// English intent detection: question starters.

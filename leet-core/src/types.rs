@@ -51,14 +51,25 @@ pub struct RawField {
     pub role: RawRole,
 }
 
-/// The semantic word — a 32-dimensional concept with uncertainty.
+/// Canonical COGON_ZERO semantic vector (v0.5.1 spec § 2).
+/// Distinct from axes::boot_vector() which initialises new agents (Pilar 4).
+pub const COGON_ZERO_SEM: SemVec = [
+    // Block S: ESSENCIA, CORRESPONDENCIA, VIBRACAO, POLARIDADE, RITMO, CAUSA_EFEITO, GENERO, SISTEMA
+    1.0, 0.0, 0.0, 0.0,   0.0, 1.0, 1.0, 1.0,
+    // Block D: ESTADO, PROCESSO, RELACAO, SINAL, ESTABILIDADE, VALENCIA_ONT, CAUSALIDADE, VERIFICABILIDADE
+    0.5, 0.0, 0.0, 1.0,   0.0, 1.0, 1.0, 0.0,
+    // Block G: TEMPORALIDADE, ANCORA_TEMPORAL, COMPLETUDE, REVERSIBILIDADE, CARGA, ORIGEM, VALENCIA_EPIST, URGENCIA
+    1.0, 0.5, 1.0, 0.5,   0.5, 1.0, 0.1, 0.0,
+    // Block P: IMPACTO, VALOR, ANOMALIA, AFETO, DEPENDENCIA, VETOR_TEMPORAL, ACAO, VALENCIA_ACAO
+    0.8, 0.0, 1.0, 0.0,   0.5, 1.0, 0.0, 0.0,
+];
+
+/// The semantic word — a 32-dimensional concept.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cogon {
     pub id: Uuid,
     /// Semantic vector [0,1]^32 — indexed by position (R10).
     pub sem: SemVec,
-    /// Uncertainty companion [0,1]^32.
-    pub unc: SemVec,
     /// Unix timestamp millis.
     pub stamp: i64,
     /// Optional raw attachment.
@@ -69,33 +80,27 @@ pub struct Cogon {
 pub const ZERO_UUID_STR: &str = "00000000-0000-0000-0000-000000000000";
 
 impl Cogon {
-    /// Construct COGON_ZERO per spec.
+    /// Construct COGON_ZERO per v0.5.1 spec § 2.
     pub fn zero() -> Self {
         Self {
             id: Uuid::nil(),
-            sem: [1.0_f32; 32],
-            unc: [0.0_f32; 32],
+            sem: COGON_ZERO_SEM,
             stamp: 0,
             raw: None,
         }
     }
 
+    /// True iff this is the canonical COGON_ZERO.
     pub fn is_zero(&self) -> bool {
         self.id == Uuid::nil()
-            && self.sem.iter().all(|&v| v == 1.0)
-            && self.unc.iter().all(|&v| v == 0.0)
             && self.stamp == 0
             && self.raw.is_none()
+            && self.sem == COGON_ZERO_SEM
     }
 
-    /// Dimensions with uncertainty above 0.9 (R5 flag).
-    pub fn low_confidence_dims(&self) -> Vec<(usize, f32)> {
-        self.unc
-            .iter()
-            .enumerate()
-            .filter(|(_, &u)| u > 0.9)
-            .map(|(i, &u)| (i, u))
-            .collect()
+    /// Low-confidence COGON per v0.5.1 R5 — P6_VETOR_TEMPORAL below 0.1.
+    pub fn is_low_confidence(&self) -> bool {
+        self.sem[29] < 0.1
     }
 }
 

@@ -58,9 +58,8 @@ fn current_stamp() -> i64 {
 
 /// Approximate tokens saved: original text byte length / 4 (rough estimate).
 fn tokens_saved(text: &str) -> i64 {
-    // A simple heuristic: each 4 bytes ~ 1 token, 32 f32 = 128 bytes
     let original_tokens = (text.len() as i64).saturating_add(3) / 4;
-    let cogon_tokens = 32i64; // 32 floats ≈ 32 tokens
+    let cogon_tokens = 32i64;
     (original_tokens - cogon_tokens).max(0)
 }
 
@@ -73,19 +72,19 @@ impl LeetService for LeetServiceImpl {
         request: Request<EncodeRequest>,
     ) -> Result<Response<EncodeResponse>, Status> {
         let req = request.into_inner();
-        let (sem, unc) = self.engine.project(&req.text, &req.agent_id);
+        let sem = self.engine.project(&req.text, &req.agent_id);
         let cogon_id = Uuid::new_v4().to_string();
         let stamp = current_stamp();
         let saved = tokens_saved(&req.text);
 
         self.store
-            .save(&req.agent_id, &cogon_id, sem.clone(), unc.clone(), stamp)
+            .save(&req.agent_id, &cogon_id, sem.clone(), stamp)
             .map_err(|e| Status::internal(e))?;
 
         Ok(Response::new(EncodeResponse {
             cogon_id,
             sem,
-            unc,
+            unc: vec![], // reserved for wire compat; not used in v0.5.1
             stamp,
             tokens_saved: saved,
         }))
@@ -96,7 +95,7 @@ impl LeetService for LeetServiceImpl {
         request: Request<DecodeRequest>,
     ) -> Result<Response<DecodeResponse>, Status> {
         let req = request.into_inner();
-        let text = self.engine.reconstruct(&req.sem, &req.unc, &req.lang);
+        let text = self.engine.reconstruct(&req.sem, &req.lang);
         Ok(Response::new(DecodeResponse { text }))
     }
 
@@ -114,17 +113,17 @@ impl LeetService for LeetServiceImpl {
             while let Some(result) = stream.next().await {
                 match result {
                     Ok(req) => {
-                        let (sem, unc) = queue.push(req.text.clone(), req.agent_id.clone()).await;
+                        let sem = queue.push(req.text.clone(), req.agent_id.clone()).await;
                         let cogon_id = Uuid::new_v4().to_string();
                         let stamp = current_stamp();
                         let saved = tokens_saved(&req.text);
 
-                        let _ = store.save(&req.agent_id, &cogon_id, sem.clone(), unc.clone(), stamp);
+                        let _ = store.save(&req.agent_id, &cogon_id, sem.clone(), stamp);
 
                         let resp = EncodeResponse {
                             cogon_id,
                             sem,
-                            unc,
+                            unc: vec![],
                             stamp,
                             tokens_saved: saved,
                         };
@@ -179,7 +178,7 @@ impl LeetService for LeetServiceImpl {
             .map(|r| CogonRecord {
                 cogon_id: r.cogon_id,
                 sem: r.sem,
-                unc: r.unc,
+                unc: vec![], // reserved for wire compat
                 dist: r.dist,
                 stamp: r.stamp,
             })

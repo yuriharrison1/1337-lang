@@ -40,7 +40,6 @@ mod tests {
             payload: Payload::Cogon(Cogon {
                 id: Uuid::new_v4(),
                 sem: [0.5_f32; 32],
-                unc: [0.1_f32; 32],
                 stamp: 1000000,
                 raw: None,
             }),

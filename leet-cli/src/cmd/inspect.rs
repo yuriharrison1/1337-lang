@@ -27,7 +27,7 @@ pub fn run(json_input: &str) {
     for (rank, (i, v)) in indexed.iter().take(10).enumerate() {
         let axis = &CANONICAL_AXES[*i];
         let label = format!("{}_{}", axis.code, axis.name);
-        let line = format!("  {:2}. {:28} = {:.4}  (unc={:.4})", rank + 1, label, v, cogon.unc[*i]);
+        let line = format!("  {:2}. {:28} = {:.4}", rank + 1, label, v);
         if *v > 0.8 {
             println!("{}", line.red());
         } else if *v >= 0.5 {

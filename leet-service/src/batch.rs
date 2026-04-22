@@ -10,7 +10,7 @@ use crate::projection::Engine;
 struct Job {
     text: String,
     agent_id: String,
-    reply: oneshot::Sender<(Vec<f32>, Vec<f32>)>,
+    reply: oneshot::Sender<Vec<f32>>,
 }
 
 /// A batch queue that groups encode requests and processes them together.
@@ -40,7 +40,6 @@ impl BatchQueue {
                                 }
                             }
                             None => {
-                                // Channel closed, flush remaining and exit
                                 flush(&engine, &mut pending);
                                 break;
                             }
@@ -59,25 +58,24 @@ impl BatchQueue {
     }
 
     /// Push an encode request and wait for the result.
-    pub async fn push(&self, text: String, agent_id: String) -> (Vec<f32>, Vec<f32>) {
+    pub async fn push(&self, text: String, agent_id: String) -> Vec<f32> {
         let (reply_tx, reply_rx) = oneshot::channel();
         let job = Job {
             text,
             agent_id,
             reply: reply_tx,
         };
-        // If channel is full or dropped, fall back to direct projection
         if self.sender.send(job).await.is_err() {
-            return (vec![0.5_f32; 32], vec![0.2_f32; 32]);
+            return vec![0.5_f32; 32];
         }
-        reply_rx.await.unwrap_or_else(|_| (vec![0.5_f32; 32], vec![0.2_f32; 32]))
+        reply_rx.await.unwrap_or_else(|_| vec![0.5_f32; 32])
     }
 }
 
 fn flush(engine: &Engine, pending: &mut Vec<Job>) {
     for job in pending.drain(..) {
-        let (sem, unc) = engine.project(&job.text, &job.agent_id);
-        let _ = job.reply.send((sem, unc));
+        let sem = engine.project(&job.text, &job.agent_id);
+        let _ = job.reply.send(sem);
     }
 }
 
@@ -89,10 +87,9 @@ mod tests {
     async fn test_batch_processes_requests() {
         let engine = Arc::new(Engine::new());
         let queue = BatchQueue::new(engine);
-        let (sem, unc) = queue.push("urgente".to_string(), "agent1".to_string()).await;
+        let sem = queue.push("urgente".to_string(), "agent1".to_string()).await;
         assert_eq!(sem.len(), 32);
-        assert_eq!(unc.len(), 32);
-        assert!(sem[22] > 0.9, "C1_URGENCIA should be activated");
+        assert!(sem[23] > 0.9, "G8_URGENCIA should be activated");
     }
 
     #[tokio::test]
@@ -110,9 +107,8 @@ mod tests {
         }
 
         for handle in handles {
-            let (sem, unc) = handle.await.unwrap();
+            let sem = handle.await.unwrap();
             assert_eq!(sem.len(), 32);
-            assert_eq!(unc.len(), 32);
         }
     }
 }

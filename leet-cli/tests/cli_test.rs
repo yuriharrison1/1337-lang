@@ -109,15 +109,15 @@ fn test_encode_deploy_activates_processo() {
 // ─── Zero tests ───────────────────────────────────────────────────────────────
 
 #[test]
-fn test_zero_sem_all_ones() {
+fn test_zero_s1_essencia_is_one() {
     let z = Cogon::zero();
-    assert!(z.sem.iter().all(|&v| v == 1.0));
+    assert_eq!(z.sem[0], 1.0, "COGON_ZERO: S1_ESSENCIA should be 1.0");
 }
 
 #[test]
-fn test_zero_unc_all_zeros() {
+fn test_zero_d6_valencia_ont_is_one() {
     let z = Cogon::zero();
-    assert!(z.unc.iter().all(|&v| v == 0.0));
+    assert_eq!(z.sem[13], 1.0, "COGON_ZERO: D6_VALENCIA_ONT should be 1.0");
 }
 
 #[test]
@@ -152,7 +152,6 @@ fn test_validate_valid_msg() {
         payload: Payload::Cogon(Cogon {
             id: Uuid::new_v4(),
             sem: [0.5_f32; 32],
-            unc: [0.1_f32; 32],
             stamp: 1000,
             raw: None,
         }),
