@@ -1,4 +1,4 @@
-//! Validation of MSG_1337 against rules R1–R21.
+//! Validation of MSG_1337 against rules R1–R23.
 //!
 //! Rules that require multi-message agent state (R13, R15, R16, R18) are
 //! enforced at the operator/bridge layer, not here. This module validates
@@ -29,6 +29,8 @@ pub fn validate(msg: &Msg1337) -> Result<(), LeetError> {
     r19_inheritance_depth(msg)?;
     r20_cogon_zero_structure(msg)?;
     r21_bridge_no_exposure(msg)?;
+    r22_sem_in_range(msg)?;
+    r23_stamp_non_negative(msg)?;
     Ok(())
 }
 
@@ -288,6 +290,48 @@ fn r21_bridge_no_exposure(msg: &Msg1337) -> Result<(), LeetError> {
     Ok(())
 }
 
+// ─── R22 ─────────────────────────────────────────────────────────────────────
+
+fn r22_sem_in_range(msg: &Msg1337) -> Result<(), LeetError> {
+    let check = |cogon: &crate::types::Cogon| -> Result<(), LeetError> {
+        for (i, &v) in cogon.sem.iter().enumerate() {
+            if v < 0.0 || v > 1.0 {
+                return Err(LeetError::R22SemOutOfRange { dim: i, value: v });
+            }
+        }
+        Ok(())
+    };
+    match &msg.payload {
+        Payload::Cogon(c) => check(c)?,
+        Payload::Dag(dag) => {
+            for node in &dag.nodes {
+                check(node)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+// ─── R23 ─────────────────────────────────────────────────────────────────────
+
+fn r23_stamp_non_negative(msg: &Msg1337) -> Result<(), LeetError> {
+    let check = |cogon: &crate::types::Cogon| -> Result<(), LeetError> {
+        if cogon.stamp < 0 {
+            return Err(LeetError::R23NegativeStamp(cogon.stamp));
+        }
+        Ok(())
+    };
+    match &msg.payload {
+        Payload::Cogon(c) => check(c)?,
+        Payload::Dag(dag) => {
+            for node in &dag.nodes {
+                check(node)?;
+            }
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -400,5 +444,29 @@ mod tests {
         let msg = base_msg(Payload::Cogon(cogon));
         let flags = check_confidence(&msg);
         assert_eq!(flags.len(), 1);
+    }
+
+    #[test]
+    fn test_r22_rejects_sem_above_1() {
+        let mut cogon = simple_cogon();
+        cogon.sem[5] = 1.5;
+        let msg = base_msg(Payload::Cogon(cogon));
+        assert!(matches!(validate(&msg), Err(LeetError::R22SemOutOfRange { dim: 5, .. })));
+    }
+
+    #[test]
+    fn test_r22_rejects_sem_below_0() {
+        let mut cogon = simple_cogon();
+        cogon.sem[10] = -0.1;
+        let msg = base_msg(Payload::Cogon(cogon));
+        assert!(matches!(validate(&msg), Err(LeetError::R22SemOutOfRange { dim: 10, .. })));
+    }
+
+    #[test]
+    fn test_r23_rejects_negative_stamp() {
+        let mut cogon = simple_cogon();
+        cogon.stamp = -1;
+        let msg = base_msg(Payload::Cogon(cogon));
+        assert!(matches!(validate(&msg), Err(LeetError::R23NegativeStamp(-1))));
     }
 }

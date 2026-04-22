@@ -23,8 +23,8 @@ pub enum LeetError {
     #[error("R4: DAG contains a cycle")]
     R4Cycle,
 
-    // R5: unc[i] > 0.9 triggers low-confidence flag.
-    #[error("R5: low confidence at dimension {dim} (unc={value:.3})")]
+    // R5: P6_CONFIANCA (sem[29]) < 0.1 triggers low-confidence flag.
+    #[error("R5: low confidence — P6_CONFIANCA at dim {dim} = {value:.3} (threshold 0.1)")]
     R5LowConfidence { dim: usize, value: f32 },
 
     // R6: surface.human_required=true requires urgency declared.
@@ -39,8 +39,8 @@ pub enum LeetError {
     #[error("R8: BROADCAST receiver only allowed for ANOMALY or SYNC intent")]
     R8InvalidBroadcast,
 
-    // R9: RAW role=EVIDENCE must have coherent sem/unc.
-    #[error("R9: RAW role=EVIDENCE has incoherent sem/unc (all zeros)")]
+    // R9: RAW role=EVIDENCE must have coherent sem (non-zero).
+    #[error("R9: RAW role=EVIDENCE has incoherent sem (all zeros)")]
     R9IncoherentEvidence,
 
     // R10: VECTOR[32] indexed by position.
@@ -66,6 +66,14 @@ pub enum LeetError {
     // R21: BRIDGE agent never exposes 1337 internals to external system.
     #[error("R21: BRIDGE agent attempted to expose 1337 internals")]
     R21BridgeExposure,
+
+    // R22: All sem values must be in [0.0, 1.0].
+    #[error("R22: sem[{dim}] = {value:.4} is out of [0.0, 1.0] range")]
+    R22SemOutOfRange { dim: usize, value: f32 },
+
+    // R23: stamp must be >= 0 (nanoseconds since epoch).
+    #[error("R23: stamp = {0} is negative (must be >= 0)")]
+    R23NegativeStamp(i64),
 
     // General errors
     #[error("dimension mismatch: expected {expected}, got {got}")]
@@ -99,6 +107,8 @@ impl LeetError {
             Self::R19InheritanceTooDeep => "R19",
             Self::R20MissingCogonZero => "R20",
             Self::R21BridgeExposure => "R21",
+            Self::R22SemOutOfRange { .. } => "R22",
+            Self::R23NegativeStamp(_) => "R23",
             _ => "ERR",
         }
     }
