@@ -24,7 +24,7 @@ pub enum LeetError {
     R4Cycle,
 
     // R5: P6_CONFIANCA (sem[29]) < 0.1 triggers low-confidence flag.
-    #[error("R5: low confidence — P6_CONFIANCA at dim {dim} = {value:.3} (threshold 0.1)")]
+    #[error("R5: low confidence — P6_TEMPORAL_VECTOR at dim {dim} = {value:.3} (threshold 0.1)")]
     R5LowConfidence { dim: usize, value: f32 },
 
     // R6: surface.human_required=true requires urgency declared.
