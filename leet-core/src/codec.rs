@@ -1,4 +1,4 @@
-//! Binary codec for 1337 — compact binary encoding with checksum.
+//! Binary codec for 1337 — compact binary encoding with checksum (v0.5.1).
 //!
 //! Format COGON (96 bytes fixed):
 //! ```text
@@ -6,18 +6,26 @@
 //!
 //! Header:
 //!   - magic: 2 bytes (0x1337)
-//!   - version_flags: 1 byte
+//!   - version_flags: 1 byte   (v0.5.1 keeps VERSION=0x02 for binary compat)
 //!   - reserved: 1 byte
 //!
 //! Payload:
-//!   - id: 16 bytes (UUID)
-//!   - sem: 32 bytes (32 uint8, quantized)
-//!   - reserved: 32 bytes (zeros; was unc in v0.4)  // TODO(07c): rename to reserved
-//!   - stamp: 8 bytes (u64 nanoseconds)
+//!   - id: 16 bytes (UUID)                         bytes  0..16
+//!   - sem: 32 bytes (32 uint8, quantized)         bytes 16..48
+//!   - reserved: 32 bytes (always zero, v0.5.1)    bytes 48..80
+//!   - stamp: 8 bytes (u64 nanoseconds)            bytes 80..88
 //!
 //! Checksum:
 //!   - CRC32 of header + payload for integrity verification
 //! ```
+//!
+//! v0.5.1 CHANGE: the 32-byte block that previously held 'unc' is now
+//! 'reserved' and written as zeros. Decoders from v0.4 will see zeros
+//! instead of uncertainty, which translates to "maximum confidence" in
+//! the old semantic — acceptable forward-compatibility.
+//!
+//! Reserved bytes may be repurposed in the future; doing so requires
+//! bumping VERSION to 0x03 so old decoders can reject the frame.
 //!
 //! Quantization: float [0.0, 1.0] <-> uint8 [0, 255]
 //! Compression vs JSON: ~4-5:1
@@ -84,6 +92,7 @@ pub fn encode_cogon(cogon: &Cogon) -> Vec<u8> {
     let crc = compute_crc32(&buf);
     buf.extend_from_slice(&crc.to_be_bytes());
 
+    debug_assert_eq!(buf.len(), TOTAL_SIZE, "frame must be exactly 96 bytes");
     buf
 }
 
@@ -220,6 +229,23 @@ mod tests {
     }
 
     #[test]
+    fn test_frame_size_is_96_bytes() {
+        let c = make_cogon(0.5);
+        let encoded = encode_cogon(&c);
+        assert_eq!(encoded.len(), TOTAL_SIZE);
+        assert_eq!(encoded.len(), 96);
+    }
+
+    #[test]
+    fn test_reserved_bytes_are_zero() {
+        let c = make_cogon(0.9);
+        let encoded = encode_cogon(&c);
+        // Payload starts at byte 4 (after header). Reserved region is payload[48..80].
+        let reserved = &encoded[HEADER_SIZE + 48..HEADER_SIZE + 80];
+        assert_eq!(reserved, &[0u8; 32], "reserved bytes must all be zero");
+    }
+
+    #[test]
     fn test_quantization_roundtrip() {
         let original = 0.734;
         let quantized = float_to_u8(original);
@@ -235,8 +261,33 @@ mod tests {
 
         assert_eq!(original.id, decoded.id);
         for i in 0..32 {
-            assert!((original.sem[i] - decoded.sem[i]).abs() < 0.004);
+            assert!((original.sem[i] - decoded.sem[i]).abs() < 0.004, "dim {i}");
         }
+        assert_eq!(original.stamp, decoded.stamp);
+    }
+
+    #[test]
+    fn test_v04_frame_with_unc_still_decodes() {
+        // Forward-compat: a v0.4-style frame where bytes 48..80 contain
+        // non-zero unc data still decodes correctly (reserved bytes discarded).
+        let c = make_cogon(0.5);
+        let mut encoded = encode_cogon(&c);
+
+        // Simulate v0.4 encoder: fill reserved region with some unc values.
+        for i in 0..32 {
+            encoded[HEADER_SIZE + 48 + i] = 128; // simulated unc=0.5
+        }
+        // Recompute checksum so the frame is still "valid" under v0.4 producer.
+        let new_crc = compute_crc32(&encoded[..HEADER_SIZE + PAYLOAD_SIZE]);
+        encoded[HEADER_SIZE + PAYLOAD_SIZE..HEADER_SIZE + PAYLOAD_SIZE + CHECKSUM_SIZE]
+            .copy_from_slice(&new_crc.to_be_bytes());
+
+        let decoded = decode_cogon(&encoded).expect("v0.4-style frame must decode");
+        assert_eq!(decoded.id, c.id);
+        for i in 0..32 {
+            assert!((decoded.sem[i] - 0.5).abs() < 0.004);
+        }
+        // The unc data from the v0.4 frame is silently discarded — that's the contract.
     }
 
     #[test]
