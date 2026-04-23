@@ -1,3 +1,0 @@
-[workspace]
-members = ["leet-core", "leet-bridge", "leet-service", "leet-cli"]
-resolver = "2"

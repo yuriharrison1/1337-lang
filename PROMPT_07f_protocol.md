@@ -1,0 +1,530 @@
+# PROMPT 07f — PROTOCOL v0.5.1 (âncoras reprojetadas, sem unc)
+
+Reescrever as 5 âncoras canônicas (presença, ausência, mudança, agência, incerteza) com os valores específicos v0.5.1 da tabela da seção 12 da spec. Remover toda referência a `unc` nos factories `Msg1337::new_sync`, `new_ack`, `new_cogon_zero`, `new_nl_message`.
+
+**PRÉ-REQUISITOS**: 07a até 07e executados. `cargo test --workspace` verde.
+
+**ESCOPO**: arquivo único — `leet-core/src/protocol.rs`.
+
+**Taskwarrior**: `+prompt07f`.
+
+---
+
+## ÂNCORAS v0.5.1 — TABELA EXATA
+
+Da spec v0.5.1 seção 12, "Os 5 Conceitos Âncora". Valores não listados = 0.5 (default neutro).
+
+### ÂNCORA_1 — presença
+```
+S1_INTENCAO       [0]  = 1.0
+S5_ENTROPIA       [4]  = 0.0
+S7_COERENCIA      [6]  = 1.0
+P6_CONFIANCA      [29] = 1.0
+G1_MASSA          [16] = 1.0
+G4_TEMPORALIDADE  [19] = 0.5   (presente)
+D4_ESTABILIDADE   [11] = 1.0
+P4_RUIDO          [27] = 0.0
+G2_ANCORA_TEMP    [17] = 0.5
+D7_CAUSALIDADE    [14] = 1.0
+P7_ACAO           [30] = 0.0
+```
+
+### ÂNCORA_2 — ausência
+```
+S1_INTENCAO       [0]  = 0.0
+S5_ENTROPIA       [4]  = 0.0
+S7_COERENCIA      [6]  = 1.0
+P6_CONFIANCA      [29] = 1.0
+G1_MASSA          [16] = 0.3
+G4_TEMPORALIDADE  [19] = 0.5
+D4_ESTABILIDADE   [11] = 1.0
+G3_AFINIDADE      [18] = 0.0
+G2_ANCORA_TEMP    [17] = 0.5
+D7_CAUSALIDADE    [14] = 0.8
+P7_ACAO           [30] = 0.0
+```
+
+### ÂNCORA_3 — mudança
+```
+S1_INTENCAO       [0]  = 0.5
+S5_ENTROPIA       [4]  = 0.5
+D2_TAXA_APREND    [9]  = 1.0
+D4_ESTABILIDADE   [11] = 0.0
+D8_INERCIA        [15] = 0.0
+G8_GRADIENTE      [23] = 1.0
+G4_TEMPORALIDADE  [19] = 0.5
+D3_DECAIMENTO     [10] = 0.7
+D7_CAUSALIDADE    [14] = 0.3
+G2_ANCORA_TEMP    [17] = 0.3
+P7_ACAO           [30] = 0.3
+```
+
+### ÂNCORA_4 — agência
+```
+S1_INTENCAO       [0]  = 1.0
+S5_ENTROPIA       [4]  = 0.2
+P6_CONFIANCA      [29] = 0.8
+G1_MASSA          [16] = 0.8
+G3_AFINIDADE      [18] = 0.8
+D6_PROPAGACAO     [13] = 1.0
+G8_GRADIENTE      [23] = 0.7
+D2_TAXA_APREND    [9]  = 0.6
+D7_CAUSALIDADE    [14] = 0.9
+G2_ANCORA_TEMP    [17] = 0.7
+P7_ACAO           [30] = 0.9
+```
+
+### ÂNCORA_5 — incerteza
+```
+S5_ENTROPIA       [4]  = 1.0
+P4_RUIDO          [27] = 0.8
+P6_CONFIANCA      [29] = 0.1
+S7_COERENCIA      [6]  = 0.2
+D4_ESTABILIDADE   [11] = 0.2
+G7_K_INTERACAO    [22] = 0.1
+P1_QUANTIZACAO    [24] = 0.9
+S6_DENSIDADE      [5]  = 0.2
+D7_CAUSALIDADE    [14] = 0.1
+G2_ANCORA_TEMP    [17] = 0.2
+P7_ACAO           [30] = 0.0
+```
+
+---
+
+## FILE ÚNICO — `leet-core/src/protocol.rs`
+
+Reescrita completa:
+
+```rust
+//! Protocol support: 5 anchor COGONs, C5 handshake factory methods (v0.5.1).
+//!
+//! - Five immutable anchor COGONs for canonical alignment
+//! - Msg1337 factory constructors for the C5 handshake phases
+//! - `compute_align_hash` — deterministic fingerprint per agent
+
+use std::collections::HashMap;
+
+use sha2::{Digest, Sha256};
+use uuid::Uuid;
+
+use crate::types::{
+    C5Block, Cogon, Intent, Msg1337, Payload, RawField, RawRole, Receiver, SurfaceBlock,
+};
+
+// ── Anchor COGONs ─────────────────────────────────────────────────────────────
+
+/// Names of the 5 immutable anchor concepts (transmitted in ECHO phase).
+pub const ANCHOR_NAMES: [&str; 5] = [
+    "presence",    // Something exists now
+    "absence",     // Something does not exist
+    "change",      // Previous state ≠ current state
+    "agency",      // There is an actor causing something
+    "uncertainty", // Degree of unknowing
+];
+
+/// Generate the nth anchor COGON (v0.5.1 projection).
+///
+/// Each anchor has a distinctive semantic fingerprint on the 32 axes
+/// derived from the v0.5.1 spec § 12 table. Axes not listed default to 0.5.
+pub fn anchor_cogon(index: usize) -> Cogon {
+    let mut sem = [0.5_f32; 32];
+
+    match index {
+        0 => {
+            // presence
+            sem[0]  = 1.0;  // S1 INTENCAO
+            sem[4]  = 0.0;  // S5 ENTROPIA
+            sem[6]  = 1.0;  // S7 COERENCIA
+            sem[11] = 1.0;  // D4 ESTABILIDADE
+            sem[14] = 1.0;  // D7 CAUSALIDADE
+            sem[16] = 1.0;  // G1 MASSA
+            sem[17] = 0.5;  // G2 ANCORA_TEMPORAL
+            sem[19] = 0.5;  // G4 TEMPORALIDADE (presente)
+            sem[27] = 0.0;  // P4 RUIDO
+            sem[29] = 1.0;  // P6 CONFIANCA
+            sem[30] = 0.0;  // P7 ACAO
+        }
+        1 => {
+            // absence
+            sem[0]  = 0.0;  // S1 INTENCAO
+            sem[4]  = 0.0;  // S5 ENTROPIA
+            sem[6]  = 1.0;  // S7 COERENCIA
+            sem[11] = 1.0;  // D4 ESTABILIDADE
+            sem[14] = 0.8;  // D7 CAUSALIDADE
+            sem[16] = 0.3;  // G1 MASSA
+            sem[17] = 0.5;  // G2 ANCORA_TEMPORAL
+            sem[18] = 0.0;  // G3 AFINIDADE (repulsão)
+            sem[19] = 0.5;  // G4 TEMPORALIDADE
+            sem[29] = 1.0;  // P6 CONFIANCA
+            sem[30] = 0.0;  // P7 ACAO
+        }
+        2 => {
+            // change
+            sem[0]  = 0.5;  // S1 INTENCAO
+            sem[4]  = 0.5;  // S5 ENTROPIA
+            sem[9]  = 1.0;  // D2 TAXA_APRENDIZADO
+            sem[10] = 0.7;  // D3 DECAIMENTO
+            sem[11] = 0.0;  // D4 ESTABILIDADE
+            sem[14] = 0.3;  // D7 CAUSALIDADE
+            sem[15] = 0.0;  // D8 INERCIA
+            sem[17] = 0.3;  // G2 ANCORA_TEMPORAL
+            sem[19] = 0.5;  // G4 TEMPORALIDADE
+            sem[23] = 1.0;  // G8 GRADIENTE
+            sem[30] = 0.3;  // P7 ACAO
+        }
+        3 => {
+            // agency
+            sem[0]  = 1.0;  // S1 INTENCAO
+            sem[4]  = 0.2;  // S5 ENTROPIA
+            sem[9]  = 0.6;  // D2 TAXA_APRENDIZADO
+            sem[13] = 1.0;  // D6 PROPAGACAO
+            sem[14] = 0.9;  // D7 CAUSALIDADE
+            sem[16] = 0.8;  // G1 MASSA
+            sem[17] = 0.7;  // G2 ANCORA_TEMPORAL
+            sem[18] = 0.8;  // G3 AFINIDADE
+            sem[23] = 0.7;  // G8 GRADIENTE
+            sem[29] = 0.8;  // P6 CONFIANCA
+            sem[30] = 0.9;  // P7 ACAO
+        }
+        4 => {
+            // uncertainty
+            sem[4]  = 1.0;  // S5 ENTROPIA
+            sem[5]  = 0.2;  // S6 DENSIDADE
+            sem[6]  = 0.2;  // S7 COERENCIA
+            sem[11] = 0.2;  // D4 ESTABILIDADE
+            sem[14] = 0.1;  // D7 CAUSALIDADE
+            sem[17] = 0.2;  // G2 ANCORA_TEMPORAL
+            sem[22] = 0.1;  // G7 K_INTERACAO
+            sem[24] = 0.9;  // P1 QUANTIZACAO
+            sem[27] = 0.8;  // P4 RUIDO
+            sem[29] = 0.1;  // P6 CONFIANCA
+            sem[30] = 0.0;  // P7 ACAO
+        }
+        _ => {} // out of range: all-neutral 0.5
+    }
+
+    Cogon {
+        id: Uuid::new_v4(),
+        sem,
+        stamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos() as i64)
+            .unwrap_or(0),
+        raw: Some(RawField {
+            content_type: "text/plain".to_string(),
+            content: serde_json::Value::String(
+                ANCHOR_NAMES.get(index).copied().unwrap_or("unknown").to_string(),
+            ),
+            role: RawRole::Evidence,
+        }),
+    }
+}
+
+/// Generate all 5 anchor COGONs.
+pub fn all_anchors() -> [Cogon; 5] {
+    [
+        anchor_cogon(0),
+        anchor_cogon(1),
+        anchor_cogon(2),
+        anchor_cogon(3),
+        anchor_cogon(4),
+    ]
+}
+
+// ── Align hash ────────────────────────────────────────────────────────────────
+
+/// Compute the canonical align_hash for an agent.
+///
+/// `align_hash = SHA256("1337:v0.5.1:" || agent_name)`
+pub fn compute_align_hash(agent_name: &str) -> [u8; 32] {
+    let mut h = Sha256::new();
+    h.update(b"1337:v0.5.1:");
+    h.update(agent_name.as_bytes());
+    let result = h.finalize();
+    let mut out = [0u8; 32];
+    out.copy_from_slice(&result);
+    out
+}
+
+// ── Msg1337 factory methods ───────────────────────────────────────────────────
+
+impl Msg1337 {
+    /// PROBE phase: initial SYNC — "I exist, here is who I am."
+    pub fn new_sync(agent_id: Uuid, agent_name: &str, role: &str) -> Self {
+        let mut cogon = Cogon::zero();
+        cogon.id = agent_id;
+        cogon.raw = Some(RawField {
+            content_type: "application/json".to_string(),
+            content: serde_json::json!({
+                "name": agent_name,
+                "role": role,
+                "schema_ver": "0.5.1"
+            }),
+            role: RawRole::Bridge,
+        });
+
+        Self {
+            id: Uuid::new_v4(),
+            sender: agent_id,
+            receiver: Receiver::Broadcast,
+            intent: Intent::Sync,
+            ref_hash: None,
+            patch: None,
+            payload: Payload::Cogon(cogon),
+            c5: C5Block {
+                zone_fixed: crate::axes::boot_vector(),
+                zone_emergent: HashMap::new(),
+                schema_ver: "0.5.1".to_string(),
+                align_hash: [0u8; 32],
+            },
+            surface: SurfaceBlock {
+                human_required: false,
+                urgency: None,
+                reconstruct_depth: 1,
+                lang: "pt".to_string(),
+            },
+        }
+    }
+
+    /// VERIFY phase: ACK with computed align_hash.
+    pub fn new_ack(agent_id: Uuid, align_hash: [u8; 32]) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            sender: agent_id,
+            receiver: Receiver::Broadcast,
+            intent: Intent::Ack,
+            ref_hash: None,
+            patch: None,
+            payload: Payload::Cogon(Cogon::zero()),
+            c5: C5Block {
+                zone_fixed: crate::axes::boot_vector(),
+                zone_emergent: HashMap::new(),
+                schema_ver: "0.5.1".to_string(),
+                align_hash,
+            },
+            surface: SurfaceBlock {
+                human_required: false,
+                urgency: None,
+                reconstruct_depth: 1,
+                lang: "pt".to_string(),
+            },
+        }
+    }
+
+    /// Construct a COGON_ZERO broadcast — "I AM" identity assertion.
+    pub fn new_cogon_zero(agent_id: Uuid) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            sender: agent_id,
+            receiver: Receiver::Broadcast,
+            intent: Intent::Assert,
+            ref_hash: None,
+            patch: None,
+            payload: Payload::Cogon(Cogon::zero()),
+            c5: C5Block {
+                zone_fixed: crate::axes::boot_vector(),
+                zone_emergent: HashMap::new(),
+                schema_ver: "0.5.1".to_string(),
+                align_hash: [0u8; 32],
+            },
+            surface: SurfaceBlock {
+                human_required: false,
+                urgency: None,
+                reconstruct_depth: 1,
+                lang: "pt".to_string(),
+            },
+        }
+    }
+
+    /// Build an ASSERT message carrying a text payload in a COGON's raw field.
+    pub fn new_nl_message(
+        sender_id: Uuid,
+        receiver: Receiver,
+        cogon: Cogon,
+        align_hash: [u8; 32],
+        lang: &str,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            sender: sender_id,
+            receiver,
+            intent: Intent::Assert,
+            ref_hash: None,
+            patch: None,
+            payload: Payload::Cogon(cogon),
+            c5: C5Block {
+                zone_fixed: crate::axes::boot_vector(),
+                zone_emergent: HashMap::new(),
+                schema_ver: "0.5.1".to_string(),
+                align_hash,
+            },
+            surface: SurfaceBlock {
+                human_required: false,
+                urgency: None,
+                reconstruct_depth: 1,
+                lang: lang.to_string(),
+            },
+        }
+    }
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_anchors_have_correct_names() {
+        let anchors = all_anchors();
+        for (i, cogon) in anchors.iter().enumerate() {
+            let raw = cogon.raw.as_ref().expect("anchor must have raw");
+            let name = raw.content.as_str().expect("raw content must be string");
+            assert_eq!(name, ANCHOR_NAMES[i]);
+        }
+    }
+
+    #[test]
+    fn anchor_presence_has_high_intencao_and_massa() {
+        let c = anchor_cogon(0);
+        assert_eq!(c.sem[0],  1.0, "S1_INTENCAO");
+        assert_eq!(c.sem[16], 1.0, "G1_MASSA");
+        assert_eq!(c.sem[29], 1.0, "P6_CONFIANCA");
+    }
+
+    #[test]
+    fn anchor_absence_has_low_intencao_and_afinidade() {
+        let c = anchor_cogon(1);
+        assert_eq!(c.sem[0],  0.0, "S1_INTENCAO");
+        assert_eq!(c.sem[18], 0.0, "G3_AFINIDADE (repulsão)");
+        assert_eq!(c.sem[16], 0.3, "G1_MASSA low");
+    }
+
+    #[test]
+    fn anchor_change_has_high_learning_and_gradient() {
+        let c = anchor_cogon(2);
+        assert_eq!(c.sem[9],  1.0, "D2_TAXA_APRENDIZADO");
+        assert_eq!(c.sem[23], 1.0, "G8_GRADIENTE");
+        assert_eq!(c.sem[11], 0.0, "D4_ESTABILIDADE low");
+    }
+
+    #[test]
+    fn anchor_agency_has_high_causality_and_action() {
+        let c = anchor_cogon(3);
+        assert_eq!(c.sem[14], 0.9, "D7_CAUSALIDADE");
+        assert_eq!(c.sem[30], 0.9, "P7_ACAO");
+        assert_eq!(c.sem[0],  1.0, "S1_INTENCAO");
+    }
+
+    #[test]
+    fn anchor_uncertainty_has_low_confidence_and_high_entropy() {
+        let c = anchor_cogon(4);
+        assert_eq!(c.sem[29], 0.1, "P6_CONFIANCA low");
+        assert_eq!(c.sem[4],  1.0, "S5_ENTROPIA max");
+        assert_eq!(c.sem[27], 0.8, "P4_RUIDO high");
+    }
+
+    #[test]
+    fn anchors_respect_axis_range_0_1() {
+        for i in 0..5 {
+            let c = anchor_cogon(i);
+            for (j, &v) in c.sem.iter().enumerate() {
+                assert!(v >= 0.0 && v <= 1.0, "anchor {i} sem[{j}]={v} out of range");
+            }
+        }
+    }
+
+    #[test]
+    fn compute_align_hash_deterministic() {
+        let h1 = compute_align_hash("ATLAS");
+        let h2 = compute_align_hash("ATLAS");
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn compute_align_hash_different_names() {
+        let h_atlas = compute_align_hash("ATLAS");
+        let h_cipher = compute_align_hash("CIPHER");
+        assert_ne!(h_atlas, h_cipher);
+    }
+
+    #[test]
+    fn new_sync_has_agent_info() {
+        let agent_id = Uuid::new_v4();
+        let msg = Msg1337::new_sync(agent_id, "ATLAS", "Strategic planner");
+        assert_eq!(msg.sender, agent_id);
+        assert!(matches!(msg.intent, Intent::Sync));
+        if let Payload::Cogon(cogon) = &msg.payload {
+            let raw = cogon.raw.as_ref().unwrap();
+            let name = raw.content["name"].as_str().unwrap();
+            assert_eq!(name, "ATLAS");
+        } else {
+            panic!("expected Cogon payload");
+        }
+    }
+
+    #[test]
+    fn new_sync_uses_boot_vector_for_zone_fixed() {
+        let agent_id = Uuid::new_v4();
+        let msg = Msg1337::new_sync(agent_id, "FORGE", "Builder");
+        // P1 boot default is 0.8 (from Pilar 4).
+        assert_eq!(msg.c5.zone_fixed[24], 0.8, "P1_QUANTIZACAO boot");
+        // G7 boot default is 0.1.
+        assert_eq!(msg.c5.zone_fixed[22], 0.1, "G7_K_INTERACAO boot");
+    }
+
+    #[test]
+    fn new_ack_embeds_hash() {
+        let agent_id = Uuid::new_v4();
+        let hash = compute_align_hash("FORGE");
+        let msg = Msg1337::new_ack(agent_id, hash);
+        assert!(matches!(msg.intent, Intent::Ack));
+        assert_eq!(msg.c5.align_hash, hash);
+    }
+}
+```
+
+---
+
+## VERIFICATION
+
+```bash
+cargo test -p leet-core --lib protocol
+cargo test -p leet-core
+cargo test --workspace
+```
+
+Os asserts antigos (tipo `avg_unc > 0.5` em `anchor_uncertainty`) são substituídos pelos novos (P6=0.1). Testes em outros crates que esperavam comportamento v0.4 das âncoras vão precisar ajuste — revisar `leet-service/tests` e `leet-bridge/tests` procurando `anchor_cogon` ou `all_anchors` em asserts.
+
+---
+
+## GIT + TASKWARRIOR
+
+```bash
+task add project:1337 +prompt07f "Protocol v0.5.1: reproject 5 anchors, use boot_vector, drop unc"
+# work
+task project:1337 +prompt07f done
+
+git add leet-core/src/protocol.rs
+git commit -m "refactor(protocol): reproject 5 anchor COGONs onto v0.5.1 canonical space
+
+Anchor values are now derived from spec § 12 table (v0.5.1) with the new
+substitutions in place (D7=CAUSALIDADE, G2=ANCORA_TEMPORAL, P7=ACAO):
+
+- presence:   S1=1.0, G1=1.0, D7=1.0, P6=1.0, S7=1.0 (full identity)
+- absence:    S1=0.0, G1=0.3, G3=0.0 (repulsion), D7=0.8
+- change:     D2=1.0, G8=1.0 (accelerating), D4=0.0, D7=0.3
+- agency:     S1=1.0, D6=1.0, D7=0.9, P7=0.9 (demands action)
+- uncertainty: S5=1.0, P4=0.8, P6=0.1, G7=0.1
+
+Msg1337 factory methods (new_sync/new_ack/new_cogon_zero/new_nl_message)
+now initialize c5.zone_fixed using axes::boot_vector() from Pilar 4 instead
+of a uniform [0.5]*32 or [1.0]*32. All references to 'unc' were removed.
+
+Part of Fase A, sub-prompt 07f."
+git push origin main
+```
+
+---
+
+**END OF PROMPT_07f**

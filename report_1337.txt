@@ -1,0 +1,103 @@
+================================================================================
+                    📊 RELATÓRIO 1337 vs ENGLISH
+================================================================================
+
+    📅 Data:          2026-04-01T20:52:39.564220
+    🎯 Tópico:        Eros (Amor)
+    🔄 Rounds:        40
+    🤖 Agentes:       15
+    🔌 DeepSeek:      ✅ Sim (API Real)
+
+────────────────────────────────────────────────────────────────────────────────
+                         🎯 RESUMO EXECUTIVO
+────────────────────────────────────────────────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                             │
+    │   💰 ECONOMIA FINANCEIRA                                                    │
+    │      Custo English:             $0.0583                                   │
+    │      Custo 1337:              $0.000000    ( ZERO tokens transporte )        │
+    │      ─────────────────────────────────────                                  │
+    │      ECONOMIA:                  $0.0583    (100% de redução)              │
+    │                                                                             │
+    │   📦 EFICIÊNCIA DE COMPRESSÃO                                               │
+    │      Fator de compressão:     5.45x                                       │
+    │      Redução de tamanho:      81.6%                                     │
+    │      Bytes English:                 141.84 KB                                   │
+    │      Bytes 1337:                     26.03 KB                                   │
+    │                                                                             │
+    │   ⚡ PERFORMANCE                                                            │
+    │      Throughput:              1.6 msgs/s                                    │
+    │      Duração total:           372.0 s                                        │
+    │                                                                             │
+    └─────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+                      🗜️  ANÁLISE DE DELTA COMPRESSION
+────────────────────────────────────────────────────────────────────────────────
+
+    Mensagens COGON completo:      179  (███████░░░░░░░░░░░░░░░░░░)
+    Mensagens SparseDelta:         421  (█████████████████░░░░░░░░)
+    
+    Cobertura Delta:              70.2%  
+    Média de eixos alterados:     4.2 de 32
+    
+    📉 Economia com Delta:
+       Bytes economizados:        46.89 KB
+       Tamanho médio COGON:       ~166 B
+       Tamanho médio SparseDelta: ~70 B
+       Redução por delta:         ~57%
+
+────────────────────────────────────────────────────────────────────────────────
+                      📈 CONVERGÊNCIA SEMÂNTICA
+────────────────────────────────────────────────────────────────────────────────
+
+    Distância média entre agentes (quanto menor, mais convergência):
+    
+    Inicial:  0.0679  ▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅
+    Final:    0.0697  ▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆▆
+    
+    Evolução: ▅▅▅▇▄▆▆▄▅▅▂▂▁▅▅▄▄▃▄▇▄▄▅▅▅▆▆▃▅▅▅▅▃▇▅▅▅▄▇▄▅▅█▃▆▅▅▅▅▆
+              ↑ 2.7% de divergência
+    
+    Mínimo:   0.0545  (maior acordo)
+    Máximo:   0.0736  (maior divergência)
+
+────────────────────────────────────────────────────────────────────────────────
+                      👥 ANÁLISE POR AGENTE
+────────────────────────────────────────────────────────────────────────────────
+
+    Agente                Msgs    B(1337)      B(EN)    Ratio   Tokens      Custo
+    ────────────────────────────────────────────────────────────────────────────────
+
+    eryximachus             40      1,125      9,208    8.19x     5715  $0.003597
+    mathematician           40      2,118     15,041    7.10x     7785  $0.005509
+    drwho                   40      1,362      9,020    6.62x     6360  $0.003809
+    priest                  40      1,980     12,119    6.12x     6744  $0.004563
+    communist               40      1,688     10,288    6.09x     5970  $0.003712
+    tech_guy                40      1,771     10,456    5.90x     5752  $0.003572
+    agathon                 40      1,788     10,397    5.82x     6551  $0.004417
+    pinocchio               40      1,575      9,135    5.80x     6474  $0.003967
+    diotima                 40      2,001     11,277    5.64x     6844  $0.004540
+    aristophanes            40      1,687      9,276    5.50x     5887  $0.003687
+────────────────────────────────────────────────────────────────────────────────
+                      💡 INSIGHTS E RECOMENDAÇÕES
+────────────────────────────────────────────────────────────────────────────────
+
+    ✅ EXCELENTE: Compressão de 5.4x é excepcional!
+       A cada 5 bytes de English, apenas 1 byte de 1337 é transmitido.
+
+    ✅ Delta compression está otimizado: 70% das mensagens usam sparse delta.
+       Isso reduz drasticamente o tráfego de rede.
+
+    💰 ECONOMIA: Em escala de 1M de mensagens, o 1337 economizaria
+       aproximadamente $97.11 
+       comparado ao English puro.
+
+    🏆 Melhor compressão: eryximachus (8.19x)
+    📉 Menor compressão: socrates (2.31x)
+    💸 Mais custoso: mathematician ($0.005509)
+
+================================================================================
+                    Fim do Relatório 1337 vs English
+================================================================================
