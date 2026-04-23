@@ -244,10 +244,10 @@ async fn test_anchor_cogons() {
         assert_eq!(label, ANCHOR_NAMES[i]);
     }
 
-    // Presence anchor has high S1_INTENCAO
+    // Presence anchor has high S1_ESSENCE
     assert!(anchors[0].sem[0] > 0.8, "presence: S1 should be > 0.8");
-    // Change anchor has high G8_GRADIENTE (sem[23])
-    assert!(anchors[2].sem[23] > 0.8, "change: G8_GRADIENTE should be > 0.8");
+    // Change anchor has high G8_URGENCY (sem[23])
+    assert!(anchors[2].sem[23] > 0.8, "change: G8_URGENCY should be > 0.8");
 }
 
 /// Wrong align_hash is rejected by server.

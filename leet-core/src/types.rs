@@ -54,13 +54,13 @@ pub struct RawField {
 /// Canonical COGON_ZERO semantic vector (v0.5.1 spec § 2).
 /// Distinct from axes::boot_vector() which initialises new agents (Pilar 4).
 pub const COGON_ZERO_SEM: SemVec = [
-    // Block S: ESSENCIA, CORRESPONDENCIA, VIBRACAO, POLARIDADE, RITMO, CAUSA_EFEITO, GENERO, SISTEMA
+    // Block S: ESSENCE, CORRESPONDENCE, VIBRATION, POLARITY, RHYTHM, CAUSE_EFFECT, GENERATIVITY, SYSTEM
     1.0, 0.0, 0.0, 0.0,   0.0, 1.0, 1.0, 1.0,
-    // Block D: ESTADO, PROCESSO, RELACAO, SINAL, ESTABILIDADE, VALENCIA_ONT, CAUSALIDADE, VERIFICABILIDADE
+    // Block D: STATE, PROCESS, RELATION, SIGNAL, STABILITY, ONTOLOGICAL_VALENCE, CAUSALITY, VERIFIABILITY
     0.5, 0.0, 0.0, 1.0,   0.0, 1.0, 1.0, 0.0,
-    // Block G: TEMPORALIDADE, ANCORA_TEMPORAL, COMPLETUDE, REVERSIBILIDADE, CARGA, ORIGEM, VALENCIA_EPIST, URGENCIA
+    // Block G: TEMPORALITY, TEMPORAL_ANCHOR, COMPLETENESS, REVERSIBILITY, COGNITIVE_LOAD, ORIGIN, EPISTEMIC_VALENCE, URGENCY
     1.0, 0.5, 1.0, 0.5,   0.5, 1.0, 0.1, 0.0,
-    // Block P: IMPACTO, VALOR, ANOMALIA, AFETO, DEPENDENCIA, VETOR_TEMPORAL, ACAO, VALENCIA_ACAO
+    // Block P: IMPACT, VALUE, ANOMALY, AFFECT, DEPENDENCY, TEMPORAL_VECTOR, ACTION, ACTION_VALENCE
     0.8, 0.0, 1.0, 0.0,   0.5, 1.0, 0.0, 0.0,
 ];
 
@@ -98,7 +98,7 @@ impl Cogon {
             && self.sem == COGON_ZERO_SEM
     }
 
-    /// Low-confidence COGON per v0.5.1 R5 — P6_VETOR_TEMPORAL below 0.1.
+    /// Low-confidence COGON per v0.5.1 R5 — P6_TEMPORAL_VECTOR below 0.1.
     pub fn is_low_confidence(&self) -> bool {
         self.sem[29] < 0.1
     }
@@ -180,8 +180,12 @@ impl Dag {
             self.nodes.iter().map(|n| (n.id, Vec::new())).collect();
         
         for edge in &self.edges {
-            adj.get_mut(&edge.from).unwrap().push(edge.to);
-            *in_degree.get_mut(&edge.to).unwrap() += 1;
+            // R3 validation guarantees all edge endpoints exist in nodes.
+            adj.get_mut(&edge.from)
+                .expect("edge.from not in nodes (R3 should have caught this)")
+                .push(edge.to);
+            *in_degree.get_mut(&edge.to)
+                .expect("edge.to not in nodes (R3 should have caught this)") += 1;
         }
 
         let mut queue: Vec<Uuid> = in_degree
@@ -195,7 +199,8 @@ impl Dag {
         while let Some(node) = queue.pop() {
             result.push(node);
             for &neighbor in &adj[&node] {
-                let deg = in_degree.get_mut(&neighbor).unwrap();
+                let deg = in_degree.get_mut(&neighbor)
+                    .expect("neighbor not in in_degree (R3 should have caught this)");
                 *deg -= 1;
                 if *deg == 0 {
                     queue.push(neighbor);

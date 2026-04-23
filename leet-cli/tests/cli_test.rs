@@ -89,7 +89,7 @@ fn test_encode_erro_activates_anomalia_and_estado() {
     let proj = MockProjector;
     let cogon = proj.project("erro no sistema").unwrap();
     assert!(cogon.sem[26] > 0.8); // P3_ANOMALY
-    assert!(cogon.sem[8] > 0.8);  // D1_ESTADO
+    assert!(cogon.sem[8] > 0.8);  // D1_STATE
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn test_encode_neutral_text_baseline() {
 fn test_encode_deploy_activates_processo() {
     let proj = MockProjector;
     let cogon = proj.project("deploy do pipeline").unwrap();
-    assert!(cogon.sem[9] > 0.8); // D2_PROCESSO
+    assert!(cogon.sem[9] > 0.8); // D2_PROCESS
 }
 
 // ─── Zero tests ───────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ fn test_zero_s1_essencia_is_one() {
 #[test]
 fn test_zero_d6_valencia_ont_is_one() {
     let z = Cogon::zero();
-    assert_eq!(z.sem[13], 1.0, "COGON_ZERO: D6_VALENCIA_ONT should be 1.0");
+    assert_eq!(z.sem[13], 1.0, "COGON_ZERO: D6_ONTOLOGICAL_VALENCE should be 1.0");
 }
 
 #[test]
@@ -165,7 +165,7 @@ fn test_validate_valid_msg() {
             human_required: false,
             urgency: None,
             reconstruct_depth: 1,
-            lang: "pt".to_string(),
+            lang: "en".to_string(),
         },
     };
     assert!(validate(&msg).is_ok());

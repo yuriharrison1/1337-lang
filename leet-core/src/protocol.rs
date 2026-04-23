@@ -34,73 +34,73 @@ pub fn anchor_cogon(index: usize) -> Cogon {
     match index {
         0 => {
             // presence
-            sem[0]  = 1.0;  // S1 INTENCAO
-            sem[4]  = 0.0;  // S5 ENTROPIA
-            sem[6]  = 1.0;  // S7 COERENCIA
-            sem[11] = 1.0;  // D4 ESTABILIDADE
-            sem[14] = 1.0;  // D7 CAUSALIDADE
-            sem[16] = 1.0;  // G1 MASSA
-            sem[17] = 0.5;  // G2 ANCORA_TEMPORAL
-            sem[19] = 0.5;  // G4 TEMPORALIDADE (presente)
-            sem[27] = 0.0;  // P4 RUIDO
-            sem[29] = 1.0;  // P6 CONFIANCA
-            sem[30] = 0.0;  // P7 ACAO
+            sem[0]  = 1.0;  // S1 ESSENCE
+            sem[4]  = 0.0;  // S5 RHYTHM
+            sem[6]  = 1.0;  // S7 GENERATIVITY
+            sem[11] = 1.0;  // D4 SIGNAL
+            sem[14] = 1.0;  // D7 CAUSALITY
+            sem[16] = 1.0;  // G1 TEMPORALITY
+            sem[17] = 0.5;  // G2 TEMPORAL_ANCHOR
+            sem[19] = 0.5;  // G4 REVERSIBILITY
+            sem[27] = 0.0;  // P4 AFFECT
+            sem[29] = 1.0;  // P6 TEMPORAL_VECTOR
+            sem[30] = 0.0;  // P7 ACTION
         }
         1 => {
             // absence
-            sem[0]  = 0.0;  // S1 INTENCAO
-            sem[4]  = 0.0;  // S5 ENTROPIA
-            sem[6]  = 1.0;  // S7 COERENCIA
-            sem[11] = 1.0;  // D4 ESTABILIDADE
-            sem[14] = 0.8;  // D7 CAUSALIDADE
-            sem[16] = 0.3;  // G1 MASSA
-            sem[17] = 0.5;  // G2 ANCORA_TEMPORAL
-            sem[18] = 0.0;  // G3 AFINIDADE (repulsão)
-            sem[19] = 0.5;  // G4 TEMPORALIDADE
-            sem[29] = 1.0;  // P6 CONFIANCA
-            sem[30] = 0.0;  // P7 ACAO
+            sem[0]  = 0.0;  // S1 ESSENCE
+            sem[4]  = 0.0;  // S5 RHYTHM
+            sem[6]  = 1.0;  // S7 GENERATIVITY
+            sem[11] = 1.0;  // D4 SIGNAL
+            sem[14] = 0.8;  // D7 CAUSALITY
+            sem[16] = 0.3;  // G1 TEMPORALITY
+            sem[17] = 0.5;  // G2 TEMPORAL_ANCHOR
+            sem[18] = 0.0;  // G3 COMPLETENESS
+            sem[19] = 0.5;  // G4 REVERSIBILITY
+            sem[29] = 1.0;  // P6 TEMPORAL_VECTOR
+            sem[30] = 0.0;  // P7 ACTION
         }
         2 => {
             // change
-            sem[0]  = 0.5;  // S1 INTENCAO
-            sem[4]  = 0.5;  // S5 ENTROPIA
-            sem[9]  = 1.0;  // D2 TAXA_APRENDIZADO
-            sem[10] = 0.7;  // D3 DECAIMENTO
-            sem[11] = 0.0;  // D4 ESTABILIDADE
-            sem[14] = 0.3;  // D7 CAUSALIDADE
-            sem[15] = 0.0;  // D8 INERCIA
-            sem[17] = 0.3;  // G2 ANCORA_TEMPORAL
-            sem[19] = 0.5;  // G4 TEMPORALIDADE
-            sem[23] = 1.0;  // G8 GRADIENTE
-            sem[30] = 0.3;  // P7 ACAO
+            sem[0]  = 0.5;  // S1 ESSENCE
+            sem[4]  = 0.5;  // S5 RHYTHM
+            sem[9]  = 1.0;  // D2 PROCESS
+            sem[10] = 0.7;  // D3 RELATION
+            sem[11] = 0.0;  // D4 SIGNAL
+            sem[14] = 0.3;  // D7 CAUSALITY
+            sem[15] = 0.0;  // D8 VERIFIABILITY
+            sem[17] = 0.3;  // G2 TEMPORAL_ANCHOR
+            sem[19] = 0.5;  // G4 REVERSIBILITY
+            sem[23] = 1.0;  // G8 URGENCY
+            sem[30] = 0.3;  // P7 ACTION
         }
         3 => {
             // agency
-            sem[0]  = 1.0;  // S1 INTENCAO
-            sem[4]  = 0.2;  // S5 ENTROPIA
-            sem[9]  = 0.6;  // D2 TAXA_APRENDIZADO
-            sem[13] = 1.0;  // D6 PROPAGACAO
-            sem[14] = 0.9;  // D7 CAUSALIDADE
-            sem[16] = 0.8;  // G1 MASSA
-            sem[17] = 0.7;  // G2 ANCORA_TEMPORAL
-            sem[18] = 0.8;  // G3 AFINIDADE
-            sem[23] = 0.7;  // G8 GRADIENTE
-            sem[29] = 0.8;  // P6 CONFIANCA
-            sem[30] = 0.9;  // P7 ACAO
+            sem[0]  = 1.0;  // S1 ESSENCE
+            sem[4]  = 0.2;  // S5 RHYTHM
+            sem[9]  = 0.6;  // D2 PROCESS
+            sem[13] = 1.0;  // D6 ONTOLOGICAL_VALENCE
+            sem[14] = 0.9;  // D7 CAUSALITY
+            sem[16] = 0.8;  // G1 TEMPORALITY
+            sem[17] = 0.7;  // G2 TEMPORAL_ANCHOR
+            sem[18] = 0.8;  // G3 COMPLETENESS
+            sem[23] = 0.7;  // G8 URGENCY
+            sem[29] = 0.8;  // P6 TEMPORAL_VECTOR
+            sem[30] = 0.9;  // P7 ACTION
         }
         4 => {
             // uncertainty
-            sem[4]  = 1.0;  // S5 ENTROPIA
-            sem[5]  = 0.2;  // S6 DENSIDADE
-            sem[6]  = 0.2;  // S7 COERENCIA
-            sem[11] = 0.2;  // D4 ESTABILIDADE
-            sem[14] = 0.1;  // D7 CAUSALIDADE
-            sem[17] = 0.2;  // G2 ANCORA_TEMPORAL
-            sem[22] = 0.1;  // G7 K_INTERACAO
-            sem[24] = 0.9;  // P1 QUANTIZACAO
-            sem[27] = 0.8;  // P4 RUIDO
-            sem[29] = 0.1;  // P6 CONFIANCA
-            sem[30] = 0.0;  // P7 ACAO
+            sem[4]  = 1.0;  // S5 RHYTHM
+            sem[5]  = 0.2;  // S6 CAUSE_EFFECT
+            sem[6]  = 0.2;  // S7 GENERATIVITY
+            sem[11] = 0.2;  // D4 SIGNAL
+            sem[14] = 0.1;  // D7 CAUSALITY
+            sem[17] = 0.2;  // G2 TEMPORAL_ANCHOR
+            sem[22] = 0.1;  // G7 EPISTEMIC_VALENCE
+            sem[24] = 0.9;  // P1 IMPACT
+            sem[27] = 0.8;  // P4 AFFECT
+            sem[29] = 0.1;  // P6 TEMPORAL_VECTOR
+            sem[30] = 0.0;  // P7 ACTION
         }
         _ => {} // out of range: all-neutral 0.5
     }
@@ -183,7 +183,7 @@ impl Msg1337 {
                 human_required: false,
                 urgency: None,
                 reconstruct_depth: 1,
-                lang: "pt".to_string(),
+                lang: "en".to_string(),
             },
         }
     }
@@ -208,7 +208,7 @@ impl Msg1337 {
                 human_required: false,
                 urgency: None,
                 reconstruct_depth: 1,
-                lang: "pt".to_string(),
+                lang: "en".to_string(),
             },
         }
     }
@@ -233,7 +233,7 @@ impl Msg1337 {
                 human_required: false,
                 urgency: None,
                 reconstruct_depth: 1,
-                lang: "pt".to_string(),
+                lang: "en".to_string(),
             },
         }
     }
@@ -360,8 +360,8 @@ mod tests {
     fn test_new_sync_uses_boot_vector_for_zone_fixed() {
         let agent_id = Uuid::new_v4();
         let msg = Msg1337::new_sync(agent_id, "FORGE", "Builder");
-        assert_eq!(msg.c5.zone_fixed[24], 0.8, "P1_QUANTIZACAO boot");
-        assert_eq!(msg.c5.zone_fixed[22], 0.1, "G7_K_INTERACAO boot");
+        assert_eq!(msg.c5.zone_fixed[24], 0.8, "P1_IMPACT boot");
+        assert_eq!(msg.c5.zone_fixed[22], 0.1, "G7_EPISTEMIC_VALENCE boot");
     }
 
     #[test]

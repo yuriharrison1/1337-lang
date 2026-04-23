@@ -34,7 +34,7 @@ pub fn validate(msg: &Msg1337) -> Result<(), LeetError> {
     Ok(())
 }
 
-/// Returns low-confidence flag (R5) — triggered when P6_VETOR_TEMPORAL < 0.1.
+/// Returns low-confidence flag (R5) — triggered when P6_TEMPORAL_VECTOR < 0.1.
 pub fn check_confidence(msg: &Msg1337) -> Vec<LeetError> {
     let mut flags = Vec::new();
     let check = |c: &crate::types::Cogon| {
@@ -438,7 +438,7 @@ mod tests {
     #[test]
     fn test_check_confidence_flag_when_p6_below_threshold() {
         let mut cogon = simple_cogon();
-        cogon.sem[29] = 0.05; // P6_VETOR_TEMPORAL below 0.1
+        cogon.sem[29] = 0.05; // P6_TEMPORAL_VECTOR below 0.1
         let msg = base_msg(Payload::Cogon(cogon));
         let flags = check_confidence(&msg);
         assert_eq!(flags.len(), 1);

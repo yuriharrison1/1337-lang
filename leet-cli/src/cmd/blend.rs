@@ -31,7 +31,7 @@ mod tests {
         let c1 = proj.project("urgente").unwrap();
         let c2 = proj.project("hello").unwrap();
         let result = blend(&c1, &c2, 0.5);
-        // G8_URGENCIA should be between hello's 0.5 and urgente's 0.95
+        // G8_URGENCY should be between hello's 0.5 and urgente's 0.95
         assert!(result.sem[23] > 0.5 && result.sem[23] < 0.95 + 0.01);
     }
 }

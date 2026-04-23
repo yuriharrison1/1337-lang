@@ -89,7 +89,7 @@ mod tests {
         let queue = BatchQueue::new(engine);
         let sem = queue.push("urgente".to_string(), "agent1".to_string()).await;
         assert_eq!(sem.len(), 32);
-        assert!(sem[23] > 0.9, "G8_URGENCIA should be activated");
+        assert!(sem[23] > 0.9, "G8_URGENCY should be activated");
     }
 
     #[tokio::test]

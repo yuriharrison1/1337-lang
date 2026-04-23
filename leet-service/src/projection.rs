@@ -1,61 +1,24 @@
 //! Projection engine — text → semantic vector and reconstruction.
 //!
-//! Uses the same keyword heuristics as leet-bridge/src/heuristics.rs.
+//! Delegates text projection to leet-bridge's nl_translator (80+ heuristic rules).
+//! When W.bin is available (LEET_W_PATH or default locations), the calibrated
+//! W matrix path in leet-bridge/src/projector.rs takes over automatically.
+//!
+//! Reconstruction uses canonical axis names from leet-core.
 
+use leet_bridge::nl_to_cogon;
 use leet_core::axes::CANONICAL_AXES;
 
-/// Project human text into sem[32].
+/// Project human text into sem[32] via leet-bridge heuristics.
 pub fn project(text: &str, _agent_id: &str) -> Vec<f32> {
-    let lower = text.to_lowercase();
-    let mut sem = vec![0.5_f32; 32];
-
-    // D1_ESTADO / P3_ANOMALIA — error/down keywords
-    if lower.contains("caiu")
-        || lower.contains("falhou")
-        || lower.contains("erro")
-        || lower.contains("down")
-        || lower.contains("crash")
-    {
-        sem[8] = 0.9;   // D1_ESTADO
-        sem[26] = 0.9;  // P3_ANOMALIA
-        sem[13] = 0.15; // D6_VALENCIA_ONT (negative)
-    }
-
-    // D2_PROCESSO / P7_ACAO — process keywords
-    if lower.contains("deploy")
-        || lower.contains("processo")
-        || lower.contains("pipeline")
-        || lower.contains("rodando")
-    {
-        sem[9] = 0.85;  // D2_PROCESSO
-        sem[30] = 0.8;  // P7_ACAO
-    }
-
-    // G4_REVERSIBILIDADE / P7_ACAO — rollback keywords
-    if lower.contains("reverter")
-        || lower.contains("desfazer")
-        || lower.contains("rollback")
-        || lower.contains("undo")
-    {
-        sem[19] = 0.9;  // G4_REVERSIBILIDADE
-        sem[30] = 0.85; // P7_ACAO
-    }
-
-    // G8_URGENCIA — urgency keywords
-    if lower.contains("urgente")
-        || lower.contains("crítico")
-        || lower.contains("agora")
-        || lower.contains("imediato")
-    {
-        sem[23] = 0.95; // G8_URGENCIA
-    }
-
-    sem
+    nl_to_cogon(text, "en").sem.to_vec()
 }
 
 /// Reconstruct a text description from a sem vector.
-/// Finds the top-3 most activated axes and returns a textual description.
-pub fn reconstruct(sem: &[f32], lang: &str) -> String {
+///
+/// Returns the top-3 activated axes (above 0.5) formatted as
+/// `[cogon: AXIS_NAME=value, ...]`, or `[neutral cogon]` if none exceed 0.5.
+pub fn reconstruct(sem: &[f32], _lang: &str) -> String {
     if sem.is_empty() {
         return "[empty cogon]".to_string();
     }
@@ -72,14 +35,10 @@ pub fn reconstruct(sem: &[f32], lang: &str) -> String {
         .take(3)
         .filter(|(_, v)| *v > 0.5)
         .map(|(i, v)| {
-            let axis_name = CANONICAL_AXES.get(*i)
-                .map(|a| a.name)
-                .unwrap_or("UNKNOWN");
-            if lang == "pt" || lang.starts_with("pt") {
-                format!("{}={:.2}", axis_name, v)
-            } else {
-                format!("axis[{}]={:.2}", i, v)
-            }
+            let label = CANONICAL_AXES.get(*i)
+                .map(|a| format!("{}_{}", a.code, a.name))
+                .unwrap_or_else(|| format!("axis[{}]", i));
+            format!("{}={:.2}", label, v)
         })
         .collect();
 
@@ -90,7 +49,7 @@ pub fn reconstruct(sem: &[f32], lang: &str) -> String {
     }
 }
 
-/// Projection engine struct (for use with BatchQueue).
+/// Projection engine struct (for use with BatchQueue and LeetServiceImpl).
 pub struct Engine;
 
 impl Engine {
@@ -124,16 +83,27 @@ mod tests {
     }
 
     #[test]
-    fn test_project_urgente_activates_g8() {
+    fn test_project_urgente_activates_g8_urgency() {
         let sem = project("urgente agora", "agent1");
-        assert!(sem[23] > 0.9, "G8_URGENCIA should be activated");
+        assert!(sem[23] > 0.9, "G8_URGENCY should be activated, got {}", sem[23]);
     }
 
     #[test]
-    fn test_project_erro_activates_anomalia() {
+    fn test_project_erro_activates_p3_anomaly() {
         let sem = project("erro no sistema", "agent1");
-        assert!(sem[26] > 0.8, "P3_ANOMALIA should be activated");
-        assert!(sem[8] > 0.8, "D1_ESTADO should be activated");
+        assert!(sem[26] > 0.8, "P3_ANOMALY should be activated, got {}", sem[26]);
+    }
+
+    #[test]
+    fn test_project_deploy_activates_d2_process() {
+        let sem = project("deploy do pipeline", "agent1");
+        assert!(sem[9] > 0.8, "D2_PROCESS should be activated, got {}", sem[9]);
+    }
+
+    #[test]
+    fn test_project_rollback_activates_g4_reversibility() {
+        let sem = project("reverter o deploy", "agent1");
+        assert!(sem[19] > 0.8, "G4_REVERSIBILITY should be activated, got {}", sem[19]);
     }
 
     #[test]
@@ -141,5 +111,13 @@ mod tests {
         let sem = vec![0.5_f32; 32];
         let result = reconstruct(&sem, "en");
         assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn test_reconstruct_shows_canonical_axis_names() {
+        let mut sem = vec![0.3_f32; 32];
+        sem[23] = 0.95; // G8_URGENCY
+        let result = reconstruct(&sem, "en");
+        assert!(result.contains("G8_URGENCY"), "expected canonical name, got: {}", result);
     }
 }

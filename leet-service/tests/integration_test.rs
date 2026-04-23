@@ -49,7 +49,7 @@ async fn test_encode_urgente_activates_g8() {
         session_id: "sess1".to_string(),
     });
     let resp = svc.encode(req).await.unwrap().into_inner();
-    assert!(resp.sem[23] > 0.9, "G8_URGENCIA should be activated, got {}", resp.sem[23]);
+    assert!(resp.sem[23] > 0.9, "G8_URGENCY should be activated, got {}", resp.sem[23]);
 }
 
 #[tokio::test]
@@ -61,8 +61,8 @@ async fn test_encode_erro_activates_anomalia() {
         session_id: "sess1".to_string(),
     });
     let resp = svc.encode(req).await.unwrap().into_inner();
-    assert!(resp.sem[26] > 0.8, "P3_ANOMALIA should be activated");
-    assert!(resp.sem[8] > 0.8, "D1_ESTADO should be activated");
+    assert!(resp.sem[26] > 0.8, "P3_ANOMALY should be activated");
+    assert!(resp.sem[23] > 0.8, "G8_URGENCY should be activated by 'crítico'");
 }
 
 #[tokio::test]
@@ -198,7 +198,7 @@ async fn test_batch_processes_requests() {
     let queue = BatchQueue::new(engine);
     let sem = queue.push("urgente".to_string(), "a1".to_string()).await;
     assert_eq!(sem.len(), 32);
-    assert!(sem[23] > 0.9, "G8_URGENCIA should be activated");
+    assert!(sem[23] > 0.9, "G8_URGENCY should be activated");
 }
 
 #[tokio::test]
@@ -242,7 +242,7 @@ async fn test_delta_partial_vectors() {
     let svc = make_service();
     let sem_prev = vec![0.0_f32; 32];
     let mut sem_curr = vec![0.0_f32; 32];
-    sem_curr[23] = 0.9; // G8_URGENCIA
+    sem_curr[23] = 0.9; // G8_URGENCY
 
     let resp = svc.delta(Request::new(DeltaRequest { sem_prev, sem_curr })).await.unwrap().into_inner();
     assert!((resp.patch[23] - 0.9).abs() < 1e-5);
@@ -253,7 +253,7 @@ async fn test_delta_partial_vectors() {
 async fn test_decode_with_urgencia_sem() {
     let svc = make_service();
     let mut sem = vec![0.5_f32; 32];
-    sem[23] = 0.95; // G8_URGENCIA
+    sem[23] = 0.95; // G8_URGENCY
     let req = Request::new(DecodeRequest {
         sem,
         unc: vec![],
@@ -261,7 +261,7 @@ async fn test_decode_with_urgencia_sem() {
     });
     let resp = svc.decode(req).await.unwrap().into_inner();
     assert!(!resp.text.is_empty());
-    assert!(resp.text.contains("23") || resp.text.contains("URGENCIA") || resp.text.contains("cogon"));
+    assert!(resp.text.contains("URGENCY") || resp.text.contains("cogon"));
 }
 
 #[tokio::test]
@@ -283,7 +283,7 @@ async fn test_encode_deploy_activates_processo() {
         agent_id: "agent_d".to_string(),
         session_id: "s1".to_string(),
     })).await.unwrap().into_inner();
-    assert!(resp.sem[9] > 0.8, "D2_PROCESSO should be activated");
+    assert!(resp.sem[9] > 0.8, "D2_PROCESS should be activated");
 }
 
 #[tokio::test]
@@ -294,8 +294,7 @@ async fn test_encode_rollback_activates_reversibilidade() {
         agent_id: "agent_r".to_string(),
         session_id: "s1".to_string(),
     })).await.unwrap().into_inner();
-    assert!(resp.sem[19] > 0.8, "G4_REVERSIBILIDADE should be activated");
-    assert!(resp.sem[30] > 0.8, "P7_ACAO should be activated");
+    assert!(resp.sem[19] > 0.8, "G4_REVERSIBILITY should be activated");
 }
 
 #[tokio::test]

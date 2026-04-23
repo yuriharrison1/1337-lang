@@ -36,38 +36,38 @@ impl BridgeProjector for MockProjector {
         let lower = text.to_lowercase();
         let mut sem: SemVec = [0.5_f32; 32];
 
-        // D1_ESTADO / P3_ANOMALIA — error/down keywords
+        // D1_STATE / P3_ANOMALY — error/down keywords
         if lower.contains("caiu")
             || lower.contains("falhou")
             || lower.contains("erro")
             || lower.contains("down")
         {
-            sem[8] = 0.9;   // D1_ESTADO
-            sem[26] = 0.9;  // P3_ANOMALIA
-            sem[13] = 0.15; // D6_VALENCIA_ONT (negative)
+            sem[8] = 0.9;   // D1_STATE
+            sem[26] = 0.9;  // P3_ANOMALY
+            sem[13] = 0.15; // D6_ONTOLOGICAL_VALENCE (negative)
         }
 
-        // D2_PROCESSO / P7_ACAO — process keywords
+        // D2_PROCESS / P7_ACTION — process keywords
         if lower.contains("deploy")
             || lower.contains("processo")
             || lower.contains("pipeline")
         {
-            sem[9] = 0.85;  // D2_PROCESSO
-            sem[30] = 0.8;  // P7_ACAO (active process)
+            sem[9] = 0.85;  // D2_PROCESS
+            sem[30] = 0.8;  // P7_ACTION (active process)
         }
 
-        // G4_REVERSIBILIDADE / P7_ACAO — rollback keywords
+        // G4_REVERSIBILITY / P7_ACTION — rollback keywords
         if lower.contains("reverter")
             || lower.contains("desfazer")
             || lower.contains("rollback")
         {
-            sem[19] = 0.9;  // G4_REVERSIBILIDADE
-            sem[30] = 0.85; // P7_ACAO
+            sem[19] = 0.9;  // G4_REVERSIBILITY
+            sem[30] = 0.85; // P7_ACTION
         }
 
-        // G8_URGENCIA — urgency keywords
+        // G8_URGENCY — urgency keywords
         if lower.contains("urgente") || lower.contains("crítico") || lower.contains("agora") {
-            sem[23] = 0.95; // G8_URGENCIA
+            sem[23] = 0.95; // G8_URGENCY
         }
 
         Ok(Cogon {
@@ -327,9 +327,9 @@ mod tests {
     fn test_mock_project_error_keywords() {
         let proj = MockProjector;
         let cogon = proj.project("o servidor caiu").unwrap();
-        assert!(cogon.sem[8] > 0.8);  // D1_ESTADO
-        assert!(cogon.sem[26] > 0.8); // P3_ANOMALIA
-        assert!(cogon.sem[13] < 0.3); // D6_VALENCIA_ONT negative
+        assert!(cogon.sem[8] > 0.8);  // D1_STATE
+        assert!(cogon.sem[26] > 0.8); // P3_ANOMALY
+        assert!(cogon.sem[13] < 0.3); // D6_ONTOLOGICAL_VALENCE (negative)
     }
 
     #[test]
