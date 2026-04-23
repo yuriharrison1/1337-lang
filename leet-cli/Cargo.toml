@@ -1,7 +1,15 @@
 [package]
 name = "leet-cli"
-version = "0.5.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Command-line tools for debugging, inspecting, and benchmarking 1337"
+keywords.workspace = true
+categories.workspace = true
 
 [[bin]]
 name = "leet"

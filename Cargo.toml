@@ -1,3 +1,24 @@
 [workspace]
 members = ["leet-core", "leet-bridge", "leet-service", "leet-cli"]
 resolver = "2"
+
+[workspace.package]
+version = "0.5.1"
+edition = "2021"
+rust-version = "1.75"
+authors = ["Yuri Harrison <yuri@leetlang.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/leetlang/leet"
+homepage = "https://leetlang.org"
+description = "1337 — semantic communication protocol for AI agents"
+keywords = ["ai", "agents", "semantic", "protocol", "nlp"]
+categories = ["science", "data-structures"]
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+sha2 = "0.10"
+thiserror = "1"
+anyhow = "1"

@@ -23,4 +23,4 @@ pub use validate::{validate, check_confidence};
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Specification version
-pub const SPEC_VERSION: &str = "0.4";
+pub const SPEC_VERSION: &str = "0.5.1";

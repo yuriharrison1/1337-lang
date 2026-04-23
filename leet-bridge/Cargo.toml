@@ -1,8 +1,15 @@
 [package]
 name = "leet-bridge"
-version = "0.5.0"
-edition = "2021"
-description = "Human text ↔ 1337 semantic vector translation bridge"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "NL↔1337 bridge layer: projector, heuristics, Claude adapter"
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
 leet-core = { path = "../leet-core" }

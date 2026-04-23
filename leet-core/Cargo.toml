@@ -1,7 +1,15 @@
 [package]
 name = "leet-core"
-version = "0.4.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Core types and algebra for the 1337 semantic protocol"
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

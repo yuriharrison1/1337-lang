@@ -130,8 +130,8 @@ fn test_zero_is_zero() {
 
 #[test]
 fn test_version_string() {
-    assert_eq!(leet_core::VERSION, "0.4.0");
-    assert_eq!(leet_core::SPEC_VERSION, "0.4");
+    assert_eq!(leet_core::VERSION, "0.5.1");
+    assert_eq!(leet_core::SPEC_VERSION, "0.5.1");
 }
 
 // ─── Validate tests ───────────────────────────────────────────────────────────
