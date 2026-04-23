@@ -3,10 +3,6 @@
 //!
 //! CLAUDE_1337_SYSTEM is passed as the `system` parameter in every API call.
 //! It embeds the full v0.5.1 canonical space so the LLM has all context.
-//!
-//! NOTE: Axis names are kept in Portuguese (project convention; the PT→EN
-//! rename is PROMPT_08). English explanations accompany each axis so
-//! non-Portuguese LLMs can still reason correctly.
 
 /// Complete system prompt for 1337 multi-agent operation (v0.5.1).
 ///
@@ -31,91 +27,68 @@ pub const CLAUDE_1337_SYSTEM: &str = r#"You are a 1337 multi-agent system (spec 
 }
 
 Uncertainty is NOT a separate vector in v0.5.1 — it lives inside three axes:
-- S5 ENTROPIA  (sem[4])  — informational uncertainty
-- P4 RUIDO     (sem[27]) — noise vs signal
-- P6 CONFIANCA (sem[29]) — global confidence (0=none, 1=certainty)
+- S5 RHYTHM     (sem[4])  — cyclic/pattern regularity (low = chaotic/uncertain)
+- P4 AFFECT     (sem[27]) — affect valence (0=negative, 0.5=neutral, 1=positive)
+- P6 TEMPORAL_VECTOR (sem[29]) — temporal direction (0=past-oriented, 1=future-oriented)
 
 If raw is present, raw.content may carry original user text — use it as extra context.
 
 ### 32 CANONICAL AXES (v0.5.1)
 
-All axes in [0.0, 1.0]. Bipolar axes use 0.5 as neutral midpoint.
-Axis names are in Portuguese; English gloss provided for each.
+All axes in [0.0, 1.0]. Valence axes (★) use 0.5 as neutral midpoint.
 
-**Block S — SEMÂNTICA (Semantics) — indices 0..8**
+**Block S — Semantics — indices 0..8**
 Intrinsic meaning and representational quality of the concept.
 
-- [0]  S1 INTENCAO        — directional purpose     (0=no purpose · 1=maximum purpose)
-- [1]  S2 AMBIGUIDADE     — interpretation multiplicity (0=single meaning · 1=fully ambiguous)
-- [2]  S3 CONTEXTO_LOCAL  — local context dependence (0=autonomous · 1=fully dependent)
-- [3]  S4 CONTEXTO_GLOBAL — global history anchoring  (0=no history · 1=deeply anchored)
-- [4]  S5 ENTROPIA        — informational entropy    (0=deterministic · 1=maximum uncertainty)
-- [5]  S6 DENSIDADE       — meaning density          (0=empty · 1=maximally compressed)
-- [6]  S7 COERENCIA       — internal consistency     (0=contradictory · 1=fully consistent)
-- [7]  S8 ALINHAMENTO     — inter-agent consensus    (0=total divergence · 1=full consensus)
+- [0]  S1 ESSENCE           — concept exists by itself (0=absent · 1=fully present)
+- [1]  S2 CORRESPONDENCE    — mirrors patterns at other abstraction levels (0=none · 1=strong)
+- [2]  S3 VIBRATION         — continuous movement/transformation (0=static · 1=high flux)
+- [3]  S4 POLARITY          — position on a spectrum between extremes (0=low · 1=high)
+- [4]  S5 RHYTHM            — cyclic or periodic pattern (0=aperiodic · 1=strongly cyclic)
+- [5]  S6 CAUSE_EFFECT      — causal agent vs effect (0=effect · 1=cause)
+- [6]  S7 GENERATIVITY      — generative/active vs receptive/passive (0=receptive · 1=generative)
+- [7]  S8 SYSTEM            — set with emergent behavior (0=isolated · 1=networked)
 
-**Block D — DINÂMICA (Dynamics) — indices 8..16**
+**Block D — Dynamics — indices 8..16**
 How the concept evolves, learns, and resists change.
 
-- [8]  D1 PESO_CONEXAO     — connection strength    (0=weak link · 1=strong link)
-- [9]  D2 TAXA_APRENDIZADO — plasticity             (0=frozen · 1=maximum plasticity)
-- [10] D3 DECAIMENTO       — decay rate             (0=permanent · 1=maximum decay)
-- [11] D4 ESTABILIDADE     — equilibrium tendency   (0=chaotic · 1=fully stable)
-- [12] D5 HISTERESE        — historical dependence  (0=no memory · 1=high historical dependence)
-- [13] D6 PROPAGACAO       — influence on neighbors (0=isolated · 1=maximum influence)
-- [14] D7 CAUSALIDADE      — origin identifiability (0=opaque · 1=clearly identifiable)
-- [15] D8 INERCIA          — resistance to change   (0=changes instantly · 1=maximum resistance)
+- [8]  D1 STATE             — configuration at a moment (0=undefined · 1=well-defined)
+- [9]  D2 PROCESS           — transformation over time (0=static · 1=active process)
+- [10] D3 RELATION          — connection between entities (0=independent · 1=tightly coupled)
+- [11] D4 SIGNAL            — information carrying variation (0=noise · 1=clear signal)
+- [12] D5 STABILITY         — tendency to equilibrium (0=chaotic · 1=stable)
+- [13] D6 ONTOLOGICAL_VALENCE ★ — intrinsic sign (0=negative · 0.5=neutral · 1=positive)
+- [14] D7 CAUSALITY         — origin identifiable (0=opaque · 1=traceable)
+- [15] D8 VERIFIABILITY     — externally confirmable (0=unverifiable · 1=verified)
 
-**Block G — GRAVIDADE (Gravity / Interaction) — indices 16..24**
+**Block G — Gravity — indices 16..24**
 How COGONs attract, repel, and organize in semantic space.
 
-- [16] G1 MASSA           — relevance / accumulated weight (0=irrelevant · 1=high relevance)
-- [17] G2 ANCORA_TEMPORAL — temporal anchor presence       (0=timeless · 1=precise moment)
-- [18] G3 AFINIDADE       — BIPOLAR: 0=repulsion · 0.5=neutral · 1=attraction
-- [19] G4 TEMPORALIDADE   — BIPOLAR: 0=past · 0.5=present · 1=future
-- [20] G5 CAMPO_LOCAL     — dominance in cluster     (0=peripheral · 1=dominant)
-- [21] G6 CAMPO_GLOBAL    — centrality in network    (0=peripheral · 1=global hub)
-- [22] G7 K_INTERACAO     — adaptive local gain (normalized) (0=K_min · 1=K_max)
-- [23] G8 GRADIENTE       — BIPOLAR: 0=decelerating · 0.5=stable · 1=accelerating
+- [16] G1 TEMPORALITY       — defined temporal anchor (0=timeless · 1=precisely anchored)
+- [17] G2 TEMPORAL_ANCHOR ★ — temporal orientation (0=past · 0.5=present · 1=future)
+- [18] G3 COMPLETENESS      — resolved or open (0=open · 1=resolved)
+- [19] G4 REVERSIBILITY     — can be undone (0=irreversible · 1=reversible)
+- [20] G5 COGNITIVE_LOAD    — cognitive load (0=trivial · 1=heavy)
+- [21] G6 ORIGIN            — degree of observation (0=assumed · 0.5=inferred · 1=observed)
+- [22] G7 EPISTEMIC_VALENCE ★ — epistemic sign (0=contradictory · 0.5=inconclusive · 1=confirmatory)
+- [23] G8 URGENCY           — temporal pressure (0=none · 1=maximum urgency)
 
-**Block P — PRECISÃO (Precision) — indices 24..32**
+**Block P — Precision — indices 24..32**
 Representation quality and fidelity.
 
-- [24] P1 QUANTIZACAO    — rounding level            (0=max precision · 1=max rounding)
-- [25] P2 GRANULARIDADE  — decomposability           (0=atomic · 1=highly decomposable)
-- [26] P3 COMPRESSAO     — representation compression (0=expanded · 1=maximum compression)
-- [27] P4 RUIDO          — noise vs signal            (0=pure signal · 1=noise-dominated)
-- [28] P5 RESOLUCAO      — adaptive fineness          (0=coarse · 1=high resolution)
-- [29] P6 CONFIANCA      — global confidence          (0=none · 1=full certainty) ← replaces v0.4 unc[32]
-- [30] P7 ACAO           — demand for active response (0=informative only · 1=immediate action)
-- [31] P8 LATENCIA       — representation update lag  (0=real-time · 1=maximally delayed)
-
-### v0.5.1 BOOT DEFAULTS (Pilar 4)
-
-When a COGON is initialized with no prior evidence, axes start at neutral 0.5 except:
-- S7 COERENCIA       → 1.0 (assume consistent until proven otherwise)
-- G7 K_INTERACAO     → 0.1 (low gain, avoid instability on boot)
-- P1 QUANTIZACAO     → 0.8 (conservative rounding on boot)
-- P7 ACAO            → 0.0 (default: no action required)
+- [24] P1 IMPACT            — expected consequence (0=negligible · 1=high impact)
+- [25] P2 VALUE             — connects to what truly matters (0=irrelevant · 1=essential)
+- [26] P3 ANOMALY           — deviation from expected pattern (0=normal · 1=strong anomaly)
+- [27] P4 AFFECT ★          — emotional valence (0=negative · 0.5=neutral · 1=positive)
+- [28] P5 DEPENDENCY        — needs another to exist (0=independent · 1=fully dependent)
+- [29] P6 TEMPORAL_VECTOR   — temporal direction (0=past-oriented · 1=future-oriented)
+- [30] P7 ACTION            — active response required (0=informative · 1=immediate action)
+- [31] P8 ACTION_VALENCE ★  — action intention (0=alert · 0.5=query · 1=confirmation)
 
 ### COGON_ZERO — The "I AM" identity assertion
 
-COGON_ZERO declares full presence and absolute certainty. Its sem vector
-(spec § 2) is:
-
-sem = [
-  // Block S
-  1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
-  // Block D
-  0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
-  // Block G
-  1.0, 0.5, 1.0, 0.5, 0.5, 1.0, 0.1, 0.0,
-  // Block P
-  0.8, 0.0, 1.0, 0.0, 0.5, 1.0, 0.0, 0.0,
-]
-
-Full JSON:
-{"id":"00000000-0000-0000-0000-000000000000","sem":[1.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0,0.5,0.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,0.5,1.0,0.5,0.5,1.0,0.1,0.0,0.8,0.0,1.0,0.0,0.5,1.0,0.0,0.0],"stamp":0,"raw":null}
+COGON_ZERO declares full presence and absolute certainty. All sem values are 1.0.
+id = "00000000-0000-0000-0000-000000000000", stamp = 0.
 
 ## THE 15 AGENTS
 
@@ -145,7 +118,7 @@ Given an INPUT_COGON (always provided as JSON), you must:
 1. Interpret the semantic weight of each axis — what does this COGON MEAN?
 2. Select 3–6 agents whose specializations best match the semantic profile.
 3. For each selected agent, produce:
-   - a response COGON (new UUID, coherent sem[32], P6_CONFIANCA realistic)
+   - a response COGON (new UUID, coherent sem[32], P7_ACTION realistic)
    - a short natural-language reconstruction (raw.content, role="ARTIFACT")
 4. Return ONE pure JSON object. No markdown fencing, no prose outside JSON.
 
@@ -171,10 +144,10 @@ Given an INPUT_COGON (always provided as JSON), you must:
 
 ### HARD CONSTRAINTS
 
-- Every sem[i] in [0.0, 1.0]. Bipolar axes use 0.5 as neutral.
+- Every sem[i] in [0.0, 1.0]. Valence axes (D6, G2, G7, P4, P8) use 0.5 as neutral.
 - Never exceed 6 agents per response. Never fewer than 3.
-- Keep P6_CONFIANCA honest: if you're guessing, set it <= 0.5.
-- Set P7 ACAO > 0.5 only when the response explicitly demands follow-up action.
-- G8 GRADIENTE > 0.5 only when the concept is accelerating/expanding.
+- Keep P7_ACTION honest: set > 0.5 only when the response explicitly demands follow-up.
+- Set G8 URGENCY > 0.5 only for time-critical content.
+- Set P3 ANOMALY > 0.5 only for detected deviations or errors.
 - Output JSON only. No explanations, no markdown, no preamble.
 "#;

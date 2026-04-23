@@ -2,7 +2,7 @@
 
 use leet_bridge::nl_translator::{
     cogon_to_nl, infer_intent, nl_to_cogon,
-    G8_URGENCIA, P3_ANOMALIA, P7_ACAO,
+    G8_URGENCY, P3_ANOMALY, P7_ACTION,
 };
 use leet_core::{Cogon, Intent};
 
@@ -22,9 +22,9 @@ fn test_nl_to_cogon_pt() {
     );
 
     assert!(
-        cogon.sem[G8_URGENCIA] > 0.5,
-        "expected G8_URGENCIA > 0.5, got {}",
-        cogon.sem[G8_URGENCIA]
+        cogon.sem[G8_URGENCY] > 0.5,
+        "expected G8_URGENCY > 0.5, got {}",
+        cogon.sem[G8_URGENCY]
     );
 
     // Vectors must stay in [0, 1]
@@ -33,16 +33,16 @@ fn test_nl_to_cogon_pt() {
     }
 }
 
-/// "The system is critical" — P3_ANOMALIA > 0.7.
+/// "The system is critical" — P3_ANOMALY > 0.7.
 #[test]
 fn test_nl_to_cogon_en() {
     let text = "The system is critical";
     let cogon = nl_to_cogon(text, "en");
 
     assert!(
-        cogon.sem[P3_ANOMALIA] > 0.7,
-        "expected P3_ANOMALIA > 0.7, got {}",
-        cogon.sem[P3_ANOMALIA]
+        cogon.sem[P3_ANOMALY] > 0.7,
+        "expected P3_ANOMALY > 0.7, got {}",
+        cogon.sem[P3_ANOMALY]
     );
 
     for v in cogon.sem.iter() {
@@ -58,8 +58,8 @@ fn test_cogon_to_nl() {
     cogon.sem = [0.3_f32; 32];
     cogon.stamp = 1_000_000;
 
-    cogon.sem[G8_URGENCIA] = 0.9;
-    cogon.sem[P7_ACAO] = 0.8;
+    cogon.sem[G8_URGENCY] = 0.9;
+    cogon.sem[P7_ACTION] = 0.8;
 
     let nl = cogon_to_nl(&cogon, "pt");
     let nl_lower = nl.to_lowercase();
@@ -81,8 +81,8 @@ fn test_cogon_zero() {
     assert!(z.is_zero(), "Cogon::zero() must satisfy is_zero()");
     assert_eq!(z.stamp, 0);
     assert!(z.raw.is_none());
-    // v0.5.1: S1_ESSENCIA = 1.0, not all-ones
-    assert_eq!(z.sem[0], 1.0, "S1_ESSENCIA must be 1.0");
+    // v0.5.1: S1_ESSENCE = 1.0, not all-ones
+    assert_eq!(z.sem[0], 1.0, "S1_ESSENCE must be 1.0");
 }
 
 /// NL → COGON → NL roundtrip preserves intent and dominant axes.
@@ -100,21 +100,21 @@ fn test_roundtrip() {
     );
 
     assert!(
-        cogon.sem[P3_ANOMALIA] > 0.7,
-        "P3_ANOMALIA expected > 0.7, got {}",
-        cogon.sem[P3_ANOMALIA]
+        cogon.sem[P3_ANOMALY] > 0.7,
+        "P3_ANOMALY expected > 0.7, got {}",
+        cogon.sem[P3_ANOMALY]
     );
 
     assert!(
-        cogon.sem[P7_ACAO] > 0.7,
-        "P7_ACAO expected > 0.7, got {}",
-        cogon.sem[P7_ACAO]
+        cogon.sem[P7_ACTION] > 0.7,
+        "P7_ACTION expected > 0.7, got {}",
+        cogon.sem[P7_ACTION]
     );
 
     assert!(
-        cogon.sem[G8_URGENCIA] > 0.7,
-        "G8_URGENCIA expected > 0.7, got {}",
-        cogon.sem[G8_URGENCIA]
+        cogon.sem[G8_URGENCY] > 0.7,
+        "G8_URGENCY expected > 0.7, got {}",
+        cogon.sem[G8_URGENCY]
     );
 
     let nl = cogon_to_nl(&cogon, "pt");
@@ -134,41 +134,41 @@ fn test_roundtrip() {
 
 // ── Additional coverage ───────────────────────────────────────────────────────
 
-/// Rollback keyword → G4_REVERSIBILIDADE activated, P7_ACAO activated.
+/// Rollback keyword → G4_REVERSIBILITY activated, P7_ACTION activated.
 #[test]
 fn test_rollback_axes() {
     let cogon = nl_to_cogon("precisamos fazer rollback do deploy", "pt");
-    assert!(cogon.sem[leet_bridge::nl_translator::G4_REVERSIBILIDADE] > 0.7);
-    assert!(cogon.sem[leet_bridge::nl_translator::P7_ACAO] > 0.7);
+    assert!(cogon.sem[leet_bridge::nl_translator::G4_REVERSIBILITY] > 0.7);
+    assert!(cogon.sem[leet_bridge::nl_translator::P7_ACTION] > 0.7);
 }
 
-/// Past tense → G2_ANCORA_TEMPORAL near 0 (past).
+/// Past tense → G2_TEMPORAL_ANCHOR near 0 (past).
 #[test]
 fn test_temporal_past() {
     let cogon = nl_to_cogon("ontem o servidor caiu", "pt");
     assert!(
-        cogon.sem[leet_bridge::nl_translator::G2_ANCORA_TEMPORAL] < 0.4,
+        cogon.sem[leet_bridge::nl_translator::G2_TEMPORAL_ANCHOR] < 0.4,
         "expected past orientation, got {}",
-        cogon.sem[leet_bridge::nl_translator::G2_ANCORA_TEMPORAL]
+        cogon.sem[leet_bridge::nl_translator::G2_TEMPORAL_ANCHOR]
     );
 }
 
-/// Future tense → G2_ANCORA_TEMPORAL near 1 (future).
+/// Future tense → G2_TEMPORAL_ANCHOR near 1 (future).
 #[test]
 fn test_temporal_future() {
     let cogon = nl_to_cogon("o próximo deploy vai amanhã", "pt");
     assert!(
-        cogon.sem[leet_bridge::nl_translator::G2_ANCORA_TEMPORAL] > 0.6,
+        cogon.sem[leet_bridge::nl_translator::G2_TEMPORAL_ANCHOR] > 0.6,
         "expected future orientation, got {}",
-        cogon.sem[leet_bridge::nl_translator::G2_ANCORA_TEMPORAL]
+        cogon.sem[leet_bridge::nl_translator::G2_TEMPORAL_ANCHOR]
     );
 }
 
-/// Confirmed/verified keywords → D8_VERIFICABILIDADE high.
+/// Confirmed/verified keywords → D8_VERIFIABILITY high.
 #[test]
 fn test_verification() {
     let cogon = nl_to_cogon("foi confirmado e verificado pelos testes", "pt");
-    assert!(cogon.sem[leet_bridge::nl_translator::D8_VERIFICABILIDADE] > 0.8);
+    assert!(cogon.sem[leet_bridge::nl_translator::D8_VERIFIABILITY] > 0.8);
 }
 
 /// English intent detection: question starters.

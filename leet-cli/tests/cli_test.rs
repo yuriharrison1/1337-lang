@@ -59,9 +59,9 @@ fn test_canonical_axes_count() {
 }
 
 #[test]
-fn test_axes_first_is_s1_essencia() {
+fn test_axes_first_is_s1_essence() {
     assert_eq!(CANONICAL_AXES[0].code, "S1");
-    assert_eq!(CANONICAL_AXES[0].name, "ESSENCIA");
+    assert_eq!(CANONICAL_AXES[0].name, "ESSENCE");
 }
 
 #[test]
@@ -70,9 +70,9 @@ fn test_axes_last_is_p8() {
 }
 
 #[test]
-fn test_axes_g8_urgencia_at_23() {
+fn test_axes_g8_urgency_at_23() {
     assert_eq!(CANONICAL_AXES[23].code, "G8");
-    assert_eq!(CANONICAL_AXES[23].name, "URGENCIA");
+    assert_eq!(CANONICAL_AXES[23].name, "URGENCY");
 }
 
 // ─── Encode projection tests ──────────────────────────────────────────────────
@@ -81,14 +81,14 @@ fn test_axes_g8_urgencia_at_23() {
 fn test_encode_urgente_activates_g8() {
     let proj = MockProjector;
     let cogon = proj.project("urgente agora").unwrap();
-    assert!(cogon.sem[23] > 0.9, "G8_URGENCIA should be activated");
+    assert!(cogon.sem[23] > 0.9, "G8_URGENCY should be activated");
 }
 
 #[test]
 fn test_encode_erro_activates_anomalia_and_estado() {
     let proj = MockProjector;
     let cogon = proj.project("erro no sistema").unwrap();
-    assert!(cogon.sem[26] > 0.8); // P3_ANOMALIA
+    assert!(cogon.sem[26] > 0.8); // P3_ANOMALY
     assert!(cogon.sem[8] > 0.8);  // D1_ESTADO
 }
 
@@ -111,7 +111,7 @@ fn test_encode_deploy_activates_processo() {
 #[test]
 fn test_zero_s1_essencia_is_one() {
     let z = Cogon::zero();
-    assert_eq!(z.sem[0], 1.0, "COGON_ZERO: S1_ESSENCIA should be 1.0");
+    assert_eq!(z.sem[0], 1.0, "COGON_ZERO: S1_ESSENCE should be 1.0");
 }
 
 #[test]

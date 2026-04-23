@@ -95,9 +95,9 @@ async fn test_translation_roundtrip() {
     let cogon = nl_to_cogon(text, "pt");
 
     // P3 anomaly should be activated
-    assert!(cogon.sem[leet_bridge::nl_translator::P3_ANOMALIA] > 0.7);
+    assert!(cogon.sem[leet_bridge::nl_translator::P3_ANOMALY] > 0.7);
     // P7 action should be activated
-    assert!(cogon.sem[leet_bridge::nl_translator::P7_ACAO] > 0.7);
+    assert!(cogon.sem[leet_bridge::nl_translator::P7_ACTION] > 0.7);
 
     // Reconstruct NL and verify key concepts survive
     let reconstructed = cogon_to_nl(&cogon, "pt");
@@ -120,8 +120,8 @@ async fn test_translation_roundtrip() {
         .expect("closed");
 
     if let leet_core::types::Payload::Cogon(c) = received.payload {
-        assert!(c.sem[leet_bridge::nl_translator::P3_ANOMALIA] > 0.5,
-            "P3_ANOMALIA should survive roundtrip through server");
+        assert!(c.sem[leet_bridge::nl_translator::P3_ANOMALY] > 0.5,
+            "P3_ANOMALY should survive roundtrip through server");
     } else {
         panic!("expected Cogon payload");
     }
