@@ -161,6 +161,26 @@ const RULES: &[Rule] = &[
     Rule { keywords: &["alerta", "alert", "aviso", "warning", "cuidado", "careful", "atenção urgente", "watch out"], axis: P8_ACTION_VALENCE, value: 0.1 },
 ];
 
+// ── Keyword-fallback helpers (feature-gated) ──────────────────────────────────
+
+/// Returns the baseline sem vector used when no keyword rules fire.
+/// Matches the initial state of `nl_to_cogon("")`: 0.3 everywhere, 0.5 on valence axes.
+#[cfg(feature = "keyword-fallback")]
+pub fn default_sem_vector() -> [f32; 32] {
+    let mut sem = [0.3_f32; 32];
+    for &idx in VALENCE_AXES {
+        sem[idx] = 0.5;
+    }
+    sem
+}
+
+/// Project text through the heuristic keyword rules (legacy path).
+/// Used by `projector::project_text` when W.bin is unavailable.
+#[cfg(feature = "keyword-fallback")]
+pub fn project_text_via_rules(text: &str) -> Result<[f32; 32], crate::error::BridgeError> {
+    Ok(nl_to_cogon(text, "en").sem)
+}
+
 // ── Intent inference ──────────────────────────────────────────────────────────
 
 /// Infer message intent from text patterns.

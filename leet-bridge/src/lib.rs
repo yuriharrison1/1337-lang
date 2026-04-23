@@ -20,11 +20,13 @@
 
 pub mod anthropic_client;
 pub mod claude_1337_prompt;
+pub mod error;
 pub mod heuristics;
 pub mod nl_translator;
 pub mod projector;
 
-pub use projector::{BridgeProjector, MockProjector};
+pub use error::BridgeError;
+pub use projector::{BridgeProjector, EmbeddingProvider, MockProjector};
 pub use nl_translator::{nl_to_cogon, cogon_to_nl, infer_intent};
 
 use leet_core::{Cogon, LeetError};
