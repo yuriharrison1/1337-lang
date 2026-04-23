@@ -100,8 +100,9 @@ async fn test_delta_magnitude_nonzero() {
         sem_curr: vec![1.0_f32; 32],
     });
     let resp = svc.delta(req).await.unwrap().into_inner();
-    assert!(resp.magnitude > 0.0, "magnitude should be nonzero");
-    assert!((resp.magnitude - 32.0_f32.sqrt()).abs() < 1e-4);
+    // Max distance [0,0,…] vs [1,1,…] normalizes to exactly 1.0.
+    assert!((resp.magnitude - 1.0).abs() < 1e-4, "magnitude should be 1.0 for max delta, got {}", resp.magnitude);
+    assert!(resp.magnitude <= 1.0, "magnitude must be in [0,1]");
 }
 
 #[tokio::test]

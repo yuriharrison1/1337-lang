@@ -75,7 +75,7 @@ impl BridgeProjector for MockProjector {
             sem,
             stamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_nanos() as i64)
+                .map(|d| d.as_millis() as i64)
                 .unwrap_or(0),
             raw: None,
         })

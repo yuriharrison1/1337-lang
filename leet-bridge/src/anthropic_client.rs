@@ -194,7 +194,7 @@ fn parse_agent_responses(text: &str) -> Result<Vec<AgentResponse>, String> {
             sem,
             stamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_nanos() as i64)
+                .map(|d| d.as_millis() as i64)
                 .unwrap_or(0),
             raw: None,
         };
@@ -226,7 +226,10 @@ fn parse_f32_array(
 
     let mut out = [0.5_f32; 32];
     for (i, v) in arr.iter().enumerate() {
-        out[i] = (v.as_f64().unwrap_or(0.5) as f32).clamp(0.0, 1.0);
+        let f = v.as_f64().ok_or_else(|| {
+            format!("agent {}: '{}[{}]' is not a number (got {:?})", agent, field, i, v)
+        })?;
+        out[i] = (f as f32).clamp(0.0, 1.0);
     }
     Ok(out)
 }
