@@ -289,32 +289,32 @@ mod tests {
     #[test]
     fn test_anchor_presence_has_high_essencia() {
         let c = anchor_cogon(0);
-        assert_eq!(c.sem[0],  1.0, "S1_INTENCAO");
-        assert_eq!(c.sem[16], 1.0, "G1_MASSA");
-        assert_eq!(c.sem[29], 1.0, "P6_CONFIANCA");
+        assert_eq!(c.sem[0],  1.0, "S1_ESSENCE");
+        assert_eq!(c.sem[16], 1.0, "G1_TEMPORALITY");
+        assert_eq!(c.sem[29], 1.0, "P6_TEMPORAL_VECTOR");
     }
 
     #[test]
     fn test_anchor_absence_has_low_essencia() {
         let c = anchor_cogon(1);
-        assert_eq!(c.sem[0],  0.0, "S1_INTENCAO");
-        assert_eq!(c.sem[18], 0.0, "G3_AFINIDADE (repulsão)");
+        assert_eq!(c.sem[0],  0.0, "S1_ESSENCE");
+        assert_eq!(c.sem[18], 0.0, "G3_COMPLETENESS");
     }
 
     #[test]
     fn test_anchor_change_has_high_vibracao() {
         let c = anchor_cogon(2);
-        assert_eq!(c.sem[9],  1.0, "D2_TAXA_APRENDIZADO");
-        assert_eq!(c.sem[23], 1.0, "G8_GRADIENTE");
-        assert_eq!(c.sem[11], 0.0, "D4_ESTABILIDADE low");
+        assert_eq!(c.sem[9],  1.0, "D2_PROCESS");
+        assert_eq!(c.sem[23], 1.0, "G8_URGENCY");
+        assert_eq!(c.sem[11], 0.0, "D4_SIGNAL low");
     }
 
     #[test]
     fn test_anchor_uncertainty_has_p3_anomalia() {
         let c = anchor_cogon(4);
-        assert_eq!(c.sem[29], 0.1, "P6_CONFIANCA low");
-        assert_eq!(c.sem[4],  1.0, "S5_ENTROPIA max");
-        assert_eq!(c.sem[27], 0.8, "P4_RUIDO high");
+        assert_eq!(c.sem[29], 0.1, "P6_TEMPORAL_VECTOR low");
+        assert_eq!(c.sem[4],  1.0, "S5_RHYTHM max");
+        assert_eq!(c.sem[27], 0.8, "P4_AFFECT high");
     }
 
     #[test]

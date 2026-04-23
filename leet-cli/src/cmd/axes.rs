@@ -10,7 +10,7 @@ pub fn run() {
     let mut current_group: Option<&AxisGroup> = None;
 
     for axis in CANONICAL_AXES.iter() {
-        let group_changed = current_group.map_or(true, |g| g != &axis.group);
+        let group_changed = current_group != Some(&axis.group);
         if group_changed {
             current_group = Some(&axis.group);
             let group_label = match axis.group {

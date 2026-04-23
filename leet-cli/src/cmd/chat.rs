@@ -246,7 +246,7 @@ pub async fn run(lang: &str, show_cogon: bool, max_agents: usize) {
         }
 
         // API call
-        let _ = writeln!(out, "");
+        let _ = writeln!(out);
         let responses: Vec<AgentResponse> = match client.send_cogon(&cogon, &history, max_agents).await {
             Ok(r) => r,
             Err(e) => {
@@ -360,12 +360,12 @@ pub async fn run(lang: &str, show_cogon: bool, max_agents: usize) {
                 .collect();
             let _ = writeln!(out, "  Most active: {}", top.join(" > "));
             execute!(out, ResetColor).ok();
-            let _ = writeln!(out, "");
+            let _ = writeln!(out);
         }
     }
 
     // ── Farewell ──────────────────────────────────────────────────────────
-    let _ = writeln!(out, "");
+    let _ = writeln!(out);
     execute!(out, SetForegroundColor(Color::DarkCyan)).ok();
     let _ = writeln!(
         out,
@@ -459,7 +459,7 @@ pub async fn run_connected(server_addr: &str, lang: &str, show_cogon: bool) {
         round += 1;
 
         // Read responses with 4s timeout between messages
-        let _ = writeln!(out, "");
+        let _ = writeln!(out);
         let mut got_response = false;
         loop {
             match client.recv_timeout(std::time::Duration::from_millis(800)).await {
@@ -505,7 +505,7 @@ pub async fn run_connected(server_addr: &str, lang: &str, show_cogon: bool) {
         execute!(out, ResetColor).ok();
     }
 
-    let _ = writeln!(out, "");
+    let _ = writeln!(out);
     execute!(out, SetForegroundColor(Color::DarkCyan)).ok();
     let _ = writeln!(out, " Disconnected from {}. {} rounds.", server_addr, round);
     execute!(out, ResetColor).ok();

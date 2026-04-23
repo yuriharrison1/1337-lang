@@ -71,7 +71,7 @@ pub fn encode_cogon(cogon: &Cogon) -> Vec<u8> {
 
     // Header
     buf.extend_from_slice(&MAGIC.to_be_bytes());
-    buf.push((VERSION << 4) | 0x00); // version + flags
+    buf.push(VERSION << 4); // version nibble + zero flags
     buf.push(0x00); // reserved
 
     // Payload: UUID (16 bytes)

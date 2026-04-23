@@ -158,14 +158,14 @@ impl WMatrix {
             });
         }
         let mut sem = [0.0_f32; 32];
-        for i in 0..32 {
+        for (i, v) in sem.iter_mut().enumerate() {
             let row_start = i * self.cols;
             let acc: f32 = self.data[row_start..row_start + self.cols]
                 .iter()
                 .zip(embedding.iter())
                 .map(|(w, e)| w * e)
                 .sum();
-            sem[i] = acc.clamp(0.0, 1.0);
+            *v = acc.clamp(0.0, 1.0);
         }
         Ok(sem)
     }

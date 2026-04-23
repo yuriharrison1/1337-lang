@@ -48,8 +48,8 @@ pub fn focus(c: &Cogon, dims: &[usize]) -> Cogon {
 /// DELTA — element-wise sem difference (not clamped; can be negative).
 pub fn delta(c_prev: &Cogon, c: &Cogon) -> SemVec {
     let mut d = [0.0_f32; 32];
-    for i in 0..32 {
-        d[i] = c.sem[i] - c_prev.sem[i];
+    for ((di, &a), &b) in d.iter_mut().zip(c.sem.iter()).zip(c_prev.sem.iter()) {
+        *di = a - b;
     }
     d
 }
@@ -69,13 +69,13 @@ pub fn blend(c1: &Cogon, c2: &Cogon, alpha: f32) -> Cogon {
     let alpha = alpha.clamp(0.0, 1.0);
     let mut sem = [0.0_f32; 32];
 
-    for i in 0..32 {
-        sem[i] = match i {
-            D4_SIGNAL => c1.sem[i].min(c2.sem[i]),
-            G1_TEMPORALITY        => (c1.sem[i] + c2.sem[i]).clamp(0.0, 1.0),
-            G7_EPISTEMIC_VALENCE  => c1.sem[i].max(c2.sem[i]),
-            P6_TEMPORAL_VECTOR    => c1.sem[i].min(c2.sem[i]),
-            _               => alpha * c1.sem[i] + (1.0 - alpha) * c2.sem[i],
+    for (i, v) in sem.iter_mut().enumerate() {
+        *v = match i {
+            D4_SIGNAL            => c1.sem[i].min(c2.sem[i]),
+            G1_TEMPORALITY       => (c1.sem[i] + c2.sem[i]).clamp(0.0, 1.0),
+            G7_EPISTEMIC_VALENCE => c1.sem[i].max(c2.sem[i]),
+            P6_TEMPORAL_VECTOR   => c1.sem[i].min(c2.sem[i]),
+            _                    => alpha * c1.sem[i] + (1.0 - alpha) * c2.sem[i],
         };
     }
     clamp_all(&mut sem);
@@ -129,15 +129,15 @@ pub fn compute_weighted_centroid(history: &[Cogon]) -> Cogon {
     if total_mass > f32::EPSILON {
         for c in history {
             let w = c.sem[G1_TEMPORALITY] / total_mass;
-            for i in 0..32 {
-                sem[i] += w * c.sem[i];
+            for (s, &cv) in sem.iter_mut().zip(c.sem.iter()) {
+                *s += w * cv;
             }
         }
     } else {
         let n = history.len() as f32;
         for c in history {
-            for i in 0..32 {
-                sem[i] += c.sem[i] / n;
+            for (s, &cv) in sem.iter_mut().zip(c.sem.iter()) {
+                *s += cv / n;
             }
         }
     }

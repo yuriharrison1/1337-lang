@@ -146,10 +146,8 @@ fn r8_broadcast(msg: &Msg1337) -> Result<(), LeetError> {
 fn r9_evidence_coherence(msg: &Msg1337) -> Result<(), LeetError> {
     let check = |cogon: &crate::types::Cogon| -> Result<(), LeetError> {
         if let Some(raw) = &cogon.raw {
-            if raw.role == RawRole::Evidence {
-                if cogon.sem.iter().all(|&v| v < 0.01) {
-                    return Err(LeetError::R9IncoherentEvidence);
-                }
+            if raw.role == RawRole::Evidence && cogon.sem.iter().all(|&v| v < 0.01) {
+                return Err(LeetError::R9IncoherentEvidence);
             }
         }
         Ok(())
@@ -295,7 +293,7 @@ fn r21_bridge_no_exposure(msg: &Msg1337) -> Result<(), LeetError> {
 fn r22_sem_in_range(msg: &Msg1337) -> Result<(), LeetError> {
     let check = |cogon: &crate::types::Cogon| -> Result<(), LeetError> {
         for (i, &v) in cogon.sem.iter().enumerate() {
-            if v < 0.0 || v > 1.0 {
+            if !(0.0..=1.0).contains(&v) {
                 return Err(LeetError::R22SemOutOfRange { dim: i, value: v });
             }
         }

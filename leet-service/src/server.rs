@@ -79,7 +79,7 @@ impl LeetService for LeetServiceImpl {
 
         self.store
             .save(&req.agent_id, &cogon_id, sem.clone(), stamp)
-            .map_err(|e| Status::internal(e))?;
+            .map_err(Status::internal)?;
 
         Ok(Response::new(EncodeResponse {
             cogon_id,
@@ -171,7 +171,7 @@ impl LeetService for LeetServiceImpl {
         let records = self
             .store
             .recall(&req.agent_id, &req.sem, k)
-            .map_err(|e| Status::internal(e))?;
+            .map_err(Status::internal)?;
 
         let results = records
             .into_iter()
