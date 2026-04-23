@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "leet": {
+      "command": "python3",
+      "args": ["/home/yuri/Projetos/1337/mcp/leet_mcp.py"],
+      "env": {}
+    }
+  }
+}
