@@ -22,5 +22,5 @@ sudo rm -f /etc/systemd/system/leet-agent@.service
 sudo systemctl daemon-reload
 
 echo "=== All 1337 services stopped and disabled ==="
-echo "Binaries remain at /usr/local/bin/leet-{server,agent,cli}"
+echo "Binaries remain at /usr/local/bin/leet-server, /usr/local/bin/leet-agent, /usr/local/bin/leet"
 echo "Config remains at /etc/leet/"

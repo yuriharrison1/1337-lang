@@ -68,7 +68,7 @@ show_header() {
   echo ""
   echo -e "${BOLD}╔══════════════════════════════════════════════╗${NC}"
   echo -e "${BOLD}║        PROJETO 1337 — BUILD SYSTEM           ║${NC}"
-  echo -e "${BOLD}║        Spec v0.4 · 32 eixos canônicos        ║${NC}"
+  echo -e "${BOLD}║        Spec v0.5.1 · 32 eixos canônicos      ║${NC}"
   echo -e "${BOLD}╚══════════════════════════════════════════════╝${NC}"
   echo ""
 }

@@ -58,6 +58,7 @@ if [ ! -f /etc/leet/env ]; then
 # 1337 Service Environment
 # Set your API key here:
 # LEET_API_KEY=sk-ant-...
+# LEET_W_PATH=/path/to/calibration/data/W.bin
 RUST_LOG=info
 ENVEOF
     sudo chmod 600 /etc/leet/env
@@ -100,4 +101,7 @@ echo "    sudo systemctl enable leet-agent@\$a"
 echo "  done"
 echo ""
 echo "Connect from CLI:"
-echo "  leet chat --connect 127.0.0.1:1337 --lang pt"
+echo "  leet chat --connect 127.0.0.1:1337"
+echo ""
+echo "Optional: set W matrix path for calibrated projection:"
+echo "  echo 'LEET_W_PATH=/path/to/W.bin' | sudo tee -a /etc/leet/env"
