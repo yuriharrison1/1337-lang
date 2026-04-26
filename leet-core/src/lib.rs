@@ -15,7 +15,7 @@ pub mod validate;
 pub use axes::CANONICAL_AXES;
 pub use codec::{encode_cogon, decode_cogon, binary_size, compare_sizes};
 pub use error::LeetError;
-pub use operators::{blend, delta, dist, focus, anomaly_score};
+pub use operators::{blend, delta, delta_magnitude, dist, focus, anomaly_score};
 pub use types::{Cogon, Dag, Edge, EdgeType, Intent, Msg1337, Receiver, SemVec};
 pub use validate::{validate, check_confidence};
 

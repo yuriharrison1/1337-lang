@@ -54,6 +54,15 @@ pub fn delta(c_prev: &Cogon, c: &Cogon) -> SemVec {
     d
 }
 
+/// Scalar magnitude of a delta patch, normalised by √32 → range [0, 1].
+///
+/// Max possible L2 norm when every axis changes by 1.0 is √32,
+/// so dividing by √32 maps the magnitude to [0, 1].
+pub fn delta_magnitude(patch: &[f32]) -> f32 {
+    let sum_sq: f32 = patch.iter().map(|v| v * v).sum();
+    (sum_sq.sqrt() / 32_f32.sqrt()).clamp(0.0, 1.0)
+}
+
 // ── BLEND ─────────────────────────────────────────────────────────────────────
 
 /// BLEND — semantic fusion with per-block rules.
@@ -399,5 +408,45 @@ mod tests {
         for i in 0..32 {
             assert!((d[i] - (-0.6)).abs() < 1e-6);
         }
+    }
+
+    // ── DELTA_MAGNITUDE ────────────────────────────────────────────────────
+
+    #[test]
+    fn delta_magnitude_zero_patch_is_zero() {
+        assert_eq!(delta_magnitude(&[0.0_f32; 32]), 0.0);
+    }
+
+    #[test]
+    fn delta_magnitude_max_patch_is_one() {
+        // Every axis changes by 1.0: L2 norm = √32, magnitude = √32/√32 = 1.0.
+        assert!((delta_magnitude(&[1.0_f32; 32]) - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn delta_magnitude_single_axis_change() {
+        let mut patch = [0.0_f32; 32];
+        patch[0] = 1.0;
+        // L2 norm = 1.0, magnitude = 1/√32 ≈ 0.1768.
+        let expected = 1.0_f32 / 32_f32.sqrt();
+        assert!((delta_magnitude(&patch) - expected).abs() < 1e-6);
+    }
+
+    #[test]
+    fn delta_magnitude_always_in_0_1() {
+        let patch_big = [2.0_f32; 32]; // exceeds [0,1] range — clamp kicks in
+        assert!(delta_magnitude(&patch_big) <= 1.0);
+        let patch_neg = [-1.0_f32; 32];
+        assert!(delta_magnitude(&patch_neg) <= 1.0);
+        assert!(delta_magnitude(&patch_neg) >= 0.0);
+    }
+
+    #[test]
+    fn delta_magnitude_consistent_with_delta() {
+        let c_prev = make_cogon(0.0);
+        let c_curr = make_cogon(1.0);
+        let patch = delta(&c_prev, &c_curr);
+        // All axes went 0→1, magnitude should be 1.0.
+        assert!((delta_magnitude(&patch) - 1.0).abs() < 1e-6);
     }
 }

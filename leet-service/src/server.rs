@@ -156,9 +156,7 @@ impl LeetService for LeetServiceImpl {
             .map(|i| sem_curr[i] - sem_prev[i])
             .collect();
 
-        // Normalize by √32 (max Euclidean distance for vectors in [0,1]^32) → [0,1].
-        let magnitude = (patch.iter().map(|v| v * v).sum::<f32>().sqrt() / 32_f32.sqrt())
-            .clamp(0.0, 1.0);
+        let magnitude = leet_core::delta_magnitude(&patch);
 
         Ok(Response::new(DeltaResponse { patch, magnitude }))
     }
