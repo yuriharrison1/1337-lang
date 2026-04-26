@@ -908,13 +908,16 @@ dependencies = [
 name = "leet-cli"
 version = "0.5.1"
 dependencies = [
+ "anyhow",
  "clap",
  "colored",
  "crossterm",
  "leet-bridge",
  "leet-core",
  "leet-service",
+ "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "uuid",
 ]
@@ -929,6 +932,23 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror 2.0.18",
+ "uuid",
+]
+
+[[package]]
+name = "leet-mcp"
+version = "0.5.1"
+dependencies = [
+ "anyhow",
+ "leet-bridge",
+ "leet-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 

@@ -89,6 +89,10 @@ enum Commands {
         #[arg(long)]
         connect: Option<String>,
     },
+    /// Install or configure leet integration with external tools
+    Setup(cmd::setup::SetupArgs),
+    /// Bulk-import Claude Code session history into the project's .leet store
+    Absorb(cmd::absorb::AbsorbArgs),
 }
 
 fn read_input(maybe_json: Option<String>) -> String {
@@ -137,6 +141,18 @@ fn main() {
                 rt.block_on(cmd::chat::run_connected(addr, &lang, show_cogon));
             } else {
                 rt.block_on(cmd::chat::run(&lang, show_cogon, agents));
+            }
+        }
+        Commands::Setup(args) => {
+            if let Err(e) = cmd::setup::run(args) {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        }
+        Commands::Absorb(args) => {
+            if let Err(e) = cmd::absorb::run(args) {
+                eprintln!("error: {e}");
+                std::process::exit(1);
             }
         }
     }

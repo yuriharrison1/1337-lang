@@ -260,6 +260,49 @@ fn project_text_fallback(_text: &str) -> Result<[f32; 32], BridgeError> {
     Err(BridgeError::WMatrixNotAvailable)
 }
 
+// ── Hash-based local provider ─────────────────────────────────────────────────
+
+/// Deterministic trigram-hash embedding provider.
+/// No network, no API key. Quality is useful for DIST comparisons but not
+/// for publishing; replaced by real embeddings after calibration.
+struct HashBasedProvider;
+
+impl EmbeddingProvider for HashBasedProvider {
+    fn embed(&self, text: &str) -> Result<Vec<f32>, BridgeError> {
+        use std::hash::{Hash, Hasher};
+        let dim = 384;
+        let mut out = vec![0.0_f32; dim];
+        let chars: Vec<char> = text.to_lowercase().chars().collect();
+        for window in chars.windows(3) {
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            for c in window {
+                c.hash(&mut hasher);
+            }
+            let h = hasher.finish() as usize;
+            out[h % dim] += 1.0;
+        }
+        let norm: f32 = out.iter().map(|x| x * x).sum::<f32>().sqrt().max(1e-9);
+        for v in out.iter_mut() {
+            *v /= norm;
+        }
+        Ok(out)
+    }
+
+    fn dim(&self) -> usize { 384 }
+}
+
+fn default_local_provider() -> Box<dyn EmbeddingProvider> {
+    Box::new(HashBasedProvider)
+}
+
+/// Convenience: project text via the default local (keyless) provider.
+/// Falls back to keyword heuristics when the W matrix is unavailable.
+/// Used by leet-mcp when no embedding provider is configured.
+pub fn project_text_simple(text: &str) -> Result<Cogon, BridgeError> {
+    let provider = default_local_provider();
+    project_text(text, provider.as_ref())
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]

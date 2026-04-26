@@ -1,5 +1,5 @@
 [workspace]
-members = ["leet-core", "leet-bridge", "leet-service", "leet-cli"]
+members = ["leet-core", "leet-bridge", "leet-service", "leet-cli", "leet-mcp"]
 resolver = "2"
 
 [workspace.package]
