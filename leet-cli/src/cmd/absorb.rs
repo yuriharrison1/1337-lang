@@ -423,9 +423,13 @@ fn append_record(
     record[0..96].copy_from_slice(&frame);
     record[96..104].copy_from_slice(&unix_ns.to_le_bytes());
 
-    let excerpt_bytes = excerpt.as_bytes();
-    let len = excerpt_bytes.len().min(256);
-    record[104..104 + len].copy_from_slice(&excerpt_bytes[..len]);
+    // Truncate at char boundary to avoid splitting multibyte codepoints.
+    let mut excerpt_end = excerpt.len().min(256);
+    while excerpt_end > 0 && !excerpt.is_char_boundary(excerpt_end) {
+        excerpt_end -= 1;
+    }
+    let excerpt_bytes = &excerpt.as_bytes()[..excerpt_end];
+    record[104..104 + excerpt_bytes.len()].copy_from_slice(excerpt_bytes);
 
     let mut f = OpenOptions::new().append(true).open(&store_path)?;
     f.write_all(&record)?;

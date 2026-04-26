@@ -17,7 +17,7 @@ path = "src/main.rs"
 
 [dependencies]
 leet-core = { path = "../leet-core" }
-leet-bridge = { path = "../leet-bridge" }
+leet-bridge = { path = "../leet-bridge", features = ["keyword-fallback"] }
 leet-service = { path = "../leet-service" }
 clap = { version = "4", features = ["derive"] }
 crossterm = "0.27"
