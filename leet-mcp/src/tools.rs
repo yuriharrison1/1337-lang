@@ -117,47 +117,57 @@ struct RecallArgs {
 }
 fn default_limit() -> usize { 5 }
 
-pub async fn leet_recall(args: Value, store: &PersonalStore) -> Result<crate::protocol::ToolResult> {
+pub async fn leet_recall(args: Value, store: &mut PersonalStore) -> Result<crate::protocol::ToolResult> {
     let args: RecallArgs = serde_json::from_value(args).unwrap_or(RecallArgs {
         query: None,
         limit: default_limit(),
     });
 
     if store.is_empty() {
+        store.index.touch_recall(now_ns());
+        let _ = store.index.flush();
         return Ok(crate::protocol::ToolResult::text(
             "No prior context in this project. Starting fresh.",
         ));
     }
 
-    let ranked: Vec<(f32, &StoreRecord)> = match args.query {
+    // Pre-collect live indices (not consolidated) to avoid borrow conflicts below.
+    let live_indices: Vec<usize> = (0..store.records().len())
+        .filter(|&i| !store.index.entries[i].is_consolidated())
+        .collect();
+
+    let ranked: Vec<(f32, usize)> = match args.query {
         Some(q) if !q.is_empty() => {
             let query_cogon = encode_text(&q)?;
-            let mut scored: Vec<(f32, &StoreRecord)> = store
-                .records()
+            let mut scored: Vec<(f32, usize)> = live_indices
                 .iter()
-                .map(|r| (dist(&query_cogon, &r.cogon), r))
+                .map(|&i| (dist(&query_cogon, &store.records()[i].cogon), i))
                 .collect();
             scored.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
             scored
         }
-        _ => store.records().iter().rev().map(|r| (0.0_f32, r)).collect(),
+        _ => live_indices.iter().rev().map(|&i| (0.0_f32, i)).collect(),
     };
 
     let picks: Vec<_> = ranked.into_iter().take(args.limit).collect();
 
     let mut out = String::from("Recalled context from prior sessions:\n\n");
-    for (i, (dist_val, rec)) in picks.iter().enumerate() {
+    for (j, (dist_val, idx)) in picks.iter().enumerate() {
+        let rec = &store.records()[*idx];
         let ts = chrono_like(rec.unix_ns);
         out.push_str(&format!(
-            "[{i}] {ts}  (distance={dist_val:.3})\n    {}\n\n",
+            "[{j}] {ts}  (distance={dist_val:.3})\n    {}\n\n",
             rec.excerpt
         ));
     }
     out.push_str(&format!(
-        "({}/{} records shown. Use leet_recall with a narrower query to filter further.)",
+        "({}/{} live records shown. Use leet_recall with a narrower query to filter further.)",
         picks.len(),
-        store.len()
+        live_indices.len()
     ));
+
+    store.index.touch_recall(now_ns());
+    let _ = store.index.flush();
 
     Ok(crate::protocol::ToolResult::text(out))
 }

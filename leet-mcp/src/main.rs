@@ -6,6 +6,7 @@
 use anyhow::Result;
 use tracing_subscriber::EnvFilter;
 
+mod index;
 mod protocol;
 mod server;
 mod store;
