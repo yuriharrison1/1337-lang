@@ -341,6 +341,70 @@ def configure_experiment(env: dict) -> dict:
     return env
 
 
+def configure_claude_code(env: dict) -> dict:
+    header("CLAUDE CODE  (leet-mcp + skill)")
+
+    import subprocess
+
+    # ── Verifica se cargo está disponível ──────────────────────────────────────
+    if not shutil.which("cargo"):
+        warn("cargo não encontrado no PATH. Instale o Rust antes de continuar.")
+        return env
+
+    # ── Build + install leet-mcp ───────────────────────────────────────────────
+    section("Instalando leet-mcp")
+    info("cargo install --path leet-mcp --bin leet-mcp  (pode demorar na primeira vez)")
+    result = subprocess.run(
+        ["cargo", "install", "--path", "leet-mcp", "--bin", "leet-mcp"],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        warn("Falha ao instalar leet-mcp:")
+        print(red(result.stderr[-800:] if result.stderr else "(sem output)"))
+        return env
+    ok("leet-mcp instalado em ~/.cargo/bin/leet-mcp")
+
+    # ── Build + install leet CLI ───────────────────────────────────────────────
+    section("Instalando leet CLI")
+    result = subprocess.run(
+        ["cargo", "install", "--path", "leet-cli", "--bin", "leet"],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        warn("Falha ao instalar leet CLI:")
+        print(red(result.stderr[-800:] if result.stderr else "(sem output)"))
+        return env
+    ok("leet instalado em ~/.cargo/bin/leet")
+
+    # ── leet setup claude-code ─────────────────────────────────────────────────
+    section("Configurando Claude Code")
+    leet_bin = shutil.which("leet")
+    if not leet_bin:
+        # tenta ~/.cargo/bin diretamente
+        candidate = Path.home() / ".cargo" / "bin" / "leet"
+        leet_bin = str(candidate) if candidate.exists() else None
+
+    if not leet_bin:
+        warn("leet não encontrado no PATH após instalação. Adicione ~/.cargo/bin ao PATH e rode:")
+        print(dim("    leet setup claude-code"))
+        return env
+
+    result = subprocess.run([leet_bin, "setup", "claude-code"], capture_output=True, text=True)
+    if result.returncode != 0:
+        warn("Falha em 'leet setup claude-code':")
+        print(red(result.stderr[-800:] if result.stderr else result.stdout[-800:]))
+        return env
+
+    # Mostra output do setup (já é compacto)
+    for line in result.stdout.splitlines():
+        print(f"  {line}")
+
+    print()
+    info("Reinicie o Claude Code para o servidor MCP ser carregado.")
+
+    return env
+
+
 def configure_docker(env: dict) -> dict:
     header("DOCKER  (docker-compose.yml)")
 
@@ -397,7 +461,8 @@ MENU_ITEMS = [
     ("4", "Python SDK (host, cache, projeção, log)"),
     ("5", "Experimento de comparação (rounds, tópico, threshold)"),
     ("6", "Docker (atualizar docker-compose.yml)"),
-    ("7", "Mostrar configuração atual"),
+    ("7", "Claude Code (instalar leet-mcp + skill)"),
+    ("8", "Mostrar configuração atual"),
     ("s", "Salvar .env e sair"),
     ("q", "Sair sem salvar"),
 ]
@@ -474,7 +539,11 @@ MENU PRINCIPAL
   6  Docker                Atualiza docker-compose.yml com os valores do .env
                            Faz backup automático em docker-compose.yml.bak
 
-  7  Mostrar               Exibe configuração atual (chaves mascaradas)
+  7  Claude Code           Instala leet-mcp e a skill 1337 no Claude Code
+                           Executa: cargo install leet-mcp + leet setup claude-code
+                           Estado de cada projeto em .leet/store.bin (auto-criado)
+
+  8  Mostrar               Exibe configuração atual (chaves mascaradas)
 
   s  Salvar e sair         Grava .env preservando comentários e ordem
   q  Sair sem salvar       Descarta alterações não salvas
@@ -554,7 +623,8 @@ def main():
         "4": configure_python_sdk,
         "5": configure_experiment,
         "6": configure_docker,
-        "7": lambda e: (show_current(e), e)[1],
+        "7": configure_claude_code,
+        "8": lambda e: (show_current(e), e)[1],
     }
 
     while True:
