@@ -6,11 +6,11 @@
 use anyhow::Result;
 use tracing_subscriber::EnvFilter;
 
-mod index;
 mod protocol;
 mod server;
-mod store;
 mod tools;
+
+use leet_mcp::store;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {

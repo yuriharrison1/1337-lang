@@ -6,7 +6,7 @@ use serde_json::{json, Value};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 use crate::protocol::*;
-use crate::store::PersonalStore;
+use leet_mcp::store::PersonalStore;
 use crate::tools;
 
 pub async fn run_stdio(mut store: PersonalStore) -> Result<()> {

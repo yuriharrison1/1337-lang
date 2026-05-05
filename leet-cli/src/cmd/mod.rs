@@ -1,6 +1,7 @@
 //! CLI command modules.
 
 pub mod absorb;
+pub mod consolidate;
 pub mod axes;
 pub mod bench;
 pub mod blend;

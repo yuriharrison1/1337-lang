@@ -9,7 +9,7 @@ use leet_core::types::Cogon;
 use uuid::Uuid;
 
 use crate::protocol::ToolDef;
-use crate::store::{PersonalStore, StoreRecord};
+use leet_mcp::store::{PersonalStore, StoreRecord};
 
 // ─── Tool definitions (tools/list) ───────────────────────────────────────────
 
@@ -531,7 +531,7 @@ fn civil_from_days(z: i64) -> (i32, u32, u32) {
 #[cfg(test)]
 mod recall_tests {
     use super::*;
-    use crate::store::{PersonalStore, StoreRecord};
+    use leet_mcp::store::{PersonalStore, StoreRecord};
     use leet_core::types::Cogon;
     use uuid::Uuid;
 

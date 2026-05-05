@@ -11,6 +11,10 @@ description = "Model Context Protocol server exposing 1337 tools to Claude Code 
 keywords.workspace = true
 categories.workspace = true
 
+[lib]
+name = "leet_mcp"
+path = "src/lib.rs"
+
 [[bin]]
 name = "leet-mcp"
 path = "src/main.rs"

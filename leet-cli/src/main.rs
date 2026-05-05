@@ -93,6 +93,8 @@ enum Commands {
     Setup(cmd::setup::SetupArgs),
     /// Bulk-import Claude Code session history into the project's .leet store
     Absorb(cmd::absorb::AbsorbArgs),
+    /// Inspect, force, or rebuild the consolidation pyramid for a project
+    Consolidate(cmd::consolidate::ConsolidateArgs),
 }
 
 fn read_input(maybe_json: Option<String>) -> String {
@@ -151,6 +153,12 @@ fn main() {
         }
         Commands::Absorb(args) => {
             if let Err(e) = cmd::absorb::run(args) {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+        }
+        Commands::Consolidate(args) => {
+            if let Err(e) = cmd::consolidate::run(args) {
                 eprintln!("error: {e}");
                 std::process::exit(1);
             }
