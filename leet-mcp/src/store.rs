@@ -38,11 +38,11 @@ pub const RECORD_SIZE: usize = FRAME_SIZE + TIMESTAMP_SIZE + EXCERPT_SIZE; // 36
 /// merge the oldest 7 into one level+1 record.
 pub const CONSOLIDATE_THRESHOLD: usize = 7;
 
-/// Block-special axis indices (must match leet-core canonical ordering).
-const D4_STABILITY: usize = 11;
-const G1_MASS: usize = 16;
-const G7_K_INTERACTION: usize = 22;
-const P6_CONFIDENCE: usize = 29;
+/// Block-special axis indices — must match leet-core canonical ordering (axes.rs).
+const D4_SIGNAL: usize = 11;           // blend rule: min (conservative signal)
+const G1_TEMPORALITY: usize = 16;      // blend rule: clamp(sum, 0, 1) — accumulating
+const G7_EPISTEMIC_VALENCE: usize = 22; // blend rule: max (higher gain wins)
+const P6_TEMPORAL_VECTOR: usize = 29;  // blend rule: min (conservative)
 
 #[derive(Debug, Clone)]
 pub struct StoreRecord {
@@ -218,8 +218,12 @@ impl PersonalStore {
         Ok(true)
     }
 
-    /// Canonical centroid (G1-weighted) of all live records with unix_ns ≤ cursor_ns.
-    /// If cursor_ns is 0 or no records match, returns the boot vector.
+    /// Canonical centroid (G1_TEMPORALITY-weighted) of all live records with
+    /// `unix_ns ≤ cursor_ns`. Returns the boot vector when no records match.
+    ///
+    /// **Sentinel**: `cursor_ns == 0` means *no upper bound* — all live records are
+    /// included. Callers that want the boot baseline (i.e. "prior state before any
+    /// history") must use `leet_core::axes::boot_vector()` directly, not pass 0.
     pub fn centroid_up_to(&self, cursor_ns: i64) -> [f32; 32] {
         let eligible: Vec<&StoreRecord> = self
             .records
@@ -234,12 +238,12 @@ impl PersonalStore {
             return leet_core::axes::boot_vector();
         }
 
-        let total_mass: f32 = eligible.iter().map(|r| r.cogon.sem[G1_MASS]).sum();
+        let total_mass: f32 = eligible.iter().map(|r| r.cogon.sem[G1_TEMPORALITY]).sum();
         let mut sem = [0.0_f32; 32];
 
         if total_mass > f32::EPSILON {
             for r in &eligible {
-                let w = r.cogon.sem[G1_MASS] / total_mass;
+                let w = r.cogon.sem[G1_TEMPORALITY] / total_mass;
                 for k in 0..32 {
                     sem[k] += w * r.cogon.sem[k];
                 }
@@ -334,12 +338,12 @@ fn blend_n_records(records: &[&StoreRecord], source_level: u8) -> StoreRecord {
     let n = records.len();
     debug_assert!(n > 0);
 
-    let total_mass: f32 = records.iter().map(|r| r.cogon.sem[G1_MASS]).sum();
+    let total_mass: f32 = records.iter().map(|r| r.cogon.sem[G1_TEMPORALITY]).sum();
     let mut sem = [0.0_f32; 32];
 
     if total_mass > f32::EPSILON {
         for r in records {
-            let w = r.cogon.sem[G1_MASS] / total_mass;
+            let w = r.cogon.sem[G1_TEMPORALITY] / total_mass;
             for k in 0..32 {
                 sem[k] += w * r.cogon.sem[k];
             }
@@ -354,22 +358,21 @@ fn blend_n_records(records: &[&StoreRecord], source_level: u8) -> StoreRecord {
     }
 
     // Per-block overrides.
-    sem[D4_STABILITY] = records
+    sem[D4_SIGNAL] = records
         .iter()
-        .map(|r| r.cogon.sem[D4_STABILITY])
+        .map(|r| r.cogon.sem[D4_SIGNAL])
         .fold(f32::INFINITY, f32::min);
 
-    let mass_sum: f32 = records.iter().map(|r| r.cogon.sem[G1_MASS]).sum();
-    sem[G1_MASS] = mass_sum.clamp(0.0, 1.0);
+    sem[G1_TEMPORALITY] = total_mass.clamp(0.0, 1.0);
 
-    sem[G7_K_INTERACTION] = records
+    sem[G7_EPISTEMIC_VALENCE] = records
         .iter()
-        .map(|r| r.cogon.sem[G7_K_INTERACTION])
+        .map(|r| r.cogon.sem[G7_EPISTEMIC_VALENCE])
         .fold(f32::NEG_INFINITY, f32::max);
 
-    sem[P6_CONFIDENCE] = records
+    sem[P6_TEMPORAL_VECTOR] = records
         .iter()
-        .map(|r| r.cogon.sem[P6_CONFIDENCE])
+        .map(|r| r.cogon.sem[P6_TEMPORAL_VECTOR])
         .fold(f32::INFINITY, f32::min);
 
     for v in sem.iter_mut() {
@@ -659,12 +662,12 @@ mod tests {
         let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
         for i in 0..7 {
             let mut rec = make_record(0.5, &format!("rec{i}"), i);
-            rec.cogon.sem[G1_MASS] = 0.1;
+            rec.cogon.sem[G1_TEMPORALITY] = 0.1;
             store.append(rec).unwrap();
         }
         let consolidated = &store.records()[7];
         // 7 * 0.1 = 0.7, no saturation
-        assert!((consolidated.cogon.sem[G1_MASS] - 0.7).abs() < 0.05);
+        assert!((consolidated.cogon.sem[G1_TEMPORALITY] - 0.7).abs() < 0.05);
     }
 
     #[test]
@@ -674,11 +677,11 @@ mod tests {
         let p6_values = [0.9_f32, 0.8, 0.3, 0.95, 0.7, 0.6, 0.85];
         for (i, &p6) in p6_values.iter().enumerate() {
             let mut rec = make_record(0.5, &format!("rec{i}"), i as i64);
-            rec.cogon.sem[P6_CONFIDENCE] = p6;
+            rec.cogon.sem[P6_TEMPORAL_VECTOR] = p6;
             store.append(rec).unwrap();
         }
         let consolidated = &store.records()[7];
-        assert!((consolidated.cogon.sem[P6_CONFIDENCE] - 0.3).abs() < 0.01);
+        assert!((consolidated.cogon.sem[P6_TEMPORAL_VECTOR] - 0.3).abs() < 0.01);
     }
 
     #[test]
