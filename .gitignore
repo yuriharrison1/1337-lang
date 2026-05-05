@@ -47,3 +47,4 @@ Thumbs.db
 
 # Taskwarrior / project artifacts
 task-*.json
+.leet/
