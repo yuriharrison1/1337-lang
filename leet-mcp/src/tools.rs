@@ -17,9 +17,10 @@ pub fn tool_definitions() -> Vec<ToolDef> {
     vec![
         ToolDef {
             name: "leet_recall",
-            description: "Retrieve the most semantically relevant prior COGONs from the project's \
-                          .leet/store.bin, ranked by distance to the optional query (or by recency \
-                          if no query provided). Returns compressed context for continuing work.",
+            description: "Retrieve context from the project's .leet/store.bin using delta-aware \
+                          tiered recall: foundation summary (highest level) + mid-tier + recent \
+                          raw entries. With a query, ranks by semantic distance. Without a query, \
+                          returns the memory pyramid optimally bounded.",
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -33,6 +34,14 @@ pub fn tool_definitions() -> Vec<ToolDef> {
                         "minimum": 1,
                         "maximum": 50,
                         "default": 5
+                    },
+                    "raw_cap": {
+                        "type": "integer",
+                        "description": "Cap on raw (level 0) records returned. Default: unbounded."
+                    },
+                    "mid_cap": {
+                        "type": "integer",
+                        "description": "Cap on mid-tier records returned. Default: unbounded."
                     }
                 }
             }),
@@ -106,7 +115,7 @@ pub fn tool_definitions() -> Vec<ToolDef> {
     ]
 }
 
-// ─── leet_recall ─────────────────────────────────────────────────────────────
+// ─── leet_recall (delta-aware, post-11b) ────────────────────────────────────
 
 #[derive(Deserialize)]
 struct RecallArgs {
@@ -114,13 +123,22 @@ struct RecallArgs {
     query: Option<String>,
     #[serde(default = "default_limit")]
     limit: usize,
+    #[serde(default)]
+    raw_cap: Option<usize>,
+    #[serde(default)]
+    mid_cap: Option<usize>,
 }
 fn default_limit() -> usize { 5 }
 
-pub async fn leet_recall(args: Value, store: &mut PersonalStore) -> Result<crate::protocol::ToolResult> {
+pub async fn leet_recall(
+    args: Value,
+    store: &mut PersonalStore,
+) -> Result<crate::protocol::ToolResult> {
     let args: RecallArgs = serde_json::from_value(args).unwrap_or(RecallArgs {
         query: None,
         limit: default_limit(),
+        raw_cap: None,
+        mid_cap: None,
     });
 
     if store.is_empty() {
@@ -131,45 +149,203 @@ pub async fn leet_recall(args: Value, store: &mut PersonalStore) -> Result<crate
         ));
     }
 
-    // Pre-collect live indices (not consolidated) to avoid borrow conflicts below.
-    let live_indices: Vec<usize> = (0..store.records().len())
-        .filter(|&i| !store.index.entries[i].is_consolidated())
-        .collect();
+    let tiers = group_live_records_by_tier(store);
 
-    let ranked: Vec<(f32, usize)> = match args.query {
-        Some(q) if !q.is_empty() => {
-            let query_cogon = encode_text(&q)?;
-            let mut scored: Vec<(f32, usize)> = live_indices
-                .iter()
-                .map(|&i| (dist(&query_cogon, &store.records()[i].cogon), i))
-                .collect();
-            scored.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-            scored
-        }
-        _ => live_indices.iter().rev().map(|&i| (0.0_f32, i)).collect(),
+    let picks = match args.query.as_deref() {
+        Some(q) if !q.is_empty() => rank_by_distance(store, &tiers, q, args.limit)?,
+        _ => fill_temporal(&tiers, args.limit, args.mid_cap, args.raw_cap),
     };
 
-    let picks: Vec<_> = ranked.into_iter().take(args.limit).collect();
-
-    let mut out = String::from("Recalled context from prior sessions:\n\n");
-    for (j, (dist_val, idx)) in picks.iter().enumerate() {
-        let rec = &store.records()[*idx];
-        let ts = chrono_like(rec.unix_ns);
+    let mut out = String::new();
+    if picks.is_empty() {
+        out.push_str(
+            "Found no live context to recall (all records consolidated — this shouldn't \
+             normally happen).",
+        );
+    } else {
         out.push_str(&format!(
-            "[{j}] {ts}  (distance={dist_val:.3})\n    {}\n\n",
-            rec.excerpt
+            "Recalled {} entries from {} live records ({} total in store):\n\n",
+            picks.len(),
+            tiers.live_count(),
+            store.len(),
         ));
+        for (i, pick) in picks.iter().enumerate() {
+            let rec = &store.records()[pick.idx];
+            let entry = &store.index.entries[pick.idx];
+            let ts = chrono_like(rec.unix_ns);
+            let level_tag = format_level_tag(entry.level);
+            let dist_str = pick
+                .distance
+                .map(|d| format!(" · distance={d:.3}"))
+                .unwrap_or_default();
+            out.push_str(&format!(
+                "[{i}] {ts} · {level_tag}{dist_str}\n    {}\n\n",
+                rec.excerpt
+            ));
+        }
+        out.push_str(&summary_footer(&tiers, &picks));
     }
-    out.push_str(&format!(
-        "({}/{} live records shown. Use leet_recall with a narrower query to filter further.)",
-        picks.len(),
-        live_indices.len()
-    ));
 
     store.index.touch_recall(now_ns());
     let _ = store.index.flush();
 
     Ok(crate::protocol::ToolResult::text(out))
+}
+
+// ─── Tiering ─────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Default)]
+struct Tiers {
+    foundation: Option<usize>,
+    mid: Vec<usize>,
+    raw: Vec<usize>,
+}
+
+impl Tiers {
+    fn live_count(&self) -> usize {
+        self.foundation.iter().count() + self.mid.len() + self.raw.len()
+    }
+}
+
+fn group_live_records_by_tier(store: &PersonalStore) -> Tiers {
+    let mut max_live_level: u8 = 0;
+    for entry in &store.index.entries {
+        if !entry.is_consolidated() && entry.level > max_live_level {
+            max_live_level = entry.level;
+        }
+    }
+
+    let mut tiers = Tiers::default();
+    let mut foundation_idx: Option<usize> = None;
+    if max_live_level > 0 {
+        for (i, entry) in store.index.entries.iter().enumerate().rev() {
+            if !entry.is_consolidated() && entry.level == max_live_level {
+                foundation_idx = Some(i);
+                break;
+            }
+        }
+    }
+    tiers.foundation = foundation_idx;
+
+    for (i, entry) in store.index.entries.iter().enumerate().rev() {
+        if entry.is_consolidated() {
+            continue;
+        }
+        if Some(i) == foundation_idx {
+            continue;
+        }
+        if entry.level == 0 {
+            tiers.raw.push(i);
+        } else {
+            // Intermediate levels or older siblings at max level.
+            tiers.mid.push(i);
+        }
+    }
+
+    tiers
+}
+
+// ─── Ranked recall (with query) ──────────────────────────────────────────────
+
+#[derive(Debug, Clone)]
+struct Pick {
+    idx: usize,
+    distance: Option<f32>,
+}
+
+fn rank_by_distance(
+    store: &PersonalStore,
+    tiers: &Tiers,
+    query: &str,
+    limit: usize,
+) -> Result<Vec<Pick>> {
+    let query_cogon = encode_text(query)?;
+    let mut all_indices: Vec<usize> = Vec::new();
+    if let Some(f) = tiers.foundation {
+        all_indices.push(f);
+    }
+    all_indices.extend(&tiers.mid);
+    all_indices.extend(&tiers.raw);
+
+    let mut scored: Vec<Pick> = all_indices
+        .into_iter()
+        .map(|i| {
+            let d = dist(&query_cogon, &store.records()[i].cogon);
+            Pick { idx: i, distance: Some(d) }
+        })
+        .collect();
+
+    scored.sort_by(|a, b| {
+        a.distance
+            .partial_cmp(&b.distance)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    scored.truncate(limit);
+    Ok(scored)
+}
+
+// ─── Temporal recall (no query): foundation + mid + recent raw ────────────────
+
+fn fill_temporal(
+    tiers: &Tiers,
+    limit: usize,
+    mid_cap: Option<usize>,
+    raw_cap: Option<usize>,
+) -> Vec<Pick> {
+    let mut out: Vec<Pick> = Vec::new();
+
+    if let Some(f) = tiers.foundation {
+        out.push(Pick { idx: f, distance: None });
+    }
+
+    let mid_take = mid_cap.unwrap_or(usize::MAX);
+    for &i in tiers.mid.iter().take(mid_take) {
+        out.push(Pick { idx: i, distance: None });
+    }
+
+    let raw_take = raw_cap.unwrap_or(usize::MAX);
+    for &i in tiers.raw.iter().take(raw_take) {
+        out.push(Pick { idx: i, distance: None });
+    }
+
+    out.truncate(limit.max(1));
+    out
+}
+
+// ─── Rendering helpers ────────────────────────────────────────────────────────
+
+fn format_level_tag(level: u8) -> String {
+    match level {
+        0 => "raw".to_string(),
+        n => format!("L{n}"),
+    }
+}
+
+fn summary_footer(tiers: &Tiers, picks: &[Pick]) -> String {
+    let raw_total = tiers.raw.len();
+    let mid_total = tiers.mid.len();
+    let foundation_present = tiers.foundation.is_some();
+    let mut parts = Vec::new();
+    if foundation_present {
+        parts.push("1 foundation".to_string());
+    }
+    if mid_total > 0 {
+        parts.push(format!("{mid_total} mid-tier"));
+    }
+    if raw_total > 0 {
+        parts.push(format!("{raw_total} raw"));
+    }
+    let live_breakdown = parts.join(" + ");
+    let shown = picks.len();
+    let total_live = tiers.live_count();
+    if shown < total_live {
+        format!(
+            "({shown} of {total_live} live: {live_breakdown}. \
+             Pass a narrower query or higher limit to see more.)"
+        )
+    } else {
+        format!("({live_breakdown})")
+    }
 }
 
 // ─── leet_remember ───────────────────────────────────────────────────────────
@@ -286,12 +462,12 @@ pub async fn leet_dist(args: Value) -> Result<crate::protocol::ToolResult> {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-fn encode_text(text: &str) -> Result<Cogon> {
+pub fn encode_text(text: &str) -> Result<Cogon> {
     match leet_bridge::projector::project_text_simple(text) {
         Ok(c) => Ok(c),
         Err(_) => {
             let mut sem = leet_core::axes::boot_vector();
-            sem[29] = 0.3; // low P6_CONFIDENCE — uncalibrated result
+            sem[29] = 0.3;
             Ok(Cogon {
                 id: Uuid::new_v4(),
                 sem,
@@ -312,7 +488,7 @@ fn truncate(s: &str, max: usize) -> String {
     }
 }
 
-fn now_ns() -> i64 {
+pub fn now_ns() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos() as i64)
@@ -326,7 +502,7 @@ fn now_ms() -> i64 {
         .unwrap_or(0)
 }
 
-fn chrono_like(unix_ns: i64) -> String {
+pub fn chrono_like(unix_ns: i64) -> String {
     let secs = unix_ns / 1_000_000_000;
     let epoch_days = secs / 86400;
     let (year, month, day) = civil_from_days(epoch_days);
@@ -336,7 +512,6 @@ fn chrono_like(unix_ns: i64) -> String {
     format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02}")
 }
 
-/// Howard Hinnant's civil_from_days algorithm (public domain).
 fn civil_from_days(z: i64) -> (i32, u32, u32) {
     let z = z + 719468;
     let era = if z >= 0 { z / 146097 } else { (z - 146096) / 146097 };
@@ -349,4 +524,139 @@ fn civil_from_days(z: i64) -> (i32, u32, u32) {
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = if m <= 2 { y + 1 } else { y };
     (y, m, d)
+}
+
+// ─── Tests ────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod recall_tests {
+    use super::*;
+    use crate::store::{PersonalStore, StoreRecord};
+    use leet_core::types::Cogon;
+    use uuid::Uuid;
+
+    fn make_record(seed: f32, excerpt: &str, unix_ns: i64) -> StoreRecord {
+        StoreRecord {
+            cogon: Cogon { id: Uuid::new_v4(), sem: [seed; 32], stamp: 0, raw: None },
+            excerpt: excerpt.to_string(),
+            unix_ns,
+        }
+    }
+
+    fn format_text(r: &crate::protocol::ToolResult) -> String {
+        r.content
+            .iter()
+            .filter_map(|c| match c {
+                crate::protocol::ContentItem::Text { text } => Some(text.clone()),
+            })
+            .collect::<String>()
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_empty_store() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        let res = leet_recall(serde_json::json!({}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        assert!(text.contains("No prior context"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_below_threshold_returns_all_raw() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        for i in 0..3 {
+            store.append(make_record(0.5, &format!("rec{i}"), i)).unwrap();
+        }
+        let res = leet_recall(serde_json::json!({"limit": 10}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        assert!(text.contains("rec0"));
+        assert!(text.contains("rec1"));
+        assert!(text.contains("rec2"));
+        assert!(!text.contains("L1"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_after_consolidation_includes_foundation() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        // 8 records → 7 flagged (L0) + 1 L1 foundation + 1 new raw.
+        for i in 0..8 {
+            store.append(make_record(0.5, &format!("rec{i}"), i)).unwrap();
+        }
+        let res = leet_recall(serde_json::json!({"limit": 10}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        assert!(text.contains("L1"));
+        assert!(text.contains("raw"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_with_query_ranks_by_distance() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        store.append(make_record(0.1, "near 0", 1)).unwrap();
+        store.append(make_record(0.5, "middle", 2)).unwrap();
+        store.append(make_record(0.9, "near 1", 3)).unwrap();
+
+        let res = leet_recall(
+            serde_json::json!({"query": "anything", "limit": 3}),
+            &mut store,
+        )
+        .await
+        .unwrap();
+        let text = format_text(&res);
+        assert!(text.contains("distance="));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_updates_cursor() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        store.append(make_record(0.5, "x", 1)).unwrap();
+        let before = store.index.last_recall_at;
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        let _ = leet_recall(serde_json::json!({}), &mut store).await.unwrap();
+        let after = store.index.last_recall_at;
+        assert!(
+            after > before,
+            "cursor should advance after recall (before={before}, after={after})"
+        );
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_skips_consolidated_records() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        for i in 0..7 {
+            store.append(make_record(0.5, &format!("absorbed{i}"), i)).unwrap();
+        }
+        let res = leet_recall(serde_json::json!({"limit": 50}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        assert!(text.contains("[L1×7]"));
+        // Individual absorbed records would appear as "    absorbed{i}\n" if standalone.
+        // Inside the consolidated excerpt they appear as "...absorbed{i}" preceded by " · ".
+        for i in 0..7 {
+            assert!(
+                !text.contains(&format!("    absorbed{i}\n")),
+                "record {i} should not appear standalone — it was consolidated"
+            );
+        }
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn recall_at_high_levels_stays_bounded() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        for i in 0..49 {
+            store.append(make_record(0.5, &format!("rec{i}"), i)).unwrap();
+        }
+        let res = leet_recall(serde_json::json!({"limit": 50}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        assert!(
+            text.len() < 4096,
+            "recall output {} bytes — too verbose at scale",
+            text.len()
+        );
+        assert!(text.contains("L2"));
+    }
 }
