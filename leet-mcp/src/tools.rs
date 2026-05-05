@@ -112,6 +112,23 @@ pub fn tool_definitions() -> Vec<ToolDef> {
                 }
             }),
         },
+        ToolDef {
+            name: "leet_recall_delta",
+            description: "Spec-compliant intent=DELTA recall. Returns a 32-dim patch vector \
+                          representing the change in canonical state since the last sync, plus \
+                          any newly-added live records. Use ONLY if you maintain prior state \
+                          and can apply patches — for human-readable recall, use leet_recall.",
+            input_schema: json!({
+                "type": "object",
+                "properties": {
+                    "since_unix_ns": {
+                        "type": "integer",
+                        "description": "Override the cursor. If omitted, uses index.last_recall_at. \
+                                        Pass 0 to get the patch from the boot baseline."
+                    }
+                }
+            }),
+        },
     ]
 }
 
@@ -460,6 +477,88 @@ pub async fn leet_dist(args: Value) -> Result<crate::protocol::ToolResult> {
     Ok(crate::protocol::ToolResult::text(format!("{{\"distance\": {d:.6}}}")))
 }
 
+// ─── leet_recall_delta (intent=DELTA spec compliance) ────────────────────────
+
+#[derive(Deserialize)]
+struct RecallDeltaArgs {
+    #[serde(default)]
+    since_unix_ns: Option<i64>,
+}
+
+pub async fn leet_recall_delta(
+    args: Value,
+    store: &mut PersonalStore,
+) -> Result<crate::protocol::ToolResult> {
+    let args: RecallDeltaArgs = serde_json::from_value(args).unwrap_or(RecallDeltaArgs {
+        since_unix_ns: None,
+    });
+
+    let cursor_ns = args.since_unix_ns.unwrap_or(store.index.last_recall_at);
+
+    // When cursor=0 the "prior" is definitionally the boot baseline (no history).
+    // centroid_up_to(0) means "include all records" (the sentinel for current state),
+    // so we must special-case boot here instead of calling it for prior too.
+    let prior = if cursor_ns == 0 {
+        leet_core::axes::boot_vector()
+    } else {
+        store.centroid_up_to(cursor_ns)
+    };
+    let current = store.centroid_up_to(0); // 0 = no upper bound → all live records
+
+    let mut patch = [0.0_f32; 32];
+    for k in 0..32 {
+        patch[k] = current[k] - prior[k];
+    }
+
+    let ref_hash = sha256_of_sem(&prior);
+
+    let new_indices = store.live_records_after(cursor_ns);
+    let newly_added: Vec<Value> = new_indices
+        .iter()
+        .map(|&i| {
+            let entry = &store.index.entries[i];
+            let rec = &store.records()[i];
+            json!({
+                "level": entry.level,
+                "excerpt": rec.excerpt,
+                "unix_ns": rec.unix_ns,
+            })
+        })
+        .collect();
+
+    let payload = json!({
+        "intent": "DELTA",
+        "ref_hash": ref_hash,
+        "patch": patch.to_vec(),
+        "newly_added": newly_added,
+        "unchanged_since": cursor_ns,
+        "spec_version": "0.5.1",
+    });
+
+    store.index.touch_recall(now_ns());
+    let _ = store.index.flush();
+
+    Ok(crate::protocol::ToolResult::text(payload.to_string()))
+}
+
+fn sha256_of_sem(sem: &[f32; 32]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut bytes = [0u8; 128];
+    for (k, v) in sem.iter().enumerate() {
+        bytes[k * 4..k * 4 + 4].copy_from_slice(&v.to_le_bytes());
+    }
+    let h = Sha256::digest(bytes);
+    hex(&h)
+}
+
+fn hex(bytes: &[u8]) -> String {
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        s.push_str(&format!("{:02x}", b));
+    }
+    s
+}
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 pub fn encode_text(text: &str) -> Result<Cogon> {
@@ -658,5 +757,93 @@ mod recall_tests {
             text.len()
         );
         assert!(text.contains("L2"));
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn delta_with_no_records_returns_zero_patch() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        let res = leet_recall_delta(serde_json::json!({}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let patch = parsed["patch"].as_array().unwrap();
+        for v in patch {
+            assert!((v.as_f64().unwrap()).abs() < 1e-6);
+        }
+        assert_eq!(parsed["intent"].as_str().unwrap(), "DELTA");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn delta_after_first_record_is_nontrivial() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        let mut rec = make_record(0.5, "first decision", 1000);
+        // S2_CORRESPONDENCE (index 1): boot_vector=0.0 → setting to 0.95 gives delta ≈ +0.95
+        rec.cogon.sem[1] = 0.95;
+        store.append(rec).unwrap();
+
+        let res = leet_recall_delta(serde_json::json!({"since_unix_ns": 0}), &mut store)
+            .await.unwrap();
+        let text = format_text(&res);
+        let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let patch = parsed["patch"].as_array().unwrap();
+        let s2_delta = patch[1].as_f64().unwrap() as f32;
+        assert!(s2_delta > 0.3, "S2 delta = {s2_delta}, expected ≥ 0.3");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn delta_includes_newly_added() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        store.append(make_record(0.5, "before", 1000)).unwrap();
+        store.index.touch_recall(2000);
+        let _ = store.index.flush();
+        store.append(make_record(0.5, "after", 3000)).unwrap();
+
+        let res = leet_recall_delta(serde_json::json!({}), &mut store).await.unwrap();
+        let text = format_text(&res);
+        let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let added = parsed["newly_added"].as_array().unwrap();
+        assert_eq!(added.len(), 1);
+        assert_eq!(added[0]["excerpt"].as_str().unwrap(), "after");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn delta_ref_hash_changes_with_state() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        let res1 = leet_recall_delta(serde_json::json!({"since_unix_ns": 0}), &mut store)
+            .await.unwrap();
+        let text1 = format_text(&res1);
+        let parsed1: serde_json::Value = serde_json::from_str(&text1).unwrap();
+        let h1 = parsed1["ref_hash"].as_str().unwrap().to_string();
+
+        store.append(make_record(0.9, "x", 10)).unwrap();
+        let res2 = leet_recall_delta(serde_json::json!({"since_unix_ns": 0}), &mut store)
+            .await.unwrap();
+        let text2 = format_text(&res2);
+        let parsed2: serde_json::Value = serde_json::from_str(&text2).unwrap();
+        let h2 = parsed2["ref_hash"].as_str().unwrap().to_string();
+
+        // Both computed against boot_vector (cursor=0) — prior state unchanged.
+        assert_eq!(h1, h2);
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn delta_patch_can_be_negative() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        let mut rec = make_record(0.5, "low essence", 1);
+        // S1_ESSENCE (index 0): boot_vector=1.0 → setting to 0.1 gives delta ≈ -0.9
+        rec.cogon.sem[0] = 0.1;
+        store.append(rec).unwrap();
+
+        let res = leet_recall_delta(serde_json::json!({"since_unix_ns": 0}), &mut store)
+            .await.unwrap();
+        let text = format_text(&res);
+        let parsed: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let patch = parsed["patch"].as_array().unwrap();
+        let s1_delta = patch[0].as_f64().unwrap() as f32;
+        assert!(s1_delta < -0.2, "S1 should drop from boot=1.0 to ~0.1, delta = {s1_delta}");
     }
 }

@@ -83,11 +83,12 @@ async fn handle_tools_call(
     let arguments = params.get("arguments").cloned().unwrap_or(Value::Null);
 
     let result = match tool_name.as_str() {
-        "leet_recall"   => tools::leet_recall(arguments, store).await,
-        "leet_remember" => tools::leet_remember(arguments, store).await,
-        "leet_encode"   => tools::leet_encode(arguments).await,
-        "leet_decode"   => tools::leet_decode(arguments).await,
-        "leet_dist"     => tools::leet_dist(arguments).await,
+        "leet_recall"       => tools::leet_recall(arguments, store).await,
+        "leet_recall_delta" => tools::leet_recall_delta(arguments, store).await,
+        "leet_remember"     => tools::leet_remember(arguments, store).await,
+        "leet_encode"       => tools::leet_encode(arguments).await,
+        "leet_decode"       => tools::leet_decode(arguments).await,
+        "leet_dist"         => tools::leet_dist(arguments).await,
         other => Err(anyhow::anyhow!("unknown tool: {other}")),
     };
 
