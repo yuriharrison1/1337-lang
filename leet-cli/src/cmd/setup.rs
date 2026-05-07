@@ -68,10 +68,12 @@ fn setup_claude_code(install_binary: bool, workspace_root: &Path) -> Result<()> 
 
     install_global_skill(&claude_dir)?;
     println!("  ✓ Installed global skill at {}/skills/leet/", claude_dir.display());
+    println!("  ✓ Installed /leet-stats command at {}/commands/leet-stats.md", claude_dir.display());
 
     println!();
     println!("  All set. Open any project with Claude Code — 1337 recall is live.");
     println!("  Per-project state lives in `.leet/store.bin` (auto-created, git-ignored).");
+    println!("  Run /leet-stats inside Claude Code to see token savings.");
     Ok(())
 }
 
@@ -232,6 +234,19 @@ fn install_global_skill(claude_dir: &Path) -> Result<()> {
         std::fs::write(&skill_md, setup_skill_content::SKILL_MD)?;
     }
 
+    install_global_commands(claude_dir)?;
+
+    Ok(())
+}
+
+fn install_global_commands(claude_dir: &Path) -> Result<()> {
+    let cmd_dir = claude_dir.join("commands");
+    std::fs::create_dir_all(&cmd_dir)?;
+
+    let stats_md = cmd_dir.join("leet-stats.md");
+    // Always write: this is a tool file we own, not user-editable content.
+    std::fs::write(&stats_md, setup_skill_content::LEET_STATS_COMMAND_MD)?;
+
     Ok(())
 }
 
@@ -275,6 +290,13 @@ fn status() -> Result<()> {
         "  Global skill:      {} {}",
         if skill_md.exists() { "✓" } else { "✗" },
         skill_md.display()
+    );
+
+    let stats_cmd = claude_dir.join("commands/leet-stats.md");
+    println!(
+        "  /leet-stats cmd:   {} {}",
+        if stats_cmd.exists() { "✓" } else { "✗" },
+        stats_cmd.display()
     );
 
     Ok(())
