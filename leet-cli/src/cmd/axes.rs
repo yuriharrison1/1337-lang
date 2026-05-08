@@ -29,7 +29,7 @@ pub fn run() {
             AxisGroup::P => axis.code.green().to_string(),
         };
 
-        let valence_marker = if axis.is_valence { " ★" } else { "" };
+        let valence_marker = if axis.bipolar { " ★" } else { "" };
 
         println!(
             "  {:>3}  {:5}  {:22}{}  {}",

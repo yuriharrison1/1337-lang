@@ -44,24 +44,24 @@ impl BridgeProjector for MockProjector {
         {
             sem[8] = 0.9;   // D1_STATE
             sem[26] = 0.9;  // P3_ANOMALY
-            sem[13] = 0.15; // D6_ONTOLOGICAL_VALENCE (negative)
+            sem[13] = 0.15; // D6_PROPAGATION (negative)
         }
 
-        // D2_PROCESS / P7_ACTION — process keywords
+        // D2_LEARNING_RATE / P7_ACTION — process keywords (legacy v0.4 mapping)
         if lower.contains("deploy")
             || lower.contains("processo")
             || lower.contains("pipeline")
         {
-            sem[9] = 0.85;  // D2_PROCESS
+            sem[9] = 0.85;  // D2_LEARNING_RATE
             sem[30] = 0.8;  // P7_ACTION (active process)
         }
 
-        // G4_REVERSIBILITY / P7_ACTION — rollback keywords
+        // G4_TEMPORALITY / P7_ACTION — rollback keywords (legacy v0.4 mapping)
         if lower.contains("reverter")
             || lower.contains("desfazer")
             || lower.contains("rollback")
         {
-            sem[19] = 0.9;  // G4_REVERSIBILITY
+            sem[19] = 0.9;  // G4_TEMPORALITY (legacy keyword path)
             sem[30] = 0.85; // P7_ACTION
         }
 
@@ -372,7 +372,7 @@ mod tests {
         let cogon = proj.project("o servidor caiu").unwrap();
         assert!(cogon.sem[8] > 0.8);  // D1_STATE
         assert!(cogon.sem[26] > 0.8); // P3_ANOMALY
-        assert!(cogon.sem[13] < 0.3); // D6_ONTOLOGICAL_VALENCE (negative)
+        assert!(cogon.sem[13] < 0.3); // D6_PROPAGATION (negative)
     }
 
     #[test]

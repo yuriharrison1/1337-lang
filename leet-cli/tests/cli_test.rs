@@ -59,9 +59,9 @@ fn test_canonical_axes_count() {
 }
 
 #[test]
-fn test_axes_first_is_s1_essence() {
+fn test_axes_first_is_s1_intention() {
     assert_eq!(CANONICAL_AXES[0].code, "S1");
-    assert_eq!(CANONICAL_AXES[0].name, "ESSENCE");
+    assert_eq!(CANONICAL_AXES[0].name, "INTENTION");
 }
 
 #[test]
@@ -70,9 +70,9 @@ fn test_axes_last_is_p8() {
 }
 
 #[test]
-fn test_axes_g8_urgency_at_23() {
+fn test_axes_g8_gradient_at_23() {
     assert_eq!(CANONICAL_AXES[23].code, "G8");
-    assert_eq!(CANONICAL_AXES[23].name, "URGENCY");
+    assert_eq!(CANONICAL_AXES[23].name, "GRADIENT");
 }
 
 // ─── Encode projection tests ──────────────────────────────────────────────────
@@ -111,13 +111,13 @@ fn test_encode_deploy_activates_processo() {
 #[test]
 fn test_zero_s1_essencia_is_one() {
     let z = Cogon::zero();
-    assert_eq!(z.sem[0], 1.0, "COGON_ZERO: S1_ESSENCE should be 1.0");
+    assert_eq!(z.sem[0], 1.0, "COGON_ZERO: S1_INTENTION should be 1.0");
 }
 
 #[test]
 fn test_zero_d6_valencia_ont_is_one() {
     let z = Cogon::zero();
-    assert_eq!(z.sem[13], 1.0, "COGON_ZERO: D6_ONTOLOGICAL_VALENCE should be 1.0");
+    assert_eq!(z.sem[13], 1.0, "COGON_ZERO: D6_PROPAGATION should be 1.0");
 }
 
 #[test]

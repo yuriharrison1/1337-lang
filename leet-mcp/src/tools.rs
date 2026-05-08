@@ -834,7 +834,7 @@ mod recall_tests {
         let tmp = tempfile::tempdir().unwrap();
         let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
         let mut rec = make_record(0.5, "low essence", 1);
-        // S1_ESSENCE (index 0): boot_vector=1.0 → setting to 0.1 gives delta ≈ -0.9
+        // S1_INTENTION (index 0): boot_vector=1.0 → setting to 0.1 gives delta ≈ -0.9
         rec.cogon.sem[0] = 0.1;
         store.append(rec).unwrap();
 

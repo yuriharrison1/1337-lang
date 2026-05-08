@@ -83,27 +83,27 @@ mod tests {
     }
 
     #[test]
-    fn test_project_urgente_activates_g8_urgency() {
+    fn test_project_urgente_activates_g8_gradient() {
         let sem = project("urgente agora", "agent1");
-        assert!(sem[23] > 0.9, "G8_URGENCY should be activated, got {}", sem[23]);
+        assert!(sem[23] > 0.9, "G8_GRADIENT should be activated, got {}", sem[23]);
     }
 
     #[test]
-    fn test_project_erro_activates_p3_anomaly() {
+    fn test_project_erro_activates_p3_compression() {
         let sem = project("erro no sistema", "agent1");
-        assert!(sem[26] > 0.8, "P3_ANOMALY should be activated, got {}", sem[26]);
+        assert!(sem[26] > 0.8, "P3_COMPRESSION should be activated, got {}", sem[26]);
     }
 
     #[test]
-    fn test_project_deploy_activates_d2_process() {
+    fn test_project_deploy_activates_d2_learning_rate() {
         let sem = project("deploy do pipeline", "agent1");
-        assert!(sem[9] > 0.8, "D2_PROCESS should be activated, got {}", sem[9]);
+        assert!(sem[9] > 0.8, "D2_LEARNING_RATE should be activated, got {}", sem[9]);
     }
 
     #[test]
-    fn test_project_rollback_activates_g4_reversibility() {
+    fn test_project_rollback_activates_g4_temporality() {
         let sem = project("reverter o deploy", "agent1");
-        assert!(sem[19] > 0.8, "G4_REVERSIBILITY should be activated, got {}", sem[19]);
+        assert!(sem[19] > 0.8, "G4_TEMPORALITY should be activated, got {}", sem[19]);
     }
 
     #[test]
@@ -116,8 +116,8 @@ mod tests {
     #[test]
     fn test_reconstruct_shows_canonical_axis_names() {
         let mut sem = vec![0.3_f32; 32];
-        sem[23] = 0.95; // G8_URGENCY
+        sem[23] = 0.95; // G8_GRADIENT
         let result = reconstruct(&sem, "en");
-        assert!(result.contains("G8_URGENCY"), "expected canonical name, got: {}", result);
+        assert!(result.contains("G8_GRADIENT"), "expected canonical name, got: {}", result);
     }
 }

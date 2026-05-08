@@ -2,7 +2,7 @@
 
 use leet_bridge::nl_translator::{
     cogon_to_nl, infer_intent, nl_to_cogon,
-    G8_URGENCY, P3_ANOMALY, P7_ACTION,
+    G8_GRADIENT, P3_COMPRESSION, P7_ACTION,
 };
 use leet_core::{Cogon, Intent};
 
@@ -22,9 +22,9 @@ fn test_nl_to_cogon_pt() {
     );
 
     assert!(
-        cogon.sem[G8_URGENCY] > 0.5,
-        "expected G8_URGENCY > 0.5, got {}",
-        cogon.sem[G8_URGENCY]
+        cogon.sem[G8_GRADIENT] > 0.5,
+        "expected G8_GRADIENT > 0.5, got {}",
+        cogon.sem[G8_GRADIENT]
     );
 
     // Vectors must stay in [0, 1]
@@ -33,16 +33,16 @@ fn test_nl_to_cogon_pt() {
     }
 }
 
-/// "The system is critical" — P3_ANOMALY > 0.7.
+/// "The system is critical" — P3_COMPRESSION > 0.7.
 #[test]
 fn test_nl_to_cogon_en() {
     let text = "The system is critical";
     let cogon = nl_to_cogon(text, "en");
 
     assert!(
-        cogon.sem[P3_ANOMALY] > 0.7,
-        "expected P3_ANOMALY > 0.7, got {}",
-        cogon.sem[P3_ANOMALY]
+        cogon.sem[P3_COMPRESSION] > 0.7,
+        "expected P3_COMPRESSION > 0.7, got {}",
+        cogon.sem[P3_COMPRESSION]
     );
 
     for v in cogon.sem.iter() {
@@ -58,7 +58,7 @@ fn test_cogon_to_nl() {
     cogon.sem = [0.3_f32; 32];
     cogon.stamp = 1_000_000;
 
-    cogon.sem[G8_URGENCY] = 0.9;
+    cogon.sem[G8_GRADIENT] = 0.9;
     cogon.sem[P7_ACTION] = 0.8;
 
     let nl = cogon_to_nl(&cogon, "pt");
@@ -81,8 +81,8 @@ fn test_cogon_zero() {
     assert!(z.is_zero(), "Cogon::zero() must satisfy is_zero()");
     assert_eq!(z.stamp, 0);
     assert!(z.raw.is_none());
-    // v0.5.1: S1_ESSENCE = 1.0, not all-ones
-    assert_eq!(z.sem[0], 1.0, "S1_ESSENCE must be 1.0");
+    // v0.5.1: S1_INTENTION = 1.0, not all-ones
+    assert_eq!(z.sem[0], 1.0, "S1_INTENTION must be 1.0");
 }
 
 /// NL → COGON → NL roundtrip preserves intent and dominant axes.
@@ -100,9 +100,9 @@ fn test_roundtrip() {
     );
 
     assert!(
-        cogon.sem[P3_ANOMALY] > 0.7,
-        "P3_ANOMALY expected > 0.7, got {}",
-        cogon.sem[P3_ANOMALY]
+        cogon.sem[P3_COMPRESSION] > 0.7,
+        "P3_COMPRESSION expected > 0.7, got {}",
+        cogon.sem[P3_COMPRESSION]
     );
 
     assert!(
@@ -112,9 +112,9 @@ fn test_roundtrip() {
     );
 
     assert!(
-        cogon.sem[G8_URGENCY] > 0.7,
-        "G8_URGENCY expected > 0.7, got {}",
-        cogon.sem[G8_URGENCY]
+        cogon.sem[G8_GRADIENT] > 0.7,
+        "G8_GRADIENT expected > 0.7, got {}",
+        cogon.sem[G8_GRADIENT]
     );
 
     let nl = cogon_to_nl(&cogon, "pt");
@@ -134,15 +134,15 @@ fn test_roundtrip() {
 
 // ── Additional coverage ───────────────────────────────────────────────────────
 
-/// Rollback keyword → G4_REVERSIBILITY activated, P7_ACTION activated.
+/// Rollback keyword → G4_TEMPORALITY activated, P7_ACTION activated.
 #[test]
 fn test_rollback_axes() {
     let cogon = nl_to_cogon("precisamos fazer rollback do deploy", "pt");
-    assert!(cogon.sem[leet_bridge::nl_translator::G4_REVERSIBILITY] > 0.7);
+    assert!(cogon.sem[leet_bridge::nl_translator::G4_TEMPORALITY] > 0.7);
     assert!(cogon.sem[leet_bridge::nl_translator::P7_ACTION] > 0.7);
 }
 
-/// Past tense → G2_TEMPORAL_ANCHOR near 0 (past).
+/// Past tense → G2_TEMPORAL_ANCHOR near 0 (past-anchored).
 #[test]
 fn test_temporal_past() {
     let cogon = nl_to_cogon("ontem o servidor caiu", "pt");
@@ -164,11 +164,11 @@ fn test_temporal_future() {
     );
 }
 
-/// Confirmed/verified keywords → D8_VERIFIABILITY high.
+/// Confirmed/verified keywords → D8_INERTIA high.
 #[test]
 fn test_verification() {
     let cogon = nl_to_cogon("foi confirmado e verificado pelos testes", "pt");
-    assert!(cogon.sem[leet_bridge::nl_translator::D8_VERIFIABILITY] > 0.8);
+    assert!(cogon.sem[leet_bridge::nl_translator::D8_INERTIA] > 0.8);
 }
 
 /// English intent detection: question starters.

@@ -295,7 +295,7 @@ async fn test_encode_rollback_activates_reversibilidade() {
         agent_id: "agent_r".to_string(),
         session_id: "s1".to_string(),
     })).await.unwrap().into_inner();
-    assert!(resp.sem[19] > 0.8, "G4_REVERSIBILITY should be activated");
+    assert!(resp.sem[19] > 0.8, "G4_TEMPORALITY should be activated");
 }
 
 #[tokio::test]

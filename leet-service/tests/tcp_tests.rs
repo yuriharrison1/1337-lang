@@ -95,7 +95,7 @@ async fn test_translation_roundtrip() {
     let cogon = nl_to_cogon(text, "pt");
 
     // P3 anomaly should be activated
-    assert!(cogon.sem[leet_bridge::nl_translator::P3_ANOMALY] > 0.7);
+    assert!(cogon.sem[leet_bridge::nl_translator::P3_COMPRESSION] > 0.7);
     // P7 action should be activated
     assert!(cogon.sem[leet_bridge::nl_translator::P7_ACTION] > 0.7);
 
@@ -120,8 +120,8 @@ async fn test_translation_roundtrip() {
         .expect("closed");
 
     if let leet_core::types::Payload::Cogon(c) = received.payload {
-        assert!(c.sem[leet_bridge::nl_translator::P3_ANOMALY] > 0.5,
-            "P3_ANOMALY should survive roundtrip through server");
+        assert!(c.sem[leet_bridge::nl_translator::P3_COMPRESSION] > 0.5,
+            "P3_COMPRESSION should survive roundtrip through server");
     } else {
         panic!("expected Cogon payload");
     }
@@ -244,10 +244,10 @@ async fn test_anchor_cogons() {
         assert_eq!(label, ANCHOR_NAMES[i]);
     }
 
-    // Presence anchor has high S1_ESSENCE
+    // Presence anchor has high S1_INTENTION
     assert!(anchors[0].sem[0] > 0.8, "presence: S1 should be > 0.8");
-    // Change anchor has high G8_URGENCY (sem[23])
-    assert!(anchors[2].sem[23] > 0.8, "change: G8_URGENCY should be > 0.8");
+    // Change anchor has high G8_GRADIENT (sem[23])
+    assert!(anchors[2].sem[23] > 0.8, "change: G8_GRADIENT should be > 0.8");
 }
 
 /// Wrong align_hash is rejected by server.

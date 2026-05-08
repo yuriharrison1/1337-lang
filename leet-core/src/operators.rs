@@ -3,18 +3,18 @@
 //! - FOCUS(c, dims)              — project onto a subset of dimensions
 //! - DELTA(c_prev, c)            — element-wise sem difference
 //! - BLEND(c1, c2, α)            — semantic fusion with per-block rules
-//! - DIST(c1, c2)                — cosine distance weighted by P6_TEMPORAL_VECTOR
-//! - ANOMALY_SCORE(c, history)   — distance to G1_TEMPORALITY-weighted centroid
+//! - DIST(c1, c2)                — cosine distance weighted by P6_CONFIDENCE
+//! - ANOMALY_SCORE(c, history)   — distance to G1_MASS-weighted centroid
 //!
 //! All operators apply clamp_all() on outputs (R22).
 
 use crate::types::{Cogon, SemVec};
 use uuid::Uuid;
 
-const P6_TEMPORAL_VECTOR: usize = 29;
-const G1_TEMPORALITY: usize = 16;
-const D4_SIGNAL: usize = 11;
-const G7_EPISTEMIC_VALENCE: usize = 22;
+const P6_CONFIDENCE: usize = 29;
+const G1_MASS: usize = 16;
+const D4_STABILITY: usize = 11;
+const G7_K_INTERACTION: usize = 22;
 
 #[inline]
 fn clamp_all(v: &mut SemVec) {
@@ -70,21 +70,21 @@ pub fn delta_magnitude(patch: &[f32]) -> f32 {
 /// Default: sem[i] = α·c1.sem[i] + (1-α)·c2.sem[i]
 ///
 /// Exceptions by axis:
-/// - D4_SIGNAL (11) = min(c1, c2)        — conservative
-/// - G1_TEMPORALITY        (16) = clamp(c1+c2, 0, 1) — accumulating
-/// - G7_EPISTEMIC_VALENCE  (22) = max(c1, c2)        — higher gain wins
-/// - P6_TEMPORAL_VECTOR    (29) = min(c1, c2)        — conservative
+/// - D4_STABILITY    (11) = min(c1, c2)        — conservative
+/// - G1_MASS         (16) = clamp(c1+c2, 0, 1) — accumulating
+/// - G7_K_INTERACTION (22) = max(c1, c2)       — higher gain wins
+/// - P6_CONFIDENCE   (29) = min(c1, c2)        — conservative
 pub fn blend(c1: &Cogon, c2: &Cogon, alpha: f32) -> Cogon {
     let alpha = alpha.clamp(0.0, 1.0);
     let mut sem = [0.0_f32; 32];
 
     for (i, v) in sem.iter_mut().enumerate() {
         *v = match i {
-            D4_SIGNAL            => c1.sem[i].min(c2.sem[i]),
-            G1_TEMPORALITY       => (c1.sem[i] + c2.sem[i]).clamp(0.0, 1.0),
-            G7_EPISTEMIC_VALENCE => c1.sem[i].max(c2.sem[i]),
-            P6_TEMPORAL_VECTOR   => c1.sem[i].min(c2.sem[i]),
-            _                    => alpha * c1.sem[i] + (1.0 - alpha) * c2.sem[i],
+            D4_STABILITY     => c1.sem[i].min(c2.sem[i]),
+            G1_MASS          => (c1.sem[i] + c2.sem[i]).clamp(0.0, 1.0),
+            G7_K_INTERACTION => c1.sem[i].max(c2.sem[i]),
+            P6_CONFIDENCE    => c1.sem[i].min(c2.sem[i]),
+            _                => alpha * c1.sem[i] + (1.0 - alpha) * c2.sem[i],
         };
     }
     clamp_all(&mut sem);
@@ -99,10 +99,10 @@ pub fn blend(c1: &Cogon, c2: &Cogon, alpha: f32) -> Cogon {
 
 // ── DIST ──────────────────────────────────────────────────────────────────────
 
-/// DIST — cosine distance weighted by P6_TEMPORAL_VECTOR average.
+/// DIST — cosine distance weighted by P6_CONFIDENCE average.
 /// Returns value in [0, 2]: 0 = identical, 1 = orthogonal, 2 = opposite.
 pub fn dist(c1: &Cogon, c2: &Cogon) -> f32 {
-    let w = ((c1.sem[P6_TEMPORAL_VECTOR] + c2.sem[P6_TEMPORAL_VECTOR]) / 2.0).max(0.0);
+    let w = ((c1.sem[P6_CONFIDENCE] + c2.sem[P6_CONFIDENCE]) / 2.0).max(0.0);
 
     let dot: f32 = (0..32).map(|i| c1.sem[i] * c2.sem[i]).sum::<f32>() * w;
     let norm1: f32 = (0..32).map(|i| c1.sem[i] * c1.sem[i]).sum::<f32>().sqrt() * w.sqrt();
@@ -118,7 +118,7 @@ pub fn dist(c1: &Cogon, c2: &Cogon) -> f32 {
 
 // ── ANOMALY_SCORE ─────────────────────────────────────────────────────────────
 
-/// ANOMALY_SCORE — distance from cogon to G1_TEMPORALITY-weighted historical centroid.
+/// ANOMALY_SCORE — distance from cogon to G1_MASS-weighted historical centroid.
 /// Returns 0.5 for empty history (neutral).
 pub fn anomaly_score(c: &Cogon, history: &[Cogon]) -> f32 {
     if history.is_empty() {
@@ -128,16 +128,16 @@ pub fn anomaly_score(c: &Cogon, history: &[Cogon]) -> f32 {
     dist(c, &centroid)
 }
 
-/// Weighted centroid: each historical COGON contributes in proportion to its G1_TEMPORALITY.
+/// Weighted centroid: each historical COGON contributes in proportion to its G1_MASS.
 /// Falls back to uniform average if total mass is zero.
 pub fn compute_weighted_centroid(history: &[Cogon]) -> Cogon {
-    let total_mass: f32 = history.iter().map(|c| c.sem[G1_TEMPORALITY]).sum();
+    let total_mass: f32 = history.iter().map(|c| c.sem[G1_MASS]).sum();
 
     let mut sem = [0.0_f32; 32];
 
     if total_mass > f32::EPSILON {
         for c in history {
-            let w = c.sem[G1_TEMPORALITY] / total_mass;
+            let w = c.sem[G1_MASS] / total_mass;
             for (s, &cv) in sem.iter_mut().zip(c.sem.iter()) {
                 *s += w * cv;
             }
@@ -195,53 +195,53 @@ mod tests {
     }
 
     #[test]
-    fn blend_d4_signal_takes_min() {
+    fn blend_d4_stability_takes_min() {
         let mut c1 = make_cogon(0.5);
-        c1.sem[D4_SIGNAL] = 0.9;
+        c1.sem[D4_STABILITY] = 0.9;
         let mut c2 = make_cogon(0.5);
-        c2.sem[D4_SIGNAL] = 0.2;
+        c2.sem[D4_STABILITY] = 0.2;
         let r = blend(&c1, &c2, 0.5);
-        assert_eq!(r.sem[D4_SIGNAL], 0.2, "D4 must be min");
+        assert_eq!(r.sem[D4_STABILITY], 0.2, "D4 must be min");
     }
 
     #[test]
-    fn blend_g1_temporality_accumulates() {
+    fn blend_g1_mass_accumulates() {
         let mut c1 = make_cogon(0.5);
-        c1.sem[G1_TEMPORALITY] = 0.4;
+        c1.sem[G1_MASS] = 0.4;
         let mut c2 = make_cogon(0.5);
-        c2.sem[G1_TEMPORALITY] = 0.5;
+        c2.sem[G1_MASS] = 0.5;
         let r = blend(&c1, &c2, 0.5);
-        assert!((r.sem[G1_TEMPORALITY] - 0.9).abs() < 1e-6, "G1 must accumulate");
+        assert!((r.sem[G1_MASS] - 0.9).abs() < 1e-6, "G1 must accumulate");
     }
 
     #[test]
-    fn blend_g1_temporality_saturates_at_one() {
+    fn blend_g1_mass_saturates_at_one() {
         let mut c1 = make_cogon(0.5);
-        c1.sem[G1_TEMPORALITY] = 0.8;
+        c1.sem[G1_MASS] = 0.8;
         let mut c2 = make_cogon(0.5);
-        c2.sem[G1_TEMPORALITY] = 0.7;
+        c2.sem[G1_MASS] = 0.7;
         let r = blend(&c1, &c2, 0.5);
-        assert_eq!(r.sem[G1_TEMPORALITY], 1.0, "G1 must clamp at 1.0");
+        assert_eq!(r.sem[G1_MASS], 1.0, "G1 must clamp at 1.0");
     }
 
     #[test]
-    fn blend_g7_epistemic_valence_takes_max() {
+    fn blend_g7_k_interaction_takes_max() {
         let mut c1 = make_cogon(0.5);
-        c1.sem[G7_EPISTEMIC_VALENCE] = 0.1;
+        c1.sem[G7_K_INTERACTION] = 0.1;
         let mut c2 = make_cogon(0.5);
-        c2.sem[G7_EPISTEMIC_VALENCE] = 0.8;
+        c2.sem[G7_K_INTERACTION] = 0.8;
         let r = blend(&c1, &c2, 0.5);
-        assert_eq!(r.sem[G7_EPISTEMIC_VALENCE], 0.8, "G7 must be max");
+        assert_eq!(r.sem[G7_K_INTERACTION], 0.8, "G7 must be max");
     }
 
     #[test]
-    fn blend_p6_temporal_vector_takes_min() {
+    fn blend_p6_confidence_takes_min() {
         let mut c1 = make_cogon(0.5);
-        c1.sem[P6_TEMPORAL_VECTOR] = 0.9;
+        c1.sem[P6_CONFIDENCE] = 0.9;
         let mut c2 = make_cogon(0.5);
-        c2.sem[P6_TEMPORAL_VECTOR] = 0.3;
+        c2.sem[P6_CONFIDENCE] = 0.3;
         let r = blend(&c1, &c2, 0.5);
-        assert_eq!(r.sem[P6_TEMPORAL_VECTOR], 0.3, "P6 must be conservative (min)");
+        assert_eq!(r.sem[P6_CONFIDENCE], 0.3, "P6 must be conservative (min)");
     }
 
     #[test]
@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn dist_identical_cogons_is_zero() {
         let mut c = make_cogon(0.6);
-        c.sem[P6_TEMPORAL_VECTOR] = 1.0;
+        c.sem[P6_CONFIDENCE] = 1.0;
         let d = dist(&c, &c);
         assert!(d.abs() < 1e-5, "dist to self ~0, got {d}");
     }
@@ -275,9 +275,9 @@ mod tests {
     #[test]
     fn dist_symmetric() {
         let mut c1 = make_cogon(0.7);
-        c1.sem[P6_TEMPORAL_VECTOR] = 0.8;
+        c1.sem[P6_CONFIDENCE] = 0.8;
         let mut c2 = make_cogon(0.3);
-        c2.sem[P6_TEMPORAL_VECTOR] = 0.8;
+        c2.sem[P6_CONFIDENCE] = 0.8;
         let d12 = dist(&c1, &c2);
         let d21 = dist(&c2, &c1);
         assert!((d12 - d21).abs() < 1e-5);
@@ -308,8 +308,8 @@ mod tests {
     #[test]
     fn anomaly_score_same_as_history_is_low() {
         let mut c = make_cogon(0.5);
-        c.sem[G1_TEMPORALITY] = 1.0;
-        c.sem[P6_TEMPORAL_VECTOR] = 1.0;
+        c.sem[G1_MASS] = 1.0;
+        c.sem[P6_CONFIDENCE] = 1.0;
         let history = vec![c.clone(), c.clone()];
         let score = anomaly_score(&c, &history);
         assert!(score < 0.1, "identical history score should be low, got {score}");
@@ -318,11 +318,11 @@ mod tests {
     #[test]
     fn anomaly_score_different_from_history_is_high() {
         let mut c = make_cogon(0.9);
-        c.sem[G1_TEMPORALITY] = 1.0;
-        c.sem[P6_TEMPORAL_VECTOR] = 1.0;
+        c.sem[G1_MASS] = 1.0;
+        c.sem[P6_CONFIDENCE] = 1.0;
         let mut h = make_cogon(0.1);
-        h.sem[G1_TEMPORALITY] = 1.0;
-        h.sem[P6_TEMPORAL_VECTOR] = 1.0;
+        h.sem[G1_MASS] = 1.0;
+        h.sem[P6_CONFIDENCE] = 1.0;
         let score = anomaly_score(&c, &[h]);
         assert!(score > 0.1, "different history score should be nonzero, got {score}");
     }
@@ -331,13 +331,13 @@ mod tests {
     fn anomaly_score_heavy_cogon_dominates_centroid() {
         let mut heavy = make_cogon(0.5);
         heavy.sem[0] = 0.9;
-        heavy.sem[G1_TEMPORALITY] = 1.0;
-        heavy.sem[P6_TEMPORAL_VECTOR] = 1.0;
+        heavy.sem[G1_MASS] = 1.0;
+        heavy.sem[P6_CONFIDENCE] = 1.0;
 
         let mut light = make_cogon(0.5);
         light.sem[0] = 0.1;
-        light.sem[G1_TEMPORALITY] = 0.05;
-        light.sem[P6_TEMPORAL_VECTOR] = 1.0;
+        light.sem[G1_MASS] = 0.05;
+        light.sem[P6_CONFIDENCE] = 1.0;
 
         let mut history = vec![heavy];
         for _ in 0..10 {
@@ -351,10 +351,10 @@ mod tests {
     #[test]
     fn anomaly_score_all_zero_mass_falls_back_to_uniform() {
         let mut c1 = make_cogon(0.5);
-        c1.sem[G1_TEMPORALITY] = 0.0;
+        c1.sem[G1_MASS] = 0.0;
         c1.sem[0] = 0.2;
         let mut c2 = make_cogon(0.5);
-        c2.sem[G1_TEMPORALITY] = 0.0;
+        c2.sem[G1_MASS] = 0.0;
         c2.sem[0] = 0.8;
 
         let centroid = compute_weighted_centroid(&[c1, c2]);
@@ -446,7 +446,6 @@ mod tests {
         let c_prev = make_cogon(0.0);
         let c_curr = make_cogon(1.0);
         let patch = delta(&c_prev, &c_curr);
-        // All axes went 0→1, magnitude should be 1.0.
         assert!((delta_magnitude(&patch) - 1.0).abs() < 1e-6);
     }
 }

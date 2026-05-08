@@ -7,9 +7,9 @@ pub fn run() {
     println!("COGON_ZERO (v0.5.1)");
     println!("  id:              {}", zero.id);
     println!("  stamp:           {}", zero.stamp);
-    println!("  sem[0] S1:       {} (ESSENCE — self-existent)", zero.sem[0]);
-    println!("  sem[13] D6:      {} (ONTOLOGICAL_VALENCE — fully positive)", zero.sem[13]);
-    println!("  sem[29] P6:      {} (TEMPORAL_VECTOR — future-oriented)", zero.sem[29]);
+    println!("  sem[0] S1:       {} (INTENTION — directional purpose)", zero.sem[0]);
+    println!("  sem[13] D6:      {} (PROPAGATION — maximum influence)", zero.sem[13]);
+    println!("  sem[29] P6:      {} (CONFIDENCE — full certainty)", zero.sem[29]);
     println!("  raw:             None");
     println!();
     println!("JSON:");
@@ -26,16 +26,16 @@ mod tests {
     }
 
     #[test]
-    fn test_cogon_zero_s1_essencia() {
+    fn test_cogon_zero_s1_intention() {
         use leet_core::types::Cogon;
         let z = Cogon::zero();
-        assert_eq!(z.sem[0], 1.0, "S1_ESSENCE should be 1.0 in COGON_ZERO");
+        assert_eq!(z.sem[0], 1.0, "S1_INTENTION should be 1.0 in COGON_ZERO");
     }
 
     #[test]
-    fn test_cogon_zero_p6_confianca() {
+    fn test_cogon_zero_p6_confidence() {
         use leet_core::types::Cogon;
         let z = Cogon::zero();
-        assert_eq!(z.sem[29], 1.0, "P6_TEMPORAL_VECTOR should be 1.0 in COGON_ZERO");
+        assert_eq!(z.sem[29], 1.0, "P6_CONFIDENCE should be 1.0 in COGON_ZERO");
     }
 }

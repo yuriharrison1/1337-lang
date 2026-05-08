@@ -54,13 +54,13 @@ pub struct RawField {
 /// Canonical COGON_ZERO semantic vector (v0.5.1 spec § 2).
 /// Distinct from axes::boot_vector() which initialises new agents (Pilar 4).
 pub const COGON_ZERO_SEM: SemVec = [
-    // Block S: ESSENCE, CORRESPONDENCE, VIBRATION, POLARITY, RHYTHM, CAUSE_EFFECT, GENERATIVITY, SYSTEM
+    // Block S: INTENTION, AMBIGUITY, LOCAL_CONTEXT, GLOBAL_CONTEXT, ENTROPY, DENSITY, COHERENCE, ALIGNMENT
     1.0, 0.0, 0.0, 0.0,   0.0, 1.0, 1.0, 1.0,
-    // Block D: STATE, PROCESS, RELATION, SIGNAL, STABILITY, ONTOLOGICAL_VALENCE, CAUSALITY, VERIFIABILITY
+    // Block D: CONNECTION_WEIGHT, LEARNING_RATE, DECAY, STABILITY, HYSTERESIS, PROPAGATION, CAUSALITY, INERTIA
     0.5, 0.0, 0.0, 1.0,   0.0, 1.0, 1.0, 0.0,
-    // Block G: TEMPORALITY, TEMPORAL_ANCHOR, COMPLETENESS, REVERSIBILITY, COGNITIVE_LOAD, ORIGIN, EPISTEMIC_VALENCE, URGENCY
+    // Block G: MASS, TEMPORAL_ANCHOR, AFFINITY, TEMPORALITY, LOCAL_FIELD, GLOBAL_FIELD, K_INTERACTION, GRADIENT
     1.0, 0.5, 1.0, 0.5,   0.5, 1.0, 0.1, 0.0,
-    // Block P: IMPACT, VALUE, ANOMALY, AFFECT, DEPENDENCY, TEMPORAL_VECTOR, ACTION, ACTION_VALENCE
+    // Block P: QUANTIZATION, GRANULARITY, COMPRESSION, NOISE, RESOLUTION, CONFIDENCE, ACTION, LATENCY
     0.8, 0.0, 1.0, 0.0,   0.5, 1.0, 0.0, 0.0,
 ];
 
@@ -98,7 +98,7 @@ impl Cogon {
             && self.sem == COGON_ZERO_SEM
     }
 
-    /// Low-confidence COGON per v0.5.1 R5 — P6_TEMPORAL_VECTOR below 0.1.
+    /// Low-confidence COGON per v0.5.1 R5 — P6_CONFIDENCE below 0.1.
     pub fn is_low_confidence(&self) -> bool {
         self.sem[29] < 0.1
     }
@@ -172,9 +172,7 @@ impl Dag {
 
     /// Compute topological order using Kahn's algorithm.
     fn compute_topological_order(&self) -> Result<Vec<Uuid>, crate::error::LeetError> {
-        use std::collections::HashMap;
-        
-        let mut in_degree: HashMap<Uuid, usize> = 
+        let mut in_degree: HashMap<Uuid, usize> =
             self.nodes.iter().map(|n| (n.id, 0)).collect();
         let mut adj: HashMap<Uuid, Vec<Uuid>> = 
             self.nodes.iter().map(|n| (n.id, Vec::new())).collect();

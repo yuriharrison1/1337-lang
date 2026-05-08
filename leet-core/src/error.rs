@@ -23,8 +23,8 @@ pub enum LeetError {
     #[error("R4: DAG contains a cycle")]
     R4Cycle,
 
-    // R5: P6_TEMPORAL_VECTOR (sem[29]) < 0.1 triggers low-confidence flag.
-    #[error("R5: low confidence — P6_TEMPORAL_VECTOR at dim {dim} = {value:.3} (threshold 0.1)")]
+    // R5: P6_CONFIDENCE (sem[29]) < 0.1 triggers low-confidence flag.
+    #[error("R5: low confidence — P6_CONFIDENCE at dim {dim} = {value:.3} (threshold 0.1)")]
     R5LowConfidence { dim: usize, value: f32 },
 
     // R6: surface.human_required=true requires urgency declared.
