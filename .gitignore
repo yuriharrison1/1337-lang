@@ -48,3 +48,20 @@ Thumbs.db
 # Taskwarrior / project artifacts
 task-*.json
 .leet/
+
+# Generated experiment outputs (Python scripts at root)
+.leet_cache.db
+consciencia_debate_*.json
+demo_log.json
+demo_log_*.json
+dual_book_report_*.json
+dual_delta_report_*.json
+plato_1337_report_*.json
+compressao_*.png
+report_1337.html
+report_1337.txt
+comparison_reports/
+
+# Demo / experiment archives
+files.zip
+files-11.zip
