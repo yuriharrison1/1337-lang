@@ -95,7 +95,10 @@ async fn handle_tools_call(
     match result {
         Ok(tr) => JsonRpcResponse::ok(id, serde_json::to_value(tr).unwrap()),
         Err(e) => {
-            let tr = ToolResult::error(format!("tool error: {e}"));
+            let user_err = e
+                .downcast::<leet_core::UserFacingError>()
+                .unwrap_or_else(|anyhow_err| anyhow_err.into());
+            let tr = ToolResult::error(format!("{}", user_err));
             JsonRpcResponse::ok(id, serde_json::to_value(tr).unwrap())
         }
     }

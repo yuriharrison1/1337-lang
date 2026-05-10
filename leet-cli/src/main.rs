@@ -145,23 +145,18 @@ fn main() {
                 rt.block_on(cmd::chat::run(&lang, show_cogon, agents));
             }
         }
-        Commands::Setup(args) => {
-            if let Err(e) = cmd::setup::run(args) {
-                eprintln!("error: {e}");
-                std::process::exit(1);
-            }
-        }
-        Commands::Absorb(args) => {
-            if let Err(e) = cmd::absorb::run(args) {
-                eprintln!("error: {e}");
-                std::process::exit(1);
-            }
-        }
-        Commands::Consolidate(args) => {
-            if let Err(e) = cmd::consolidate::run(args) {
-                eprintln!("error: {e}");
-                std::process::exit(1);
-            }
-        }
+        Commands::Setup(args) => exit_on_err(cmd::setup::run(args)),
+        Commands::Absorb(args) => exit_on_err(cmd::absorb::run(args)),
+        Commands::Consolidate(args) => exit_on_err(cmd::consolidate::run(args)),
+    }
+}
+
+fn exit_on_err(result: anyhow::Result<()>) {
+    if let Err(err) = result {
+        let user_err = err
+            .downcast::<leet_core::UserFacingError>()
+            .unwrap_or_else(|anyhow_err| anyhow_err.into());
+        eprintln!("\n{}\n", user_err);
+        std::process::exit(user_err.exit_code());
     }
 }

@@ -9,12 +9,14 @@ pub mod error;
 pub mod operators;
 pub mod protocol;
 pub mod types;
+pub mod user_error;
 pub mod validate;
 
 // Re-export commonly used items
 pub use axes::CANONICAL_AXES;
 pub use codec::{encode_cogon, decode_cogon, binary_size, compare_sizes};
 pub use error::LeetError;
+pub use user_error::UserFacingError;
 pub use operators::{blend, delta, delta_magnitude, dist, focus, anomaly_score};
 pub use types::{Cogon, Dag, Edge, EdgeType, Intent, Msg1337, Receiver, SemVec};
 pub use validate::{validate, check_confidence};

@@ -100,11 +100,9 @@ fn locate_or_install_mcp_binary(install: bool, workspace_root: &Path) -> Result<
     }
 
     if !install {
-        bail!(
-            "leet-mcp not found on PATH. Either:\n  \
-             - run `cargo install --path leet-mcp` from the workspace root, or\n  \
-             - re-run with --install-binary to do it automatically."
-        );
+        leet_core::bail_user!(leet_core::UserFacingError::BinaryNotOnPath {
+            binary: "leet-mcp".to_string(),
+        });
     }
 
     println!("  → Installing leet-mcp via cargo (this may take a minute)...");
@@ -147,9 +145,24 @@ fn detect_claude_dir() -> Result<PathBuf> {
         return Ok(alt);
     }
 
-    std::fs::create_dir_all(&primary)
-        .with_context(|| format!("creating {}", primary.display()))?;
-    Ok(primary)
+    // Auto-create only if `claude` binary is on PATH (heuristic for installed-but-not-run).
+    if has_claude_binary() {
+        std::fs::create_dir_all(&primary)
+            .with_context(|| format!("creating {}", primary.display()))?;
+        Ok(primary)
+    } else {
+        leet_core::bail_user!(leet_core::UserFacingError::ClaudeCodeNotFound {
+            searched: vec![primary, alt],
+        })
+    }
+}
+
+fn has_claude_binary() -> bool {
+    Command::new("which")
+        .arg("claude")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
 }
 
 // ─── Step 3: register MCP server ──────────────────────────────────────────────
@@ -163,12 +176,13 @@ fn register_mcp_server(claude_dir: &Path, binary_path: &Path) -> Result<()> {
         if text.trim().is_empty() {
             json!({})
         } else {
-            serde_json::from_str(&text).with_context(|| {
-                format!(
-                    "parsing {} — this file has invalid JSON. Fix or back it up and re-run.",
-                    settings_path.display()
-                )
-            })?
+            match serde_json::from_str(&text) {
+            Ok(v) => v,
+            Err(e) => leet_core::bail_user!(leet_core::UserFacingError::SettingsFileMalformed {
+                path: settings_path.clone(),
+                details: e.to_string(),
+            }),
+        }
         }
     } else {
         json!({})
