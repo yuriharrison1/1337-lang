@@ -147,16 +147,26 @@ def main():
     npy_size = os.path.getsize(W_NPY_PATH)
     print(f"\nSaved {W_NPY_PATH}  ({npy_size} bytes, shape {W_out.shape})")
 
-    # Save W.bin — raw float32 little-endian, exactly 128*32*4 = 16384 bytes
-    W_flat = W_out.flatten(order="C")   # row-major, shape [4096]
-    assert len(W_flat) == 128 * 32, f"Expected 4096 floats, got {len(W_flat)}"
+    # Save W.bin — leet v1 format (16-byte header + float32 body, little-endian)
+    # W_out shape is (embedding_dim, 32); Rust reads rows=32, cols=embedding_dim.
+    # We transpose to (32, embedding_dim) so that Rust row i = weights for axis i.
+    embedding_dim = W_out.shape[0]
+    W_row_major = W_out.T.astype(np.float32)   # shape (32, embedding_dim)
+    W_flat = W_row_major.flatten(order="C")
+    assert len(W_flat) == 32 * embedding_dim, \
+        f"Expected {32 * embedding_dim} floats, got {len(W_flat)}"
 
+    # Header: b"LEET" + version(1) + reserved(3) + u32 rows(32) + u32 cols(emb_dim)
+    header = struct.pack("<4sBBBBII", b"LEET", 0x01, 0, 0, 0, 32, embedding_dim)
     with open(W_BIN_PATH, "wb") as f:
+        f.write(header)
         f.write(struct.pack(f"<{len(W_flat)}f", *W_flat))
 
+    expected_bin_size = 16 + 32 * embedding_dim * 4
     bin_size = os.path.getsize(W_BIN_PATH)
-    assert bin_size == 16384, f"W.bin size {bin_size} != 16384"
-    print(f"Saved {W_BIN_PATH}  ({bin_size} bytes)")
+    assert bin_size == expected_bin_size, \
+        f"W.bin size {bin_size} != {expected_bin_size}"
+    print(f"Saved {W_BIN_PATH}  ({bin_size} bytes, format v1, dims 32×{embedding_dim})")
     print("\nDone.")
 
 
