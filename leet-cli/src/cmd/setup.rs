@@ -12,6 +12,29 @@ use super::setup_skill_content;
 // ─── CLI shape ────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Args)]
+#[command(
+    about = "Configure leet for one or more IDEs (Claude Code, Cursor, VS Code+Continue)",
+    long_about = "Configure leet for one or more IDEs (Claude Code, Cursor, VS Code+Continue).\n\
+\n\
+Without arguments, auto-detects installed IDEs and configures them all.\n\
+With a target argument, configures only that IDE. Idempotent — running\n\
+twice doesn't duplicate entries.",
+    after_help = "Examples:\n  \
+  # Auto-detect and configure all installed IDEs\n  \
+  leet setup\n\
+\n  \
+  # Configure only Claude Code\n  \
+  leet setup claude-code\n\
+\n  \
+  # See what's currently configured\n  \
+  leet setup status\n\
+\n  \
+  # Reverse a configuration\n  \
+  leet setup uninstall claude-code\n\
+\n\
+See also:\n  \
+  leet doctor  — verify configuration health"
+)]
 pub struct SetupArgs {
     #[command(subcommand)]
     pub command: SetupCommand,
@@ -348,6 +371,12 @@ fn uninstall(target: &str) -> Result<()> {
         println!("  ✓ Removed global skill at {}", skill_dir.display());
     }
 
+    let stats_cmd = claude_dir.join("commands/leet-stats.md");
+    if stats_cmd.exists() {
+        std::fs::remove_file(&stats_cmd)?;
+        println!("  ✓ Removed /leet-stats command at {}", stats_cmd.display());
+    }
+
     println!();
     println!("  Your per-project .leet/ directories are untouched.");
     println!("  To wipe a project's store, run: rm -rf <project>/.leet");
@@ -359,6 +388,12 @@ fn uninstall(target: &str) -> Result<()> {
 
 fn dirs_home() -> Option<PathBuf> {
     std::env::var_os("HOME").map(PathBuf::from)
+}
+
+/// Public wrapper for use in `leet doctor --auto-fix`.
+pub fn install_global_skill_for_doctor() -> anyhow::Result<()> {
+    let claude_dir = detect_claude_dir()?;
+    install_global_skill(&claude_dir)
 }
 
 // ─── tests ───────────────────────────────────────────────────────────────────
