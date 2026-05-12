@@ -15,13 +15,7 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP(
-    "leet-1337",
-    description=(
-        "1337 semantic encoding. Compress context to 32-axis COGON vectors "
-        "to save ~90% tokens when passing state between agents."
-    ),
-)
+mcp = FastMCP("leet-1337")
 
 _REPO = Path(__file__).resolve().parent.parent
 _ANSI = re.compile(r"\x1B\[[0-9;]*[mGKHF]")

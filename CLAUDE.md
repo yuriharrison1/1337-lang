@@ -18,7 +18,7 @@ Python: `python/` (leet1337 SDK · `leet_vm` namespace) · `leet-vm/` (VM runtim
 ```bash
 cargo build --workspace                   # debug
 cargo build --workspace --release         # release
-cargo test --workspace                    # 173 Rust tests
+cargo test --workspace                    # 249 Rust tests
 bash test_all.sh                          # full audit (clippy + tests + PT names + CLI + Python)
 ```
 
@@ -28,12 +28,12 @@ bash test_all.sh                          # full audit (clippy + tests + PT name
 
 | Block | Codes | Axes |
 |---|---|---|
-| **S** Semantic | S1–S8 | ESSENCE · CORRESPONDENCE · VIBRATION · POLARITY · RHYTHM · CAUSE_EFFECT · GENERATIVITY · SYSTEM |
-| **D** Dynamic | D1–D8 | STATE · PROCESS · RELATION · SIGNAL · STABILITY · ONTOLOGICAL_VALENCE★ · CAUSALITY · VERIFIABILITY |
-| **G** Gravity | G1–G8 | TEMPORALITY · TEMPORAL_ANCHOR★ · COMPLETENESS · REVERSIBILITY · COGNITIVE_LOAD · ORIGIN · EPISTEMIC_VALENCE★ · URGENCY |
-| **P** Precision | P1–P8 | IMPACT · VALUE · ANOMALY · AFFECT★ · DEPENDENCY · TEMPORAL_VECTOR · ACTION · ACTION_VALENCE★ |
+| **S** Semantic | S1–S8 | INTENTION · AMBIGUITY · LOCAL_CONTEXT · GLOBAL_CONTEXT · ENTROPY · DENSITY · COHERENCE · ALIGNMENT |
+| **D** Dynamic | D1–D8 | CONNECTION_WEIGHT · LEARNING_RATE · DECAY · STABILITY · HYSTERESIS · PROPAGATION · CAUSALITY · INERTIA |
+| **G** Gravity | G1–G8 | MASS · TEMPORAL_ANCHOR · AFFINITY★ · TEMPORALITY★ · LOCAL_FIELD · GLOBAL_FIELD · K_INTERACTION · GRADIENT★ |
+| **P** Precision | P1–P8 | QUANTIZATION · GRANULARITY · COMPRESSION · NOISE · RESOLUTION · CONFIDENCE · ACTION · LATENCY |
 
-★ Valence axes: 0 = negative/past/contradictory · 0.5 = neutral · 1 = positive/future/confirmatory
+★ Bipolar axes: G3 AFFINITY (0=repulsion · 0.5=neutral · 1=attraction) · G4 TEMPORALITY (0=past · 0.5=present · 1=future) · G8 GRADIENT (0=decelerating · 0.5=stable · 1=accelerating)
 
 Compact inline notation: `⟨G8=0.95 P3=0.90 D1=0.85⟩`
 
@@ -41,11 +41,12 @@ Compact inline notation: `⟨G8=0.95 P3=0.90 D1=0.85⟩`
 
 | Tool | Description |
 |---|---|
-| `encode(text)` | Project text → active axes + values |
-| `dist(a, b)` | Cosine distance; skip re-send if < 0.05 |
-| `blend(a, b, α)` | Interpolate two COGONs |
-| `axes()` | Full 32-axis reference |
-| `inspect(json)` | Decode a COGON JSON payload |
+| `leet_recall(query?, limit?)` | Tiered recall from store (foundation + mid + raw) |
+| `leet_remember(text)` | Compress text → COGON, append to store |
+| `leet_encode(text)` | Text → sem[32] vector (no persist) |
+| `leet_decode(sem)` | sem[32] → dominant-axis description |
+| `leet_dist(a, b)` | Cosine distance weighted by P6_CONFIDENCE |
+| `leet_recall_delta(since_unix_ns?)` | Patch vector since last recall cursor |
 
 ## Leet Mode
 

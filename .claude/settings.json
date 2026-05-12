@@ -1,16 +1,17 @@
 {
+  "enableAllProjectMcpServers": true,
   "mcpServers": {
     "leet": {
-      "command": "python3",
-      "args": ["/home/yuri/Projetos/1337/mcp/leet_mcp.py"],
-      "env": {}
-    },
-    "leet-memory": {
       "command": "/home/yuri/.cargo/bin/leet-mcp",
       "args": [],
       "env": {
-        "LEET_PROJECT_ROOT": "${workspaceFolder}"
+        "LEET_PROJECT_ROOT": "/home/yuri/Projetos/1337"
       }
+    },
+    "leet-cli": {
+      "command": "python3",
+      "args": ["/home/yuri/Projetos/1337/mcp/leet_mcp.py"],
+      "env": {}
     }
   }
 }
