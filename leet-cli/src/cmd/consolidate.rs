@@ -9,6 +9,26 @@ use serde_json::json;
 use leet_mcp::store::{PersonalStore, CONSOLIDATE_THRESHOLD};
 
 #[derive(Debug, Args)]
+#[command(
+    about = "Inspect, force, or rebuild the consolidation pyramid",
+    long_about = "Inspect, force, or rebuild the consolidation pyramid.\n\
+\n\
+leet auto-consolidates memories every 7 entries. This subcommand exposes\n\
+the pyramid for manual inspection, forcing consolidation below threshold,\n\
+or recovering after index corruption.",
+    after_help = "Examples:\n  \
+  # Show pyramid shape (how many entries at each level)\n  \
+  leet consolidate inspect\n\
+\n  \
+  # Force a consolidation pass\n  \
+  leet consolidate force\n\
+\n  \
+  # Regenerate index.bin from store.bin (lossy: levels reset to 0)\n  \
+  leet consolidate rebuild-index --yes\n\
+\n\
+See also:\n  \
+  leet doctor  — detects index/store sync issues"
+)]
 pub struct ConsolidateArgs {
     #[command(subcommand)]
     pub command: ConsolidateCommand,

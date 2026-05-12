@@ -12,6 +12,30 @@ use leet_core::types::Cogon;
 use leet_bridge::projector::project_text_simple;
 
 #[derive(Debug, Args)]
+#[command(
+    about = "Bulk-import past Claude Code sessions into the leet store",
+    long_about = "Bulk-import past Claude Code sessions into the leet store.\n\
+\n\
+Reads conversation history from ~/.claude/projects/<hash>/, summarizes\n\
+each session into one COGON, and appends to the current project's store.\n\
+Useful for bootstrapping leet on an existing project that has prior\n\
+Claude Code history.\n\
+\n\
+Idempotent — won't double-import the same session.",
+    after_help = "Examples:\n  \
+  # Import sessions from the past 7 days\n  \
+  leet absorb --since 7d\n\
+\n  \
+  # Import all available sessions\n  \
+  leet absorb --all\n\
+\n  \
+  # Dry run (show what would be imported)\n  \
+  leet absorb --dry-run\n\
+\n\
+See also:\n  \
+  leet consolidate  — inspect/force the consolidation pyramid\n  \
+  leet doctor       — project state checks"
+)]
 pub struct AbsorbArgs {
     /// Only absorb sessions modified on/after this date.
     /// Accepts: "yesterday", "last-week", or YYYY-MM-DD.
