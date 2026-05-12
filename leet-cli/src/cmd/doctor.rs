@@ -322,9 +322,9 @@ impl HealthCheck for WMatrixCheck {
     fn run(&self) -> CheckResult {
         let candidates: Vec<PathBuf> = vec![
             std::env::var("LEET_W_PATH").ok().map(PathBuf::from),
+            Some(leet_bridge::projector::default_user_w_path()),
             Some(PathBuf::from("calibration/data/W.bin")),
             Some(PathBuf::from("/usr/share/leetlang/W.bin")),
-            std::env::var("HOME").ok().map(|h| PathBuf::from(h).join(".local/share/leetlang/W.bin")),
         ].into_iter().flatten().collect();
 
         for path in &candidates {
