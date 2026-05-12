@@ -497,7 +497,7 @@ fn try_auto_fix(checks: &mut Vec<(String, CheckResult)>, project_root: &PathBuf)
 }
 
 fn try_download_w() -> Result<()> {
-    anyhow::bail!("W matrix download not yet implemented (Phase 12-W)")
+    super::calibrate::cmd_download(false)
 }
 
 fn try_rebuild_index(_project_root: &PathBuf) -> Result<()> {

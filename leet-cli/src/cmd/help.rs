@@ -67,10 +67,11 @@ struct CommandInfo {
 fn build_categories() -> Vec<(&'static str, Vec<CommandInfo>)> {
     vec![
         ("Setup & diagnostics", vec![
-            CommandInfo { name: "setup",      about: "Configure leet for IDEs (Claude Code, Cursor, VS Code)" },
-            CommandInfo { name: "doctor",     about: "Health check: binaries, IDEs, store, network" },
-            CommandInfo { name: "version",    about: "Print version information for all components" },
-            CommandInfo { name: "health",     about: "[deprecated] Use 'leet doctor' instead" },
+            CommandInfo { name: "setup",       about: "Configure leet for IDEs (Claude Code, Cursor, VS Code)" },
+            CommandInfo { name: "doctor",      about: "Health check: binaries, IDEs, store, network" },
+            CommandInfo { name: "calibrate",   about: "Download and manage the W matrix" },
+            CommandInfo { name: "version",     about: "Print version information for all components" },
+            CommandInfo { name: "health",      about: "[deprecated] Use 'leet doctor' instead" },
         ]),
         ("Project memory", vec![
             CommandInfo { name: "absorb",       about: "Bulk-import past Claude Code sessions into the store" },

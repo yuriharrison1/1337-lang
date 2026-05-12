@@ -293,6 +293,8 @@ See also:\n  \
         #[arg(long)]
         connect: Option<String>,
     },
+    /// Download and manage the W matrix for high-quality NL→COGON projection
+    Calibrate(cmd::calibrate::CalibrateArgs),
     /// Run system health check across binaries, IDEs, store, network
     Doctor(cmd::doctor::DoctorArgs),
     /// Configure leet for one or more IDEs (Claude Code, Cursor, VS Code+Continue)
@@ -353,6 +355,7 @@ fn main() {
                 rt.block_on(cmd::chat::run(&lang, show_cogon, agents));
             }
         }
+        Commands::Calibrate(args) => exit_on_err(cmd::calibrate::run(args)),
         Commands::Doctor(args) => exit_on_err(cmd::doctor::run(args)),
         Commands::Setup(args) => exit_on_err(cmd::setup::run(args)),
         Commands::Absorb(args) => exit_on_err(cmd::absorb::run(args)),

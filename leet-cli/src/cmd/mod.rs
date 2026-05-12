@@ -1,6 +1,7 @@
 //! CLI command modules.
 
 pub mod absorb;
+pub mod calibrate;
 pub mod doctor;
 pub mod help;
 pub mod consolidate;
