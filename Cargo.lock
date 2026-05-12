@@ -927,6 +927,7 @@ dependencies = [
 name = "leet-core"
 version = "0.5.1"
 dependencies = [
+ "anyhow",
  "crc32fast",
  "pyo3",
  "serde",

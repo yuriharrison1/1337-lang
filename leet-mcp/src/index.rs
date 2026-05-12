@@ -32,6 +32,7 @@ impl IndexEntry {
 }
 
 /// In-memory mirror of the index file.
+#[derive(Debug)]
 pub struct Index {
     path: PathBuf,
     pub last_recall_at: i64,

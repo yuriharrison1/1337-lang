@@ -51,7 +51,9 @@ pub struct StoreRecord {
     pub unix_ns: i64,
 }
 
+#[derive(Debug)]
 pub struct PersonalStore {
+    leet_dir: PathBuf,
     path: PathBuf,
     records: Vec<StoreRecord>,
     pub index: Index,
@@ -61,9 +63,41 @@ impl PersonalStore {
     /// Open or create the store under `project_root/.leet/`.
     /// Also writes `.leet/.gitignore` on first creation.
     pub fn open_or_create(project_root: &Path) -> Result<Self> {
-        let leet_dir = project_root.join(".leet");
+        // Scenario 1: Canonicalize so symlinks and relative paths resolve to the
+        // same .leet directory.
+        let canonical_root = project_root.canonicalize()
+            .map_err(|e| {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    anyhow::Error::new(leet_core::UserFacingError::NotInProject {
+                        cwd: project_root.to_path_buf(),
+                    })
+                } else {
+                    anyhow::Error::new(e).context(format!(
+                        "canonicalizing project root {}", project_root.display()
+                    ))
+                }
+            })?;
+
+        let leet_dir = canonical_root.join(".leet");
         std::fs::create_dir_all(&leet_dir)
-            .with_context(|| format!("creating {}", leet_dir.display()))?;
+            .map_err(|e| {
+                if e.kind() == std::io::ErrorKind::PermissionDenied {
+                    anyhow::Error::new(leet_core::UserFacingError::NoWritePermission {
+                        path: leet_dir.clone(),
+                    })
+                } else {
+                    anyhow::Error::new(e).context(format!("creating {}", leet_dir.display()))
+                }
+            })?;
+
+        // Scenario 5: Early write-permission probe; fails fast before any store I/O.
+        let test_file = leet_dir.join(".write_test");
+        if std::fs::File::create(&test_file).is_err() {
+            return Err(anyhow::Error::new(leet_core::UserFacingError::NoWritePermission {
+                path: leet_dir.clone(),
+            }));
+        }
+        let _ = std::fs::remove_file(&test_file);
 
         let gitignore = leet_dir.join(".gitignore");
         if !gitignore.exists() {
@@ -75,12 +109,38 @@ impl PersonalStore {
         }
 
         let path = leet_dir.join("store.bin");
+
+        // Scenario 2: Truncate incomplete tail left by a previous crash.
+        if path.exists() {
+            truncate_incomplete_tail(&path)?;
+        }
+
         let records = if path.exists() {
             Self::load_all(&path)?
         } else {
             Self::create_empty(&path)?;
             Vec::new()
         };
+
+        // Scenario 3: Detect index desync before loading; refuse silent rebuild.
+        let index_path_check = leet_dir.join("index.bin");
+        if index_path_check.exists() {
+            let meta = std::fs::metadata(&index_path_check)?;
+            let file_size = meta.len();
+            let header_bytes = crate::index::HEADER_SIZE as u64;
+            let entry_bytes = crate::index::ENTRY_SIZE as u64;
+            let index_count = if file_size > header_bytes {
+                ((file_size - header_bytes) / entry_bytes) as usize
+            } else { 0 };
+            if index_count != records.len() {
+                return Err(anyhow::Error::new(leet_core::UserFacingError::IndexOutOfSync {
+                    store_path: path.clone(),
+                    index_path: index_path_check.clone(),
+                    store_count: records.len(),
+                    index_count,
+                }));
+            }
+        }
 
         let index = Index::open_or_create(&leet_dir, records.len())?;
 
@@ -90,13 +150,14 @@ impl PersonalStore {
             index.entries.len()
         );
 
-        Ok(Self { path, records, index })
+        Ok(Self { leet_dir, path, records, index })
     }
 
     pub fn len(&self) -> usize { self.records.len() }
     pub fn is_empty(&self) -> bool { self.records.is_empty() }
     pub fn records(&self) -> &[StoreRecord] { &self.records }
     pub fn path(&self) -> &Path { &self.path }
+    pub fn leet_dir(&self) -> &Path { &self.leet_dir }
 
     /// Append a record at level 0, then auto-consolidate if threshold reached.
     pub fn append(&mut self, record: StoreRecord) -> Result<()> {
@@ -128,7 +189,7 @@ impl PersonalStore {
             .open(&self.path)
             .with_context(|| format!("opening {}", self.path.display()))?;
         f.write_all(&bytes).with_context(|| "writing record")?;
-        f.sync_all().with_context(|| "fsync after append")?;
+        fsync_or_user_error(&f, &self.path)?;
         drop(f);
 
         self.records.push(record);
@@ -282,7 +343,7 @@ impl PersonalStore {
         header[0..4].copy_from_slice(MAGIC);
         header[4] = VERSION;
         f.write_all(&header)?;
-        f.sync_all()?;
+        fsync_or_user_error(&f, path)?;
         Ok(())
     }
 
@@ -294,19 +355,17 @@ impl PersonalStore {
         f.read_exact(&mut header).with_context(|| "reading header")?;
 
         if &header[0..4] != MAGIC {
-            bail!(
-                "invalid magic in {} — not a leet store file",
-                path.display()
-            );
+            return Err(anyhow::Error::new(leet_core::UserFacingError::StoreCorrupted {
+                path: path.to_path_buf(),
+                details: "invalid magic bytes — not a leet store file".into(),
+            }));
         }
         if header[4] != VERSION {
-            bail!(
-                "unsupported store version {} (expected {}); \
-                 move or delete {} to re-create",
-                header[4],
-                VERSION,
-                path.display()
-            );
+            return Err(anyhow::Error::new(leet_core::UserFacingError::StoreVersionMismatch {
+                path: path.to_path_buf(),
+                found_version: header[4],
+                expected_version: VERSION,
+            }));
         }
 
         let mut body = Vec::new();
@@ -330,6 +389,53 @@ impl PersonalStore {
         }
         Ok(records)
     }
+}
+
+// ─── Crash recovery ──────────────────────────────────────────────────────────
+
+fn truncate_incomplete_tail(store_path: &Path) -> Result<()> {
+    let store_size = std::fs::metadata(store_path)?.len();
+    let header: u64 = HEADER_SIZE as u64;
+    let record: u64 = RECORD_SIZE as u64;
+
+    if store_size > header {
+        let after_header = store_size - header;
+        let trailing = after_header % record;
+        if trailing != 0 {
+            let truncate_to = header + (after_header / record) * record;
+            tracing::warn!(
+                "store.bin has {} trailing bytes (incomplete record); \
+                 truncating to {} bytes (likely from a previous crash)",
+                trailing, truncate_to
+            );
+            let f = std::fs::OpenOptions::new().write(true).open(store_path)?;
+            f.set_len(truncate_to)?;
+            f.sync_all()?;
+        }
+    }
+    Ok(())
+}
+
+// ─── fsync helper ─────────────────────────────────────────────────────────────
+
+fn fsync_or_user_error(file: &std::fs::File, target_path: &Path) -> Result<()> {
+    file.sync_all().map_err(|e| {
+        match e.kind() {
+            std::io::ErrorKind::PermissionDenied => {
+                anyhow::Error::new(leet_core::UserFacingError::NoWritePermission {
+                    path: target_path.to_path_buf(),
+                })
+            }
+            std::io::ErrorKind::Other if e.raw_os_error() == Some(28) => {
+                // ENOSPC — disk full
+                anyhow::Error::new(leet_core::UserFacingError::Unexpected {
+                    summary: format!("Disk full while writing to {}", target_path.display()),
+                    chain: format!("ENOSPC: {}", e),
+                })
+            }
+            _ => anyhow::Error::new(e).context(format!("fsync on {}", target_path.display())),
+        }
+    })
 }
 
 // ─── Hybrid BLEND_N: G1-weighted centroid + per-block rules ──────────────────
@@ -475,6 +581,10 @@ mod tests {
 
     fn make_record(seed: f32, excerpt: &str, unix_ns: i64) -> StoreRecord {
         StoreRecord { cogon: make_cogon(seed), excerpt: excerpt.to_string(), unix_ns }
+    }
+
+    fn make_test_record(text: &str) -> StoreRecord {
+        make_record(0.5, text, 0)
     }
 
     // ─── existing tests ───────────────────────────────────────────────────────
@@ -730,5 +840,146 @@ mod tests {
             assert_eq!(e.level, 0);
             assert!(!e.is_consolidated());
         }
+    }
+
+    // ─── Edge case tests (Phase 12-U-04) ─────────────────────────────────────
+
+    // Scenario 1: paths canonicalized — symlinks and relative paths resolve to same store
+    #[test]
+    fn canonicalizes_project_root() {
+        let tmp = tempfile::tempdir().unwrap();
+        let real = tmp.path().join("real-project");
+        std::fs::create_dir_all(&real).unwrap();
+
+        let symlink = tmp.path().join("link-to-project");
+        std::os::unix::fs::symlink(&real, &symlink).unwrap();
+
+        let s1 = PersonalStore::open_or_create(&real).unwrap();
+        let s2 = PersonalStore::open_or_create(&symlink).unwrap();
+        assert_eq!(s1.leet_dir(), s2.leet_dir());
+    }
+
+    #[test]
+    fn nonexistent_project_root_fails_humanly() {
+        let nonexistent = std::path::PathBuf::from("/tmp/leet-does-not-exist-xyz123");
+        let result = PersonalStore::open_or_create(&nonexistent);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let user_err = err.downcast_ref::<leet_core::UserFacingError>();
+        assert!(matches!(user_err, Some(leet_core::UserFacingError::NotInProject { .. })));
+    }
+
+    // Scenario 2: truncate incomplete tail from previous crash
+    #[test]
+    fn truncates_incomplete_tail_silently() {
+        let tmp = tempfile::tempdir().unwrap();
+        {
+            let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+            store.append(make_test_record("real entry")).unwrap();
+        }
+
+        let store_path = tmp.path().join(".leet/store.bin");
+        let original_size = std::fs::metadata(&store_path).unwrap().len();
+        assert_eq!(original_size, (HEADER_SIZE + RECORD_SIZE) as u64);
+
+        // Simulate crash: append 100 garbage bytes mid-write
+        {
+            use std::io::Write;
+            let mut f = std::fs::OpenOptions::new().append(true).open(&store_path).unwrap();
+            f.write_all(&[0xff; 100]).unwrap();
+        }
+
+        let store = PersonalStore::open_or_create(tmp.path()).unwrap();
+        assert_eq!(store.len(), 1);
+        let final_size = std::fs::metadata(&store_path).unwrap().len();
+        assert_eq!(final_size, (HEADER_SIZE + RECORD_SIZE) as u64);
+    }
+
+    // Scenario 3: index desync detected on open
+    #[test]
+    fn detects_index_mismatch() {
+        let tmp = tempfile::tempdir().unwrap();
+        {
+            let mut store = PersonalStore::open_or_create(tmp.path()).unwrap();
+            for i in 0..3 {
+                store.append(make_test_record(&format!("rec{i}"))).unwrap();
+            }
+        }
+
+        // Truncate index.bin to remove last entry
+        let index_path = tmp.path().join(".leet/index.bin");
+        let size = std::fs::metadata(&index_path).unwrap().len();
+        let new_size = size - crate::index::ENTRY_SIZE as u64;
+        let f = std::fs::OpenOptions::new().write(true).open(&index_path).unwrap();
+        f.set_len(new_size).unwrap();
+
+        let result = PersonalStore::open_or_create(tmp.path());
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let user_err = err.downcast_ref::<leet_core::UserFacingError>();
+        assert!(matches!(user_err, Some(leet_core::UserFacingError::IndexOutOfSync { .. })));
+    }
+
+    // Scenario 4: fsync error maps to UserFacingError
+    #[test]
+    fn fsync_permission_denied_maps_to_no_write_permission() {
+        let mock_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied");
+        let path = std::path::Path::new("/x/store.bin");
+        let result: Result<()> = Err(mock_err).map_err(|e| {
+            match e.kind() {
+                std::io::ErrorKind::PermissionDenied => {
+                    anyhow::Error::new(leet_core::UserFacingError::NoWritePermission {
+                        path: path.to_path_buf(),
+                    })
+                }
+                _ => anyhow::Error::new(e),
+            }
+        });
+        let err = result.unwrap_err();
+        let user_err = err.downcast_ref::<leet_core::UserFacingError>();
+        assert!(matches!(user_err, Some(leet_core::UserFacingError::NoWritePermission { .. })));
+    }
+
+    // Scenario 5: no write permission fails with UserFacingError
+    #[test]
+    #[cfg(unix)]
+    fn no_write_permission_fails_humanly() {
+        use std::os::unix::fs::PermissionsExt;
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("readonly");
+        std::fs::create_dir_all(&project).unwrap();
+
+        let mut perms = std::fs::metadata(&project).unwrap().permissions();
+        perms.set_mode(0o555);
+        std::fs::set_permissions(&project, perms.clone()).unwrap();
+
+        let result = PersonalStore::open_or_create(&project);
+        // Restore permissions before asserting (so cleanup works)
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&project, perms).unwrap();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let user_err = err.downcast_ref::<leet_core::UserFacingError>();
+        assert!(user_err.is_some(), "expected UserFacingError, got: {:?}", err);
+    }
+
+    // Scenario 6: schema version mismatch fails humanly
+    #[test]
+    fn store_version_mismatch_fails_humanly() {
+        let tmp = tempfile::tempdir().unwrap();
+        let leet_dir = tmp.path().join(".leet");
+        std::fs::create_dir_all(&leet_dir).unwrap();
+
+        let mut header = [0u8; HEADER_SIZE];
+        header[0..4].copy_from_slice(b"LEET");
+        header[4] = 0x99; // future version
+        std::fs::write(leet_dir.join("store.bin"), header).unwrap();
+
+        let result = PersonalStore::open_or_create(tmp.path());
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let user_err = err.downcast_ref::<leet_core::UserFacingError>();
+        assert!(matches!(user_err, Some(leet_core::UserFacingError::StoreVersionMismatch { .. })));
     }
 }
