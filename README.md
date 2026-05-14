@@ -15,24 +15,47 @@
 "critical production failure — immediate action required"
 ```
 
-## Início Rápido
+## Install
 
 ```bash
-# Build
-cargo build --workspace --release
+cargo install leet-cli
+leet setup claude-code   # or: cursor / vscode
+```
 
-# Encode texto em COGON
-./target/release/leet encode "deploy urgente falhou"
+## Quick Start
 
-# Distância semântica entre dois textos
-./target/release/leet dist "urgente" "tranquilo"
+```bash
+# Health check
+leet doctor
 
-# Chat multi-agente (requer LEET_API_KEY)
-./target/release/leet chat
+# Encode text to COGON
+leet encode "deploy urgente falhou"
 
-# Suite de testes completa
+# Semantic distance
+leet dist "urgente" "tranquilo"
+
+# List all 32 axes
+leet axes
+
+# Full test suite (dev)
 bash test_all.sh
 ```
+
+## Architecture
+
+| Crate | Role | Docs |
+|---|---|---|
+| [`leet-core`](leet-core/) | COGON types, 32-axis algebra, protocol rules | [docs.rs](https://docs.rs/leet-core) |
+| [`leet-bridge`](leet-bridge/) | NL→COGON projection, W matrix, embedding providers | [docs.rs](https://docs.rs/leet-bridge) |
+| [`leet-mcp`](leet-mcp/) | MCP server (stdio JSON-RPC) for IDE integration | [docs.rs](https://docs.rs/leet-mcp) |
+| [`leet-cli`](leet-cli/) | `leet` binary — encode/decode/doctor/setup/… | [docs.rs](https://docs.rs/leet-cli) |
+| [`leet-service`](leet-service/) | gRPC + TCP service for network deployments | [docs.rs](https://docs.rs/leet-service) |
+
+## Documentation
+
+- **Protocol spec**: [leetlang.org/spec](https://leetlang.org/spec)
+- **API reference**: [docs.rs/leet-core](https://docs.rs/leet-core)
+- **Getting started**: [leetlang.org/getting-started](https://leetlang.org/getting-started)
 
 ## Estrutura do Projeto
 

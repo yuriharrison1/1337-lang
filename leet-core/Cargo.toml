@@ -12,6 +12,7 @@ keywords.workspace = true
 categories.workspace = true
 documentation = "https://docs.rs/leet-core"
 readme = "README.md"
+exclude = ["tests/fixtures/*", "benches/*"]
 
 [dependencies]
 anyhow = "1"

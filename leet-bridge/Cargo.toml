@@ -12,6 +12,7 @@ keywords.workspace = true
 categories.workspace = true
 documentation = "https://docs.rs/leet-bridge"
 readme = "README.md"
+exclude = ["calibration/data/*", "tests/fixtures/*"]
 
 [features]
 default = []
