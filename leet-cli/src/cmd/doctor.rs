@@ -330,10 +330,26 @@ impl HealthCheck for WMatrixCheck {
 
         for path in &candidates {
             if path.exists() {
-                let size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
-                return CheckResult::Ok {
-                    details: vec![format!("Loaded from {} ({} bytes)", path.display(), size)],
-                };
+                match leet_bridge::projector::WMatrix::load(path) {
+                    Ok(w) => {
+                        let size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+                        return CheckResult::Ok {
+                            details: vec![format!(
+                                "Loaded from {} ({}×{}, {} bytes)",
+                                path.display(), w.rows, w.cols, size
+                            )],
+                        };
+                    }
+                    Err(e) => {
+                        return CheckResult::Error {
+                            message: format!("W matrix at {} is corrupt: {}", path.display(), e),
+                            suggestion: Some(
+                                "Delete the file and re-run `leet calibrate --download`".into()
+                            ),
+                            details: vec![],
+                        };
+                    }
+                }
             }
         }
 
