@@ -65,3 +65,5 @@ comparison_reports/
 # Demo / experiment archives
 files.zip
 files-11.zip
+*-lang-main*.zip
+*-lang-main*.tar.gz
