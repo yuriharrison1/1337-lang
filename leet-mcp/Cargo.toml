@@ -10,6 +10,8 @@ homepage.workspace = true
 description = "Model Context Protocol server exposing 1337 tools to Claude Code and other MCP clients"
 keywords.workspace = true
 categories.workspace = true
+documentation = "https://docs.rs/leet-mcp"
+readme = "README.md"
 
 [lib]
 name = "leet_mcp"

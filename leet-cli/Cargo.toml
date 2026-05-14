@@ -10,6 +10,8 @@ homepage.workspace = true
 description = "Command-line tools for debugging, inspecting, and benchmarking 1337"
 keywords.workspace = true
 categories.workspace = true
+documentation = "https://docs.rs/leet-cli"
+readme = "README.md"
 
 [[bin]]
 name = "leet"

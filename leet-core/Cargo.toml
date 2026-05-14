@@ -10,6 +10,8 @@ homepage.workspace = true
 description = "Core types and algebra for the 1337 semantic protocol"
 keywords.workspace = true
 categories.workspace = true
+documentation = "https://docs.rs/leet-core"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1"

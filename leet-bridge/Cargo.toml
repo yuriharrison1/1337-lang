@@ -10,6 +10,8 @@ homepage.workspace = true
 description = "NL↔1337 bridge layer: projector, heuristics, Claude adapter"
 keywords.workspace = true
 categories.workspace = true
+documentation = "https://docs.rs/leet-bridge"
+readme = "README.md"
 
 [features]
 default = []

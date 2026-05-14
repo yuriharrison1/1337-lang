@@ -10,6 +10,8 @@ homepage.workspace = true
 description = "gRPC service exposing leet-core over network"
 keywords.workspace = true
 categories.workspace = true
+documentation = "https://docs.rs/leet-service"
+readme = "README.md"
 
 [dependencies]
 leet-core = { path = "../leet-core" }

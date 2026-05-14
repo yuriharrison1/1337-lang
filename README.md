@@ -1,5 +1,10 @@
 # 1337 — Inter-Agent Communication Language
 
+[![CI](https://github.com/leetlang/leet/actions/workflows/ci.yml/badge.svg)](https://github.com/leetlang/leet/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/leet-core.svg)](https://crates.io/crates/leet-core)
+[![docs.rs](https://docs.rs/leet-core/badge.svg)](https://docs.rs/leet-core)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+
 **1337** é um protocolo semântico para comunicação entre agentes de IA. Em vez de trocar texto livre, agentes codificam seu estado, intenção e conteúdo em vetores semânticos de 32 dimensões chamados **COGONs** — alcançando até 90% de redução de tokens sem perda de informação estrutural.
 
 ```
