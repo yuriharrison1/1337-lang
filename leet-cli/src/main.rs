@@ -305,6 +305,30 @@ See also:\n  \
     Consolidate(cmd::consolidate::ConsolidateArgs),
     /// Show command overview grouped by category
     Help(cmd::help::HelpArgs),
+    /// Generate shell completion scripts (bash, zsh, fish, elvish)
+    #[command(
+        long_about = "Generate shell completion scripts for leet.\n\
+\n\
+The completion script should be sourced or placed in your shell's completions\n\
+directory. This enables tab-completion for leet commands and flags.",
+        after_help = "Examples:\n  \
+  # Bash\n  \
+  leet completions bash >> ~/.bash_completion.d/leet\n  \
+  echo 'source ~/.bash_completion.d/leet' >> ~/.bashrc\n\
+\n  \
+  # Zsh\n  \
+  leet completions zsh > ~/.zsh/completions/_leet\n\
+\n  \
+  # Fish\n  \
+  leet completions fish > ~/.config/fish/completions/leet.fish\n\
+\n\
+See also:\n  \
+  leet setup  — configure IDE integrations"
+    )]
+    Completions {
+        /// Shell to generate completions for
+        shell: String,
+    },
 }
 
 fn read_input(maybe_json: Option<String>) -> String {
@@ -361,6 +385,7 @@ fn main() {
         Commands::Absorb(args) => exit_on_err(cmd::absorb::run(args)),
         Commands::Consolidate(args) => exit_on_err(cmd::consolidate::run(args)),
         Commands::Help(args) => exit_on_err(cmd::help::run(args)),
+        Commands::Completions { shell } => exit_on_err(cmd::completions::run(&shell)),
     }
 }
 

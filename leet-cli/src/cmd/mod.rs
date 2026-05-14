@@ -2,6 +2,7 @@
 
 pub mod absorb;
 pub mod calibrate;
+pub mod completions;
 pub mod doctor;
 pub mod help;
 pub mod consolidate;
