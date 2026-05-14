@@ -144,10 +144,11 @@ impl HealthCheck for BinariesCheck {
                     details.push(format!("{:<10} v{:<8} {}", name, version, path.display()));
 
                     if version != *expected_version {
+                        let crate_path = if *name == "leet" { "leet-cli" } else { name };
                         return CheckResult::Warning {
                             message: format!("{} version mismatch (expected v{}, found v{})",
                                              name, expected_version, version),
-                            hint: Some(format!("Run `cargo install --path {} --force` to upgrade", name)),
+                            hint: Some(format!("Run `cargo install --path {} --force` to upgrade", crate_path)),
                             details,
                         };
                     }
@@ -374,6 +375,21 @@ impl HealthCheck for ProjectCheck {
                 hint: Some("Likely a fresh project — first leet_remember will create it".into()),
                 details: vec![],
             };
+        }
+
+        // Validate magic bytes before trusting the file.
+        if let Ok(mut f) = std::fs::File::open(&store_path) {
+            use std::io::Read;
+            let mut magic = [0u8; 4];
+            if f.read_exact(&mut magic).is_ok() && &magic != b"LEET" {
+                return CheckResult::Error {
+                    message: "store.bin has invalid magic bytes — file is corrupt or not a leet store".into(),
+                    suggestion: Some(
+                        "Delete .leet/store.bin and .leet/index.bin to reset, or run `leet consolidate rebuild-index --yes`".into()
+                    ),
+                    details: vec![format!("Project   {}", self.project_root.display())],
+                };
+            }
         }
 
         let store_size = std::fs::metadata(&store_path).map(|m| m.len()).unwrap_or(0);
@@ -633,9 +649,23 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let leet_dir = tmp.path().join(".leet");
         std::fs::create_dir_all(&leet_dir).unwrap();
-        std::fs::write(leet_dir.join("store.bin"), &[0u8; 16]).unwrap();
+        // Valid 16-byte header: magic "LEET" + version 1 + 11 reserved bytes.
+        let mut header = [0u8; 16];
+        header[0..4].copy_from_slice(b"LEET");
+        header[4] = 1;
+        std::fs::write(leet_dir.join("store.bin"), &header).unwrap();
         let result = ProjectCheck::new(tmp.path().to_path_buf()).run();
         assert!(matches!(result, CheckResult::Ok { .. }) || matches!(result, CheckResult::Warning { .. }));
+    }
+
+    #[test]
+    fn project_check_corrupt_store_is_error() {
+        let tmp = tempfile::tempdir().unwrap();
+        let leet_dir = tmp.path().join(".leet");
+        std::fs::create_dir_all(&leet_dir).unwrap();
+        std::fs::write(leet_dir.join("store.bin"), b"not a leet file").unwrap();
+        let result = ProjectCheck::new(tmp.path().to_path_buf()).run();
+        assert!(matches!(result, CheckResult::Error { .. }));
     }
 
     #[test]
