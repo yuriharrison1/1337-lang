@@ -1,6 +1,6 @@
 //! leet decode — reconstruct text from a COGON JSON.
 
-use leet_bridge::{BridgeProjector, MockProjector};
+use leet_bridge::{BridgeProjector as _, MockProjector};
 use leet_core::types::Cogon;
 
 pub fn run(json_input: &str, top: usize) {

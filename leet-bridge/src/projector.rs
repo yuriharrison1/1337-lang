@@ -36,15 +36,15 @@ impl BridgeProjector for MockProjector {
         let lower = text.to_lowercase();
         let mut sem: SemVec = [0.5_f32; 32];
 
-        // D1_STATE / P3_ANOMALY — error/down keywords
+        // D1_CONNECTION_WEIGHT / P3_COMPRESSION — error/down keywords (legacy v0.4 mapping)
         if lower.contains("caiu")
             || lower.contains("falhou")
             || lower.contains("erro")
             || lower.contains("down")
         {
-            sem[8] = 0.9;   // D1_STATE
-            sem[26] = 0.9;  // P3_ANOMALY
-            sem[13] = 0.15; // D6_PROPAGATION (negative)
+            sem[8] = 0.9;   // D1_CONNECTION_WEIGHT
+            sem[26] = 0.9;  // P3_COMPRESSION
+            sem[13] = 0.15; // D6_PROPAGATION (low influence)
         }
 
         // D2_LEARNING_RATE / P7_ACTION — process keywords (legacy v0.4 mapping)
@@ -65,9 +65,9 @@ impl BridgeProjector for MockProjector {
             sem[30] = 0.85; // P7_ACTION
         }
 
-        // G8_URGENCY — urgency keywords
+        // G8_GRADIENT — urgency keywords
         if lower.contains("urgente") || lower.contains("crítico") || lower.contains("agora") {
-            sem[23] = 0.95; // G8_URGENCY
+            sem[23] = 0.95; // G8_GRADIENT (accelerating)
         }
 
         Ok(Cogon {

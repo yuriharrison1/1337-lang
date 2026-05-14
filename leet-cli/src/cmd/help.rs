@@ -88,7 +88,7 @@ fn build_categories() -> Vec<(&'static str, Vec<CommandInfo>)> {
             CommandInfo { name: "dist",     about: "Cosine distance between two vectors" },
             CommandInfo { name: "blend",    about: "Blend two COGONs (BLEND operator)" },
             CommandInfo { name: "validate", about: "Validate a 1337 message against R1–R25" },
-            CommandInfo { name: "inspect",  about: "Show storage statistics for a project" },
+            CommandInfo { name: "inspect",  about: "Show top-10 activated axes in a COGON" },
         ]),
         ("Advanced", vec![
             CommandInfo { name: "bench",    about: "Run benchmarks on operators and storage" },

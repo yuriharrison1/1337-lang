@@ -235,26 +235,26 @@ See also:\n  \
         #[arg(long, short, default_value = "1000")]
         n: usize,
     },
-    /// Show storage statistics for a leet project
+    /// Show top-10 activated axes in a COGON
     #[command(
-        long_about = "Show storage statistics for a leet project.\n\
+        long_about = "Show top-10 activated axes in a COGON.\n\
 \n\
-Reports record count, store size, index status, top-recall cursor,\n\
-consolidation depth, and last-modified time. Read-only — never modifies\n\
-state.",
+Takes a full Cogon JSON object (from leet encode --json or leet zero --json)\n\
+and prints the 10 axes with highest activation, color-coded by value.\n\
+Read-only — never modifies state.",
         after_help = "Examples:\n  \
-  # Inspect current directory\n  \
-  leet inspect\n\
+  # Inspect COGON_ZERO\n  \
+  leet zero --json | leet inspect\n\
 \n  \
-  # Inspect another project\n  \
-  leet inspect /path/to/other-project/some.json\n\
+  # Inspect an encoded text\n  \
+  leet encode --json \"deploy urgente falhou\" | leet inspect\n\
 \n\
 See also:\n  \
-  leet doctor               — full health check including project state\n  \
-  leet consolidate inspect  — pyramid-specific view"
+  leet decode  — axis narrative (simpler output)\n  \
+  leet axes    — full axis reference"
     )]
     Inspect {
-        /// COGON JSON string (use '-' for stdin)
+        /// Full Cogon JSON object (use '-' or omit to read from stdin)
         json: Option<String>,
     },
     /// Quick liveness check for the running leet-service (deprecated, use doctor)

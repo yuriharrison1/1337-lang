@@ -514,13 +514,13 @@ fn try_auto_fix(checks: &mut Vec<(String, CheckResult)>, project_root: &PathBuf)
                 }
             }
             "w_matrix" => {
-                // Placeholder until leet calibrate is implemented (Phase 12-W).
                 let _ = try_download_w();
             }
             "project" => {
                 if let CheckResult::Error { .. } = result {
-                    let _ = try_rebuild_index(project_root);
-                    *result = CheckResult::Ok { details: vec!["auto-fix: rebuilt index".into()] };
+                    if try_rebuild_index(project_root).is_ok() {
+                        *result = CheckResult::Ok { details: vec!["auto-fix: rebuilt index".into()] };
+                    }
                 }
             }
             _ => {}
@@ -532,7 +532,14 @@ fn try_download_w() -> Result<()> {
     super::calibrate::cmd_download(false)
 }
 
-fn try_rebuild_index(_project_root: &PathBuf) -> Result<()> {
+fn try_rebuild_index(project_root: &std::path::Path) -> Result<()> {
+    let index_path = project_root.join(".leet/index.bin");
+    if index_path.exists() {
+        std::fs::remove_file(&index_path)
+            .with_context(|| format!("removing {}", index_path.display()))?;
+    }
+    // Re-opening creates a fresh index aligned with the store
+    let _store = leet_mcp::store::PersonalStore::open_or_create(project_root)?;
     Ok(())
 }
 

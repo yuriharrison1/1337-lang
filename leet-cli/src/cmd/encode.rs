@@ -1,7 +1,6 @@
 //! leet encode — project text and display colored axis bars.
 
 use colored::Colorize;
-use leet_bridge::MockProjector;
 use leet_core::axes::CANONICAL_AXES;
 
 /// Render a single axis bar with colored output.
@@ -26,9 +25,7 @@ pub fn render_bar(name: &str, value: f32, width: usize) -> String {
 }
 
 pub fn run(text: &str, json: bool, top: usize) {
-    use leet_bridge::BridgeProjector;
-    let proj = MockProjector;
-    let cogon = match proj.project(text) {
+    let cogon = match leet_bridge::projector::project_text_simple(text) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("Error: {}", e);

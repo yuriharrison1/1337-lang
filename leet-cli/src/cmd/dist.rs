@@ -1,7 +1,6 @@
 //! leet dist — compute cosine distance between two sem vectors or texts.
 
 use colored::Colorize;
-use leet_bridge::{BridgeProjector, MockProjector};
 use leet_core::operators::dist as cogon_dist;
 use leet_core::axes::CANONICAL_AXES;
 use leet_core::types::Cogon;
@@ -27,8 +26,7 @@ fn parse_or_project(input: &str) -> Cogon {
         return cogon;
     }
     // Fall back to text projection
-    let proj = MockProjector;
-    proj.project(input).unwrap_or_else(|_| Cogon::zero())
+    leet_bridge::projector::project_text_simple(input).unwrap_or_else(|_| Cogon::zero())
 }
 
 pub fn run(text_a: &str, text_b: &str, json: bool) {
@@ -70,10 +68,9 @@ pub fn run(text_a: &str, text_b: &str, json: bool) {
 mod tests {
     #[test]
     fn test_dist_same_text_is_small() {
-        use leet_bridge::{BridgeProjector, MockProjector};
+        use leet_bridge::projector::project_text_simple;
         use leet_core::operators::dist;
-        let proj = MockProjector;
-        let c = proj.project("urgente agora").unwrap();
+        let c = project_text_simple("urgente agora").unwrap();
         let d = dist(&c, &c);
         assert!(d < 1e-5);
     }
