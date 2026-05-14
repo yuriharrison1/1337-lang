@@ -192,7 +192,7 @@ struct IdesCheck;
 impl IdesCheck {
     fn new() -> Self { Self }
 
-    fn check_claude_code(&self, home: &PathBuf) -> Vec<String> {
+    fn check_claude_code(&self, home: &std::path::Path) -> Vec<String> {
         let settings = home.join(".claude/settings.json");
         if settings.exists() {
             let text = std::fs::read_to_string(&settings).unwrap_or_default();
@@ -207,7 +207,7 @@ impl IdesCheck {
         }
     }
 
-    fn check_cursor(&self, home: &PathBuf) -> Vec<String> {
+    fn check_cursor(&self, home: &std::path::Path) -> Vec<String> {
         let settings = home.join(".cursor/mcp.json");
         if settings.exists() {
             let text = std::fs::read_to_string(&settings).unwrap_or_default();
@@ -221,7 +221,7 @@ impl IdesCheck {
         }
     }
 
-    fn check_continue(&self, home: &PathBuf) -> Vec<String> {
+    fn check_continue(&self, home: &std::path::Path) -> Vec<String> {
         let config = home.join(".continue/config.json");
         if config.exists() {
             vec![format!("VS Code (Continue) detected   {}", config.display())]
@@ -501,7 +501,7 @@ fn probe_latency(url: &str, timeout: Duration) -> Option<u64> {
 
 // ─── Auto-fix ─────────────────────────────────────────────────────────────────
 
-fn try_auto_fix(checks: &mut Vec<(String, CheckResult)>, project_root: &PathBuf) {
+fn try_auto_fix(checks: &mut [(String, CheckResult)], project_root: &std::path::Path) {
     for (name, result) in checks.iter_mut() {
         if !matches!(result, CheckResult::Error { .. } | CheckResult::Warning { .. }) {
             continue;

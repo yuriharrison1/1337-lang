@@ -305,15 +305,15 @@ impl PersonalStore {
         if total_mass > f32::EPSILON {
             for r in &eligible {
                 let w = r.cogon.sem[G1_MASS] / total_mass;
-                for k in 0..32 {
-                    sem[k] += w * r.cogon.sem[k];
+                for (k, v) in sem.iter_mut().enumerate() {
+                    *v += w * r.cogon.sem[k];
                 }
             }
         } else {
             let inv_n = 1.0 / eligible.len() as f32;
             for r in &eligible {
-                for k in 0..32 {
-                    sem[k] += r.cogon.sem[k] * inv_n;
+                for (k, v) in sem.iter_mut().enumerate() {
+                    *v += r.cogon.sem[k] * inv_n;
                 }
             }
         }
@@ -450,15 +450,15 @@ fn blend_n_records(records: &[&StoreRecord], source_level: u8) -> StoreRecord {
     if total_mass > f32::EPSILON {
         for r in records {
             let w = r.cogon.sem[G1_MASS] / total_mass;
-            for k in 0..32 {
-                sem[k] += w * r.cogon.sem[k];
+            for (k, v) in sem.iter_mut().enumerate() {
+                *v += w * r.cogon.sem[k];
             }
         }
     } else {
         let inv_n = 1.0 / n as f32;
         for r in records {
-            for k in 0..32 {
-                sem[k] += r.cogon.sem[k] * inv_n;
+            for (k, v) in sem.iter_mut().enumerate() {
+                *v += r.cogon.sem[k] * inv_n;
             }
         }
     }
@@ -501,7 +501,7 @@ fn blend_n_records(records: &[&StoreRecord], source_level: u8) -> StoreRecord {
 }
 
 fn truncate_utf8(s: &str, max_bytes: usize) -> String {
-    if s.as_bytes().len() <= max_bytes {
+    if s.len() <= max_bytes {
         return s.to_string();
     }
     let mut end = max_bytes.saturating_sub(3);

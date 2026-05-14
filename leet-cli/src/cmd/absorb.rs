@@ -435,7 +435,7 @@ fn append_record(
         let mut header = [0u8; 16];
         header[0..4].copy_from_slice(b"LEET");
         header[4] = 0x01;
-        std::fs::write(&store_path, &header)?;
+        std::fs::write(&store_path, header)?;
     }
 
     let frame = encode_cogon(cogon);
