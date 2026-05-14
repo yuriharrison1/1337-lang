@@ -40,6 +40,12 @@ For routine memory operations, use leet_remember via MCP instead.",
 \n  \
   # Pipe from another command\n  \
   echo \"rolling back to commit abc123\" | leet encode -\n\
+\n  \
+  # Get the full sem[32] as JSON\n  \
+  leet encode --json \"ATLAS thinks we should pivot\"\n\
+\n  \
+  # Show only top 3 axes\n  \
+  leet encode --top 3 \"migration failed\"\n\
 \n\
 See also:\n  \
   leet decode  — reverse a sem vector back to top-axis narrative\n  \
@@ -48,6 +54,12 @@ See also:\n  \
     Encode {
         /// Text to encode. Use '-' to read from stdin.
         text: String,
+        /// Output full COGON as JSON (enables piping to other commands)
+        #[arg(long)]
+        json: bool,
+        /// Show only the top N most-deviated axes (default: 5; ignored with --json)
+        #[arg(long, default_value = "5")]
+        top: usize,
     },
     /// Interpret a sem[32] vector as a top-axis narrative
     #[command(
@@ -70,6 +82,9 @@ See also:\n  \
     Decode {
         /// COGON JSON string or path (use '-' for stdin)
         json: Option<String>,
+        /// Show only the top N most-deviated axes (default: 5)
+        #[arg(long, default_value = "5")]
+        top: usize,
     },
     /// Compute cosine distance between two sem vectors
     #[command(
@@ -88,10 +103,13 @@ See also:\n  \
   leet blend   — combine two vectors"
     )]
     Dist {
-        /// First text
+        /// First vector: sem JSON array, comma-separated floats, or natural language text
         text_a: String,
-        /// Second text
+        /// Second vector: sem JSON array, comma-separated floats, or natural language text
         text_b: String,
+        /// Output result as JSON
+        #[arg(long)]
+        json: bool,
     },
     /// Blend two COGONs into one (BLEND operator)
     #[command(
@@ -116,13 +134,16 @@ See also:\n  \
   leet consolidate force  — N-ary blend used for memory hierarchy"
     )]
     Blend {
-        /// First text
+        /// First vector: sem JSON array, comma-separated floats, or natural language text
         text_a: String,
-        /// Second text
+        /// Second vector: sem JSON array, comma-separated floats, or natural language text
         text_b: String,
         /// Blend weight for text_a (0.0 to 1.0, default: 0.5)
         #[arg(long, default_value = "0.5")]
         alpha: f32,
+        /// Output blended COGON as JSON
+        #[arg(long)]
+        json: bool,
     },
     /// List the 32 canonical axes of the 1337 protocol
     #[command(
@@ -142,7 +163,14 @@ See also:\n  \
   leet zero   — print COGON_ZERO with axis values\n  \
   leet decode — interpret a sem[32] in terms of these axes"
     )]
-    Axes,
+    Axes {
+        /// Output as JSON instead of human-readable table
+        #[arg(long)]
+        json: bool,
+        /// Filter by block: S, D, G, or P
+        #[arg(long, value_name = "S|D|G|P")]
+        block: Option<String>,
+    },
     /// Print COGON_ZERO — the canonical boot vector
     #[command(
         long_about = "Print COGON_ZERO — the canonical boot vector.\n\
@@ -161,7 +189,11 @@ See also:\n  \
   leet axes    — full axis reference\n  \
   leet encode  — project arbitrary text into the same space"
     )]
-    Zero,
+    Zero {
+        /// Output COGON as JSON (enables piping to other commands)
+        #[arg(long)]
+        json: bool,
+    },
     /// Validate a 1337 message against R1–R25 structural rules
     #[command(
         long_about = "Validate a 1337 message against R1–R25 structural rules.\n\
@@ -257,7 +289,11 @@ version implemented.",
 See also:\n  \
   leet doctor  — full health check including version mismatches"
     )]
-    Version,
+    Version {
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Interactive REPL for conversing in 1337 (developer/demo only)
     #[command(
         long_about = "Interactive REPL for conversing in 1337 (developer/demo only).\n\
@@ -351,15 +387,15 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Encode { text } => cmd::encode::run(&text),
-        Commands::Decode { json } => {
+        Commands::Encode { text, json, top } => cmd::encode::run(&text, json, top),
+        Commands::Decode { json, top } => {
             let input = read_input(json);
-            cmd::decode::run(&input);
+            cmd::decode::run(&input, top);
         }
-        Commands::Dist { text_a, text_b } => cmd::dist::run(&text_a, &text_b),
-        Commands::Blend { text_a, text_b, alpha } => cmd::blend::run(&text_a, &text_b, alpha),
-        Commands::Axes => cmd::axes::run(),
-        Commands::Zero => cmd::zero::run(),
+        Commands::Dist { text_a, text_b, json } => cmd::dist::run(&text_a, &text_b, json),
+        Commands::Blend { text_a, text_b, alpha, json } => cmd::blend::run(&text_a, &text_b, alpha, json),
+        Commands::Axes { json, block } => cmd::axes::run(json, block.as_deref()),
+        Commands::Zero { json } => cmd::zero::run(json),
         Commands::Validate { json } => {
             let input = read_input(json);
             cmd::validate::run(&input);
@@ -370,7 +406,7 @@ fn main() {
             cmd::inspect::run(&input);
         }
         Commands::Health { url } => cmd::health::run(&url),
-        Commands::Version => cmd::version::run(),
+        Commands::Version { json } => cmd::version::run(json),
         Commands::Chat { lang, show_cogon, agents, connect } => {
             let rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
             if let Some(ref addr) = connect {

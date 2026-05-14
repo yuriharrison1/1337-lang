@@ -25,7 +25,7 @@ pub fn render_bar(name: &str, value: f32, width: usize) -> String {
     format!("  {:20} {} {:.2}", name, bar_colored, value)
 }
 
-pub fn run(text: &str) {
+pub fn run(text: &str, json: bool, top: usize) {
     use leet_bridge::BridgeProjector;
     let proj = MockProjector;
     let cogon = match proj.project(text) {
@@ -36,15 +36,27 @@ pub fn run(text: &str) {
         }
     };
 
+    if json {
+        println!("{}", serde_json::to_string(&cogon).unwrap());
+        return;
+    }
+
     println!("COGON {}", cogon.id);
+    let mut axes_with_vals: Vec<(usize, f32)> = cogon.sem
+        .iter()
+        .enumerate()
+        .filter(|(_, &v)| v > 0.3)
+        .map(|(i, &v)| (i, v))
+        .collect();
+    axes_with_vals.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+    let to_show = if top > 0 { top } else { axes_with_vals.len() };
     let mut any_printed = false;
-    for (i, &v) in cogon.sem.iter().enumerate() {
-        if v > 0.3 {
-            let axis = &CANONICAL_AXES[i];
-            let label = format!("{}_{}", axis.code, axis.name);
-            println!("{}", render_bar(&label, v, 10));
-            any_printed = true;
-        }
+    for (i, v) in axes_with_vals.iter().take(to_show) {
+        let axis = &CANONICAL_AXES[*i];
+        let label = format!("{}_{}", axis.code, axis.name);
+        println!("{}", render_bar(&label, *v, 10));
+        any_printed = true;
     }
     if !any_printed {
         println!("  (all axes at or below 0.3 — neutral)");

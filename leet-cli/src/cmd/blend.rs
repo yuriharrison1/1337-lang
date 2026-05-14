@@ -1,14 +1,38 @@
-//! leet blend — blend two texts with alpha weight.
+//! leet blend — blend two sem vectors or texts with alpha weight.
 
 use leet_bridge::{BridgeProjector, MockProjector};
 use leet_core::operators::blend as cogon_blend;
+use leet_core::types::Cogon;
 
-pub fn run(text_a: &str, text_b: &str, alpha: f32) {
+fn parse_or_project(input: &str) -> Cogon {
+    if let Ok(arr) = serde_json::from_str::<Vec<f32>>(input) {
+        if arr.len() == 32 {
+            let mut cogon = Cogon::zero();
+            cogon.sem.copy_from_slice(&arr);
+            return cogon;
+        }
+    }
+    let parts: Vec<f32> = input.split(',')
+        .filter_map(|s| s.trim().parse().ok())
+        .collect();
+    if parts.len() == 32 {
+        let mut cogon = Cogon::zero();
+        cogon.sem.copy_from_slice(&parts);
+        return cogon;
+    }
     let proj = MockProjector;
-    let ca = proj.project(text_a).unwrap();
-    let cb = proj.project(text_b).unwrap();
+    proj.project(input).unwrap_or_else(|_| Cogon::zero())
+}
 
+pub fn run(text_a: &str, text_b: &str, alpha: f32, json: bool) {
+    let ca = parse_or_project(text_a);
+    let cb = parse_or_project(text_b);
     let blended = cogon_blend(&ca, &cb, alpha);
+
+    if json {
+        println!("{}", serde_json::to_string(&blended).unwrap());
+        return;
+    }
 
     println!("COGON blend(alpha={:.2}): {}", alpha, blended.id);
     println!("Semantic vector (top activated):");

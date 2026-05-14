@@ -2,8 +2,14 @@
 
 use leet_core::types::Cogon;
 
-pub fn run() {
+pub fn run(json: bool) {
     let zero = Cogon::zero();
+
+    if json {
+        println!("{}", serde_json::to_string(&zero).unwrap());
+        return;
+    }
+
     println!("COGON_ZERO (v0.5.1)");
     println!("  id:              {}", zero.id);
     println!("  stamp:           {}", zero.stamp);

@@ -3,13 +3,43 @@
 use colored::Colorize;
 use leet_core::axes::{AxisGroup, CANONICAL_AXES};
 
-pub fn run() {
+pub fn run(json: bool, block: Option<&str>) {
+    let filtered: Vec<_> = CANONICAL_AXES.iter().filter(|a| {
+        match block {
+            None => true,
+            Some(b) => {
+                let b = b.to_uppercase();
+                match a.group {
+                    AxisGroup::S => b == "S",
+                    AxisGroup::D => b == "D",
+                    AxisGroup::G => b == "G",
+                    AxisGroup::P => b == "P",
+                }
+            }
+        }
+    }).collect();
+
+    if json {
+        let arr: Vec<serde_json::Value> = filtered.iter().map(|a| {
+            serde_json::json!({
+                "index": a.index,
+                "code": a.code,
+                "name": a.name,
+                "group": format!("{:?}", a.group),
+                "bipolar": a.bipolar,
+                "description": a.description,
+            })
+        }).collect();
+        println!("{}", serde_json::to_string(&arr).unwrap());
+        return;
+    }
+
     println!("{}", "32 Canonical 1337 Axes (v0.5.1)".bold());
     println!("{}", "─".repeat(70));
 
     let mut current_group: Option<&AxisGroup> = None;
 
-    for axis in CANONICAL_AXES.iter() {
+    for axis in filtered.iter() {
         let group_changed = current_group != Some(&axis.group);
         if group_changed {
             current_group = Some(&axis.group);
