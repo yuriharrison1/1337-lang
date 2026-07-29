@@ -57,9 +57,20 @@ pub enum SetupCommand {
     /// Print current setup status for all known targets.
     Status,
 
+    /// Configure Cursor integration (v0.42+).
+    Cursor {
+        /// Install the leet-mcp binary via `cargo install --path` if not on PATH.
+        #[arg(long)]
+        install_binary: bool,
+
+        /// Source workspace root used when --install-binary runs cargo install.
+        #[arg(long, default_value = ".")]
+        from: PathBuf,
+    },
+
     /// Remove leet configuration from a target. .leet/ directories are kept.
     Uninstall {
-        /// Target to uninstall: "claude-code".
+        /// Target to uninstall: "claude-code" or "cursor".
         #[arg(default_value = "claude-code")]
         target: String,
     },
@@ -71,6 +82,9 @@ pub fn run(args: SetupArgs) -> Result<()> {
     match args.command {
         SetupCommand::ClaudeCode { install_binary, from } => {
             setup_claude_code(install_binary, &from)
+        }
+        SetupCommand::Cursor { install_binary, from } => {
+            setup_cursor(install_binary, &from)
         }
         SetupCommand::Status => status(),
         SetupCommand::Uninstall { target } => uninstall(&target),
@@ -336,14 +350,35 @@ fn status() -> Result<()> {
         stats_cmd.display()
     );
 
+    // Cursor status
+    if let Some(home) = dirs_home() {
+        let cursor_mcp = home.join(".cursor/mcp.json");
+        if cursor_mcp.exists() {
+            let text = std::fs::read_to_string(&cursor_mcp).unwrap_or_default();
+            let parsed: serde_json::Value = serde_json::from_str(&text).unwrap_or(json!({}));
+            let configured = parsed.pointer("/mcpServers/leet/command").is_some();
+            println!(
+                "  Cursor:            {} {}",
+                if configured { "✓" } else { "✗" },
+                if configured { "configured".to_string() } else {
+                    "detected but not configured (run `leet setup cursor`)".to_string()
+                }
+            );
+        } else {
+            println!("  Cursor:            · not detected");
+        }
+    }
+
     Ok(())
 }
 
 // ─── uninstall ────────────────────────────────────────────────────────────────
 
 fn uninstall(target: &str) -> Result<()> {
-    if target != "claude-code" {
-        bail!("unknown target `{target}` — only `claude-code` is supported");
+    match target {
+        "cursor" => return uninstall_cursor(),
+        "claude-code" => {}
+        _ => bail!("unknown target `{target}` — supported: `claude-code`, `cursor`"),
     }
 
     let claude_dir = detect_claude_dir()?;
@@ -382,6 +417,269 @@ fn uninstall(target: &str) -> Result<()> {
     println!("  To wipe a project's store, run: rm -rf <project>/.leet");
 
     Ok(())
+}
+
+// ─── setup cursor ────────────────────────────────────────────────────────────
+
+fn setup_cursor(install_binary: bool, workspace_root: &Path) -> Result<()> {
+    let binary_path = locate_or_install_mcp_binary(install_binary, workspace_root)?;
+    println!("  ✓ leet-mcp binary at {}", binary_path.display());
+
+    let cursor_dir = detect_cursor_dir()?;
+    println!("  ✓ Detected Cursor config at {}", cursor_dir.display());
+
+    register_cursor_mcp(&cursor_dir, &binary_path)?;
+    println!("  ✓ Registered MCP server in {}/mcp.json", cursor_dir.display());
+
+    let cwd = std::env::current_dir()?;
+    match install_cursor_rules(&cwd)? {
+        CursorRulesResult::Installed => {
+            println!("  ✓ Added leet instructions to {}/.cursorrules", cwd.display());
+        }
+        CursorRulesResult::AlreadyInstalled => {
+            println!("  ✓ .cursorrules already has leet instructions");
+        }
+        CursorRulesResult::SkippedNoProject => {
+            println!("  ⚠ Current directory not detected as a project — skipping .cursorrules");
+            println!("    Run `leet setup cursor` from a project root to enable per-project rules,");
+            println!("    or add these instructions to Cursor Settings → Rules for AI:");
+            println!();
+            for line in cursor_rules_content().lines() {
+                println!("    {}", line);
+            }
+        }
+    }
+
+    println!();
+    println!("  All set. Restart Cursor for changes to take effect.");
+    Ok(())
+}
+
+fn detect_cursor_dir() -> Result<PathBuf> {
+    let home = dirs_home().ok_or_else(|| anyhow!("no HOME directory"))?;
+    let primary = home.join(".cursor");
+    let searched = vec![primary.clone()];
+
+    if primary.exists() {
+        return Ok(primary);
+    }
+
+    if has_cursor_binary() || is_cursor_installed_platform() {
+        std::fs::create_dir_all(&primary)
+            .with_context(|| format!("creating {}", primary.display()))?;
+        return Ok(primary);
+    }
+
+    leet_core::bail_user!(leet_core::UserFacingError::CursorNotFound { searched })
+}
+
+fn has_cursor_binary() -> bool {
+    Command::new("which")
+        .arg("cursor")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+fn is_cursor_installed_platform() -> bool {
+    #[cfg(target_os = "macos")]
+    { std::path::Path::new("/Applications/Cursor.app").exists() }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::path::Path::new("/opt/cursor").exists()
+            || std::path::Path::new("/usr/share/cursor").exists()
+            || dirs_home()
+                .map(|h| h.join(".local/share/applications/cursor.desktop").exists())
+                .unwrap_or(false)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::env::var("LOCALAPPDATA")
+            .ok()
+            .map(|p| std::path::Path::new(&p).join("Programs/cursor").exists())
+            .unwrap_or(false)
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+    { false }
+}
+
+fn register_cursor_mcp(cursor_dir: &Path, binary_path: &Path) -> Result<()> {
+    let mcp_path = cursor_dir.join("mcp.json");
+
+    let mut config: serde_json::Value = if mcp_path.exists() {
+        let text = std::fs::read_to_string(&mcp_path)
+            .with_context(|| format!("reading {}", mcp_path.display()))?;
+        if text.trim().is_empty() {
+            json!({})
+        } else {
+            match serde_json::from_str(&text) {
+                Ok(v) => v,
+                Err(e) => leet_core::bail_user!(leet_core::UserFacingError::SettingsFileMalformed {
+                    path: mcp_path.clone(),
+                    details: e.to_string(),
+                }),
+            }
+        }
+    } else {
+        json!({})
+    };
+
+    let servers = config
+        .as_object_mut()
+        .ok_or_else(|| anyhow!("top-level of mcp.json must be an object"))?
+        .entry("mcpServers")
+        .or_insert_with(|| json!({}));
+
+    let binary_str = binary_path
+        .to_str()
+        .ok_or_else(|| anyhow!("binary path is not valid UTF-8"))?;
+
+    servers
+        .as_object_mut()
+        .ok_or_else(|| anyhow!("mcpServers must be an object"))?
+        .insert("leet".to_string(), json!({
+            "command": binary_str,
+            "args": [],
+            "env": {
+                "LEET_PROJECT_ROOT": "${workspaceFolder}"
+            }
+        }));
+
+    write_atomic(&mcp_path, &serde_json::to_string_pretty(&config)?)?;
+    Ok(())
+}
+
+fn write_atomic(target: &Path, content: &str) -> Result<()> {
+    use std::io::Write;
+    let temp = target.with_extension("tmp");
+    {
+        let mut f = std::fs::File::create(&temp)?;
+        f.write_all(content.as_bytes())?;
+        f.sync_all()?;
+    }
+    std::fs::rename(&temp, target)?;
+    Ok(())
+}
+
+enum CursorRulesResult {
+    Installed,
+    AlreadyInstalled,
+    SkippedNoProject,
+}
+
+fn install_cursor_rules(project_root: &Path) -> Result<CursorRulesResult> {
+    if !looks_like_project(project_root) {
+        return Ok(CursorRulesResult::SkippedNoProject);
+    }
+
+    let rules_path = project_root.join(".cursorrules");
+    let existing = std::fs::read_to_string(&rules_path).unwrap_or_default();
+
+    if existing.contains("<!-- leet-mcp -->") {
+        return Ok(CursorRulesResult::AlreadyInstalled);
+    }
+
+    let snippet = format!(
+        "\n<!-- leet-mcp -->\n{}\n<!-- /leet-mcp -->\n",
+        cursor_rules_content()
+    );
+
+    let new_content = if existing.trim().is_empty() {
+        snippet.trim_start_matches('\n').to_string()
+    } else {
+        format!("{}\n{}", existing.trim_end(), snippet)
+    };
+
+    write_atomic(&rules_path, &new_content)?;
+    Ok(CursorRulesResult::Installed)
+}
+
+fn cursor_rules_content() -> &'static str {
+    r#"When working in this project, you have access to the `leet` MCP server with memory tools:
+
+- `leet_recall` — retrieve project memory from past sessions. Call at session start or when context is missing.
+- `leet_remember` — persist significant decisions, task completions, and architectural choices. Call silently when the user confirms task completion or a decision is made.
+- `leet_encode` / `leet_decode` / `leet_dist` — advanced COGON vector tools (use only if explicitly requested).
+
+Rules:
+1. At session start, call `leet_recall` silently to load context.
+2. On task completion / decision made / topic shift, call `leet_remember` with a 1-3 sentence paraphrased summary.
+3. Never announce memory operations to the user. Operate silently.
+4. Q&A, typos, formatting changes: do NOT call `leet_remember`."#
+}
+
+fn looks_like_project(dir: &Path) -> bool {
+    if dir.join(".git").exists() { return true; }
+    for marker in &["package.json", "Cargo.toml", "pyproject.toml", "go.mod", "pom.xml"] {
+        if dir.join(marker).exists() { return true; }
+    }
+    dir.join("README.md").exists() && has_code_files(dir)
+}
+
+fn has_code_files(dir: &Path) -> bool {
+    let code_exts = [".rs", ".py", ".js", ".ts", ".go", ".java", ".c", ".cpp", ".rb"];
+    std::fs::read_dir(dir).ok()
+        .map(|entries| {
+            entries.flatten().any(|e| {
+                let name = e.file_name().to_string_lossy().to_string();
+                code_exts.iter().any(|ext| name.ends_with(ext))
+            })
+        })
+        .unwrap_or(false)
+}
+
+fn uninstall_cursor() -> Result<()> {
+    let home = dirs_home().ok_or_else(|| anyhow!("no HOME directory"))?;
+    let mcp_path = home.join(".cursor/mcp.json");
+
+    if mcp_path.exists() {
+        let text = std::fs::read_to_string(&mcp_path)?;
+        if let Ok(mut config) = serde_json::from_str::<serde_json::Value>(&text) {
+            if let Some(servers) = config.pointer_mut("/mcpServers").and_then(|v| v.as_object_mut()) {
+                if servers.remove("leet").is_some() {
+                    write_atomic(&mcp_path, &serde_json::to_string_pretty(&config)?)?;
+                    println!("  ✓ Removed mcpServers.leet from {}", mcp_path.display());
+                } else {
+                    println!("  · mcpServers.leet not present in {}", mcp_path.display());
+                }
+            }
+        }
+    } else {
+        println!("  · {} not found — nothing to remove", mcp_path.display());
+    }
+
+    let rules_path = std::env::current_dir()?.join(".cursorrules");
+    if rules_path.exists() {
+        let text = std::fs::read_to_string(&rules_path)?;
+        if text.contains("<!-- leet-mcp -->") {
+            let cleaned = remove_leet_block(&text);
+            write_atomic(&rules_path, cleaned.trim_end_matches('\n'))?;
+            println!("  ✓ Removed leet block from {}", rules_path.display());
+        } else {
+            println!("  · No leet block found in {}", rules_path.display());
+        }
+    }
+
+    println!();
+    println!("  Your per-project .leet/ directories are untouched.");
+    Ok(())
+}
+
+fn remove_leet_block(content: &str) -> String {
+    let mut result = String::new();
+    let mut in_block = false;
+    for line in content.lines() {
+        if line.contains("<!-- leet-mcp -->") { in_block = true; continue; }
+        if line.contains("<!-- /leet-mcp -->") { in_block = false; continue; }
+        if !in_block {
+            result.push_str(line);
+            result.push('\n');
+        }
+    }
+    result
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -486,5 +784,118 @@ mod tests {
         install_global_skill(tmp.path()).unwrap();
         let content = std::fs::read_to_string(skill_dir.join("SKILL.md")).unwrap();
         assert!(content.len() > 500, "should have been upgraded to real content");
+    }
+
+    // ── Cursor tests ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn register_cursor_mcp_creates_file_from_scratch() {
+        let tmp = tempfile::tempdir().unwrap();
+        register_cursor_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+        let text = std::fs::read_to_string(tmp.path().join("mcp.json")).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(v["mcpServers"]["leet"]["command"].as_str().unwrap(), "/fake/leet-mcp");
+        assert_eq!(
+            v["mcpServers"]["leet"]["env"]["LEET_PROJECT_ROOT"].as_str().unwrap(),
+            "${workspaceFolder}"
+        );
+    }
+
+    #[test]
+    fn register_cursor_mcp_preserves_existing_servers() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mcp_path = tmp.path().join("mcp.json");
+        std::fs::write(&mcp_path, r#"{"mcpServers":{"other":{"command":"/x"}}}"#).unwrap();
+
+        register_cursor_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+
+        let text = std::fs::read_to_string(&mcp_path).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(v["mcpServers"]["other"]["command"].as_str().unwrap(), "/x");
+        assert_eq!(v["mcpServers"]["leet"]["command"].as_str().unwrap(), "/fake/leet-mcp");
+    }
+
+    #[test]
+    fn register_cursor_mcp_idempotent() {
+        let tmp = tempfile::tempdir().unwrap();
+        register_cursor_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+        let first = std::fs::read_to_string(tmp.path().join("mcp.json")).unwrap();
+        register_cursor_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+        let second = std::fs::read_to_string(tmp.path().join("mcp.json")).unwrap();
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn cursorrules_install_creates_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir(tmp.path().join(".git")).unwrap();
+
+        let result = install_cursor_rules(tmp.path()).unwrap();
+        assert!(matches!(result, CursorRulesResult::Installed));
+
+        let content = std::fs::read_to_string(tmp.path().join(".cursorrules")).unwrap();
+        assert!(content.contains("<!-- leet-mcp -->"));
+        assert!(content.contains("leet_recall"));
+        assert!(content.contains("<!-- /leet-mcp -->"));
+    }
+
+    #[test]
+    fn cursorrules_preserves_user_content() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir(tmp.path().join(".git")).unwrap();
+        let existing = "# My rules\nAlways use TypeScript.\n";
+        std::fs::write(tmp.path().join(".cursorrules"), existing).unwrap();
+
+        install_cursor_rules(tmp.path()).unwrap();
+
+        let content = std::fs::read_to_string(tmp.path().join(".cursorrules")).unwrap();
+        assert!(content.contains("Always use TypeScript"));
+        assert!(content.contains("<!-- leet-mcp -->"));
+    }
+
+    #[test]
+    fn cursorrules_idempotent() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir(tmp.path().join(".git")).unwrap();
+
+        install_cursor_rules(tmp.path()).unwrap();
+        let first = std::fs::read_to_string(tmp.path().join(".cursorrules")).unwrap();
+
+        let second_result = install_cursor_rules(tmp.path()).unwrap();
+        assert!(matches!(second_result, CursorRulesResult::AlreadyInstalled));
+
+        let second = std::fs::read_to_string(tmp.path().join(".cursorrules")).unwrap();
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn cursorrules_skipped_for_non_project() {
+        let tmp = tempfile::tempdir().unwrap();
+        let result = install_cursor_rules(tmp.path()).unwrap();
+        assert!(matches!(result, CursorRulesResult::SkippedNoProject));
+    }
+
+    #[test]
+    fn remove_leet_block_preserves_surrounding_content() {
+        let input = "# My rules\nAlways use TypeScript.\n\n<!-- leet-mcp -->\nleet stuff\n<!-- /leet-mcp -->\n";
+        let cleaned = remove_leet_block(input);
+        assert!(cleaned.contains("Always use TypeScript"));
+        assert!(!cleaned.contains("leet stuff"));
+        assert!(!cleaned.contains("<!-- leet-mcp -->"));
+    }
+
+    #[test]
+    fn looks_like_project_detects_git() {
+        let tmp = tempfile::tempdir().unwrap();
+        assert!(!looks_like_project(tmp.path()));
+        std::fs::create_dir(tmp.path().join(".git")).unwrap();
+        assert!(looks_like_project(tmp.path()));
+    }
+
+    #[test]
+    fn looks_like_project_detects_cargo_toml() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(tmp.path().join("Cargo.toml"), "[package]\n").unwrap();
+        assert!(looks_like_project(tmp.path()));
     }
 }
