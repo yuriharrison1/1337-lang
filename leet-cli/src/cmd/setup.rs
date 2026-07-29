@@ -68,9 +68,21 @@ pub enum SetupCommand {
         from: PathBuf,
     },
 
+    /// Configure VS Code + Continue.dev integration (experimental MCP support).
+    #[command(name = "vscode-continue")]
+    VscodeContinue {
+        /// Install the leet-mcp binary via `cargo install --path` if not on PATH.
+        #[arg(long)]
+        install_binary: bool,
+
+        /// Source workspace root used when --install-binary runs cargo install.
+        #[arg(long, default_value = ".")]
+        from: PathBuf,
+    },
+
     /// Remove leet configuration from a target. .leet/ directories are kept.
     Uninstall {
-        /// Target to uninstall: "claude-code" or "cursor".
+        /// Target to uninstall: "claude-code", "cursor", or "vscode-continue".
         #[arg(default_value = "claude-code")]
         target: String,
     },
@@ -85,6 +97,9 @@ pub fn run(args: SetupArgs) -> Result<()> {
         }
         SetupCommand::Cursor { install_binary, from } => {
             setup_cursor(install_binary, &from)
+        }
+        SetupCommand::VscodeContinue { install_binary, from } => {
+            setup_vscode_continue(install_binary, &from)
         }
         SetupCommand::Status => status(),
         SetupCommand::Uninstall { target } => uninstall(&target),
@@ -367,6 +382,27 @@ fn status() -> Result<()> {
         } else {
             println!("  Cursor:            · not detected");
         }
+
+        // VS Code + Continue status
+        let continue_config = home.join(".continue/config.json");
+        if continue_config.exists() {
+            let text = std::fs::read_to_string(&continue_config).unwrap_or_default();
+            let parsed: serde_json::Value = serde_json::from_str(&text).unwrap_or(json!({}));
+            let configured = parsed
+                .pointer("/experimental/modelContextProtocolServers")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().any(|s| s.get("name").and_then(|n| n.as_str()) == Some("leet")))
+                .unwrap_or(false);
+            println!(
+                "  VS Code+Continue:  {} {}",
+                if configured { "✓" } else { "✗" },
+                if configured { "configured".to_string() } else {
+                    "detected but not configured (run `leet setup vscode-continue`)".to_string()
+                }
+            );
+        } else {
+            println!("  VS Code+Continue:  · not detected");
+        }
     }
 
     Ok(())
@@ -377,8 +413,9 @@ fn status() -> Result<()> {
 fn uninstall(target: &str) -> Result<()> {
     match target {
         "cursor" => return uninstall_cursor(),
+        "vscode-continue" => return uninstall_vscode_continue(),
         "claude-code" => {}
-        _ => bail!("unknown target `{target}` — supported: `claude-code`, `cursor`"),
+        _ => bail!("unknown target `{target}` — supported: `claude-code`, `cursor`, `vscode-continue`"),
     }
 
     let claude_dir = detect_claude_dir()?;
@@ -668,6 +705,236 @@ fn uninstall_cursor() -> Result<()> {
     Ok(())
 }
 
+// ─── setup vscode-continue ───────────────────────────────────────────────────
+
+fn setup_vscode_continue(install_binary: bool, workspace_root: &Path) -> Result<()> {
+    let binary_path = locate_or_install_mcp_binary(install_binary, workspace_root)?;
+    println!("  ✓ leet-mcp binary at {}", binary_path.display());
+
+    let continue_dir = detect_continue_dir()?;
+    println!("  ✓ Detected Continue.dev config at {}", continue_dir.display());
+
+    register_continue_mcp(&continue_dir, &binary_path)?;
+    println!("  ✓ Registered MCP server in {}/config.json", continue_dir.display());
+
+    let sm_path = install_continue_system_message(&continue_dir)?;
+    println!("  ✓ Installed system message at {}", sm_path.display());
+
+    println!();
+    println!("  Note: leet uses Continue's experimental MCP support (config under 'experimental').");
+    println!("        The schema may change in future Continue.dev versions.");
+    println!();
+    println!("  To activate the system message in Continue:");
+    println!("    Settings → System Message → select 'leet'");
+    println!();
+    println!("  Restart VS Code for changes to take effect.");
+    Ok(())
+}
+
+fn detect_continue_dir() -> Result<PathBuf> {
+    let home = dirs_home().ok_or_else(|| anyhow!("no HOME directory"))?;
+    let primary = home.join(".continue");
+    let searched = vec![primary.clone()];
+
+    if primary.exists() {
+        return Ok(primary);
+    }
+
+    if has_continue_via_vscode() {
+        std::fs::create_dir_all(&primary)
+            .with_context(|| format!("creating {}", primary.display()))?;
+        return Ok(primary);
+    }
+
+    // VS Code installed but Continue missing — different error message
+    if has_vscode_binary() || is_vscode_installed_platform() {
+        leet_core::bail_user!(leet_core::UserFacingError::VsCodeContinueNotFound { searched })
+    }
+
+    leet_core::bail_user!(leet_core::UserFacingError::VsCodeContinueNotFound { searched })
+}
+
+fn has_vscode_binary() -> bool {
+    Command::new("which")
+        .arg("code")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+fn has_continue_via_vscode() -> bool {
+    let output = Command::new("code")
+        .arg("--list-extensions")
+        .output();
+    match output {
+        Ok(o) if o.status.success() => {
+            let list = String::from_utf8_lossy(&o.stdout);
+            list.lines().any(|l| l.trim().eq_ignore_ascii_case("continue.continue"))
+        }
+        _ => false,
+    }
+}
+
+fn is_vscode_installed_platform() -> bool {
+    #[cfg(target_os = "macos")]
+    { std::path::Path::new("/Applications/Visual Studio Code.app").exists() }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::path::Path::new("/opt/visual-studio-code").exists()
+            || std::path::Path::new("/usr/share/code").exists()
+            || std::path::Path::new("/snap/code").exists()
+            || dirs_home()
+                .map(|h| h.join(".vscode").exists())
+                .unwrap_or(false)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::env::var("LOCALAPPDATA")
+            .ok()
+            .map(|p| std::path::Path::new(&p).join("Programs/Microsoft VS Code").exists())
+            .unwrap_or(false)
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+    { false }
+}
+
+fn register_continue_mcp(continue_dir: &Path, binary_path: &Path) -> Result<()> {
+    let config_path = continue_dir.join("config.json");
+
+    let mut config: serde_json::Value = if config_path.exists() {
+        let text = std::fs::read_to_string(&config_path)
+            .with_context(|| format!("reading {}", config_path.display()))?;
+        if text.trim().is_empty() {
+            json!({})
+        } else {
+            match serde_json::from_str(&text) {
+                Ok(v) => v,
+                Err(e) => leet_core::bail_user!(leet_core::UserFacingError::SettingsFileMalformed {
+                    path: config_path.clone(),
+                    details: e.to_string(),
+                }),
+            }
+        }
+    } else {
+        json!({})
+    };
+
+    let binary_str = binary_path
+        .to_str()
+        .ok_or_else(|| anyhow!("binary path is not valid UTF-8"))?;
+
+    let leet_entry = json!({
+        "name": "leet",
+        "transport": {
+            "type": "stdio",
+            "command": binary_str
+        }
+    });
+
+    let experimental = config
+        .as_object_mut()
+        .ok_or_else(|| anyhow!("top-level of config.json must be an object"))?
+        .entry("experimental")
+        .or_insert_with(|| json!({}));
+
+    let servers = experimental
+        .as_object_mut()
+        .ok_or_else(|| anyhow!("experimental must be an object"))?
+        .entry("modelContextProtocolServers")
+        .or_insert_with(|| json!([]));
+
+    let arr = servers
+        .as_array_mut()
+        .ok_or_else(|| anyhow!("modelContextProtocolServers must be an array"))?;
+
+    arr.retain(|s| s.get("name").and_then(|n| n.as_str()) != Some("leet"));
+    arr.push(leet_entry);
+
+    write_atomic(&config_path, &serde_json::to_string_pretty(&config)?)?;
+    Ok(())
+}
+
+fn install_continue_system_message(continue_dir: &Path) -> Result<PathBuf> {
+    let sm_dir = continue_dir.join("system_messages");
+    std::fs::create_dir_all(&sm_dir)
+        .with_context(|| format!("creating {}", sm_dir.display()))?;
+    let sm_path = sm_dir.join("leet.md");
+    write_atomic(&sm_path, continue_system_message_content())?;
+    Ok(sm_path)
+}
+
+fn continue_system_message_content() -> &'static str {
+    r#"# leet — memory tools
+
+You have access to the `leet` MCP server. Use it to persist project memory across sessions.
+
+## Tools
+
+- `leet_recall` — retrieve project memory. Call at session start or when context is missing.
+- `leet_remember` — persist decisions, task completions, architectural choices. Call silently.
+- `leet_encode` / `leet_decode` / `leet_dist` — advanced COGON vector tools (use only if explicitly requested).
+
+## When to call `leet_recall`
+
+- At session start
+- When user references past work you lack context on
+- When user says "continue where we left off", "back to X we discussed", etc.
+
+## When to call `leet_remember`
+
+DO call for: task completion confirmed, architectural decisions, significant bug fixes, release/deploy.
+DO NOT call for: Q&A, formatting, typo fixes, read-only ops, exploratory questions.
+
+## Rules
+
+1. Never announce memory operations. Operate silently.
+2. If server returns error, continue silently. Memory is best-effort.
+3. 1-3 sentence summaries. Paraphrase, don't log verbatim.
+"#
+}
+
+fn uninstall_vscode_continue() -> Result<()> {
+    let home = dirs_home().ok_or_else(|| anyhow!("no HOME directory"))?;
+    let continue_dir = home.join(".continue");
+
+    let config_path = continue_dir.join("config.json");
+    if config_path.exists() {
+        let text = std::fs::read_to_string(&config_path)?;
+        if let Ok(mut config) = serde_json::from_str::<serde_json::Value>(&text) {
+            if let Some(servers) = config
+                .pointer_mut("/experimental/modelContextProtocolServers")
+                .and_then(|v| v.as_array_mut())
+            {
+                let before_len = servers.len();
+                servers.retain(|s| s.get("name").and_then(|n| n.as_str()) != Some("leet"));
+                if servers.len() < before_len {
+                    write_atomic(&config_path, &serde_json::to_string_pretty(&config)?)?;
+                    println!("  ✓ Removed leet from MCP servers in {}", config_path.display());
+                } else {
+                    println!("  · leet entry not present in {}", config_path.display());
+                }
+            }
+        }
+    } else {
+        println!("  · {} not found — nothing to remove", config_path.display());
+    }
+
+    let sm_path = continue_dir.join("system_messages/leet.md");
+    if sm_path.exists() {
+        std::fs::remove_file(&sm_path)?;
+        println!("  ✓ Removed system message at {}", sm_path.display());
+    } else {
+        println!("  · System message not found at {}", sm_path.display());
+    }
+
+    println!();
+    println!("  Your per-project .leet/ directories are untouched.");
+    Ok(())
+}
+
 fn remove_leet_block(content: &str) -> String {
     let mut result = String::new();
     let mut in_block = false;
@@ -897,5 +1164,115 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         std::fs::write(tmp.path().join("Cargo.toml"), "[package]\n").unwrap();
         assert!(looks_like_project(tmp.path()));
+    }
+
+    // ── VS Code + Continue tests ───────────────────────────────────────────────
+
+    #[test]
+    fn register_continue_mcp_creates_config_from_scratch() {
+        let tmp = tempfile::tempdir().unwrap();
+        register_continue_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+
+        let text = std::fs::read_to_string(tmp.path().join("config.json")).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let servers = v.pointer("/experimental/modelContextProtocolServers").unwrap().as_array().unwrap();
+        assert_eq!(servers.len(), 1);
+        assert_eq!(servers[0]["name"], "leet");
+        assert_eq!(servers[0]["transport"]["command"], "/fake/leet-mcp");
+    }
+
+    #[test]
+    fn register_continue_mcp_preserves_existing_servers() {
+        let tmp = tempfile::tempdir().unwrap();
+        let config_path = tmp.path().join("config.json");
+        let initial = json!({
+            "experimental": {
+                "modelContextProtocolServers": [
+                    { "name": "other", "transport": { "type": "stdio", "command": "/x" } }
+                ]
+            }
+        });
+        std::fs::write(&config_path, serde_json::to_string(&initial).unwrap()).unwrap();
+
+        register_continue_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+
+        let text = std::fs::read_to_string(&config_path).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let servers = v.pointer("/experimental/modelContextProtocolServers").unwrap().as_array().unwrap();
+        assert_eq!(servers.len(), 2);
+        let names: Vec<&str> = servers.iter().filter_map(|s| s["name"].as_str()).collect();
+        assert!(names.contains(&"other"));
+        assert!(names.contains(&"leet"));
+    }
+
+    #[test]
+    fn register_continue_mcp_idempotent() {
+        let tmp = tempfile::tempdir().unwrap();
+        register_continue_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+        register_continue_mcp(tmp.path(), Path::new("/fake/leet-mcp")).unwrap();
+
+        let text = std::fs::read_to_string(tmp.path().join("config.json")).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let servers = v.pointer("/experimental/modelContextProtocolServers").unwrap().as_array().unwrap();
+        assert_eq!(servers.len(), 1, "should not duplicate leet entry");
+    }
+
+    #[test]
+    fn register_continue_mcp_updates_binary_path_on_reinstall() {
+        let tmp = tempfile::tempdir().unwrap();
+        register_continue_mcp(tmp.path(), Path::new("/old/leet-mcp")).unwrap();
+        register_continue_mcp(tmp.path(), Path::new("/new/leet-mcp")).unwrap();
+
+        let text = std::fs::read_to_string(tmp.path().join("config.json")).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let servers = v.pointer("/experimental/modelContextProtocolServers").unwrap().as_array().unwrap();
+        assert_eq!(servers.len(), 1);
+        assert_eq!(servers[0]["transport"]["command"], "/new/leet-mcp");
+    }
+
+    #[test]
+    fn install_continue_system_message_creates_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let sm_path = install_continue_system_message(tmp.path()).unwrap();
+        assert!(sm_path.exists());
+        let content = std::fs::read_to_string(&sm_path).unwrap();
+        assert!(content.contains("leet_recall"));
+        assert!(content.contains("leet_remember"));
+    }
+
+    #[test]
+    fn install_continue_system_message_overwrites_existing() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("system_messages")).unwrap();
+        std::fs::write(tmp.path().join("system_messages/leet.md"), "old content").unwrap();
+
+        install_continue_system_message(tmp.path()).unwrap();
+
+        let content = std::fs::read_to_string(tmp.path().join("system_messages/leet.md")).unwrap();
+        assert!(!content.contains("old content"));
+        assert!(content.contains("leet_recall"));
+    }
+
+    #[test]
+    fn continue_uninstall_removes_only_leet_entry() {
+        let initial = json!({
+            "experimental": {
+                "modelContextProtocolServers": [
+                    { "name": "other", "transport": { "type": "stdio", "command": "/x" } },
+                    { "name": "leet", "transport": { "type": "stdio", "command": "/y" } }
+                ]
+            }
+        });
+        let text = serde_json::to_string(&initial).unwrap();
+        let mut config: serde_json::Value = serde_json::from_str(&text).unwrap();
+        if let Some(servers) = config
+            .pointer_mut("/experimental/modelContextProtocolServers")
+            .and_then(|v| v.as_array_mut())
+        {
+            servers.retain(|s| s.get("name").and_then(|n| n.as_str()) != Some("leet"));
+        }
+        let servers = config.pointer("/experimental/modelContextProtocolServers").unwrap().as_array().unwrap();
+        assert_eq!(servers.len(), 1);
+        assert_eq!(servers[0]["name"], "other");
     }
 }

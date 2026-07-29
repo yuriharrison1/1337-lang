@@ -224,7 +224,16 @@ impl IdesCheck {
     fn check_continue(&self, home: &std::path::Path) -> Vec<String> {
         let config = home.join(".continue/config.json");
         if config.exists() {
-            vec![format!("VS Code (Continue) detected   {}", config.display())]
+            let text = std::fs::read_to_string(&config).unwrap_or_default();
+            let parsed: serde_json::Value = serde_json::from_str(&text).unwrap_or(json!({}));
+            let configured = parsed
+                .pointer("/experimental/modelContextProtocolServers")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().any(|s| s.get("name").and_then(|n| n.as_str()) == Some("leet")))
+                .unwrap_or(false);
+            vec![format!("VS Code (Continue) {}  {}",
+                if configured { "configured" } else { "not configured" },
+                config.display())]
         } else {
             vec!["VS Code (Continue) not detected".into()]
         }
