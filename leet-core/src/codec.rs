@@ -13,7 +13,7 @@
 //!   - id: 16 bytes (UUID)                         bytes  0..16
 //!   - sem: 32 bytes (32 uint8, quantized)         bytes 16..48
 //!   - reserved: 32 bytes (always zero, v0.5.1)    bytes 48..80
-//!   - stamp: 8 bytes (u64 nanoseconds)            bytes 80..88
+//!   - stamp: 8 bytes (i64 milliseconds)            bytes 80..88
 //!
 //! Checksum:
 //!   - CRC32 of header + payload for integrity verification
@@ -85,7 +85,7 @@ pub fn encode_cogon(cogon: &Cogon) -> Vec<u8> {
     // Payload: reserved 32 bytes (zeros; was unc in v0.4 — kept for wire compat)
     buf.extend_from_slice(&[0u8; 32]);
 
-    // Payload: stamp (8 bytes, big-endian u64)
+    // Payload: stamp (8 bytes, big-endian i64 milliseconds)
     buf.extend_from_slice(&cogon.stamp.to_be_bytes());
 
     // Checksum: CRC32 of header + payload

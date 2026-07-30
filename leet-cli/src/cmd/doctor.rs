@@ -523,7 +523,9 @@ fn try_auto_fix(checks: &mut [(String, CheckResult)], project_root: &std::path::
                 }
             }
             "w_matrix" => {
-                let _ = try_download_w();
+                if try_download_w().is_ok() {
+                    *result = CheckResult::Ok { details: vec!["auto-fix: downloaded W matrix".into()] };
+                }
             }
             "project" => {
                 if let CheckResult::Error { .. } = result {
