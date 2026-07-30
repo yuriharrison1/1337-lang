@@ -18,10 +18,10 @@ name = "leet"
 path = "src/main.rs"
 
 [dependencies]
-leet-core = { path = "../leet-core", version = "0.5.1" }
-leet-bridge = { path = "../leet-bridge", version = "0.5.1", features = ["keyword-fallback"] }
-leet-mcp = { path = "../leet-mcp", version = "0.5.1" }
-leet-service = { path = "../leet-service", version = "0.5.1" }
+leet-core = { path = "../leet-core", version = "1.0.0" }
+leet-bridge = { path = "../leet-bridge", version = "1.0.0", features = ["keyword-fallback"] }
+leet-mcp = { path = "../leet-mcp", version = "1.0.0" }
+leet-service = { path = "../leet-service", version = "1.0.0" }
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
 crossterm = "0.27"

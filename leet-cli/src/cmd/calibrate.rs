@@ -11,7 +11,7 @@ use leet_bridge::projector::{default_user_w_path, WMatrix};
 use leet_core::UserFacingError;
 
 const W_DOWNLOAD_URL_TEMPLATE: &str =
-    "https://cdn.leetlang.org/w/v{VERSION}/W.bin";
+    "https://github.com/yuriharrison1/1337-lang/releases/download/v{VERSION}/W.bin";
 
 #[derive(Debug, Args)]
 #[command(

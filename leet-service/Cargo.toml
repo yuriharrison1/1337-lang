@@ -14,8 +14,8 @@ documentation = "https://docs.rs/leet-service"
 readme = "README.md"
 
 [dependencies]
-leet-core = { path = "../leet-core", version = "0.5.1" }
-leet-bridge = { path = "../leet-bridge", version = "0.5.1" }
+leet-core = { path = "../leet-core", version = "1.0.0" }
+leet-bridge = { path = "../leet-bridge", version = "1.0.0" }
 tonic = "0.11"
 prost = "0.12"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "time", "net"] }

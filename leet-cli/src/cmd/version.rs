@@ -18,7 +18,7 @@ pub fn run(json: bool) {
 mod tests {
     #[test]
     fn test_version_constants() {
-        assert_eq!(leet_core::VERSION, "0.5.1");
-        assert_eq!(leet_core::SPEC_VERSION, "0.5.1");
+        assert_eq!(leet_core::VERSION, env!("CARGO_PKG_VERSION"));
+        assert_eq!(leet_core::SPEC_VERSION, env!("CARGO_PKG_VERSION"));
     }
 }

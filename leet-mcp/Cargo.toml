@@ -22,8 +22,8 @@ name = "leet-mcp"
 path = "src/main.rs"
 
 [dependencies]
-leet-core = { path = "../leet-core", version = "0.5.1" }
-leet-bridge = { path = "../leet-bridge", version = "0.5.1", features = ["keyword-fallback"] }
+leet-core = { path = "../leet-core", version = "1.0.0" }
+leet-bridge = { path = "../leet-bridge", version = "1.0.0", features = ["keyword-fallback"] }
 
 tokio = { workspace = true }
 anyhow = { workspace = true }

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-29
+
+### Added
+- **Cursor adapter** — `leet setup cursor` registers leet-mcp in `~/.cursor/mcp.json`
+  and injects per-project instructions into `.cursorrules` (idempotent).
+- **VS Code + Continue.dev adapter** — `leet setup vscode-continue` registers leet-mcp
+  under `experimental.modelContextProtocolServers` in `~/.continue/config.json` and
+  installs `~/.continue/system_messages/leet.md`.
+- **`leet setup uninstall cursor/vscode-continue`** — clean removal for both new adapters.
+- **`leet setup status`** — now reports Cursor and VS Code+Continue status.
+- **W.bin hosted on GitHub Releases** — `leet calibrate --download` now fetches from
+  `https://github.com/yuriharrison1/1337-lang/releases/download/v{VERSION}/W.bin`.
+
+### Fixed
+- `doctor --auto-fix` for `w_matrix` now updates check status on successful download
+  (previously result was silently discarded).
+- `codec.rs` doc comment: stamp is `i64 milliseconds`, not `u64 nanoseconds`.
+- CLI `encode`/`dist`/`blend` now use `project_text_simple` (same projector as MCP
+  server), eliminating COGON inconsistency between CLI and MCP tools.
+- `doctor --auto-fix` for `project` now actually rebuilds the index (was a no-op).
+- `leet inspect` description corrected to match implementation.
+
+### Changed
+- Clippy: all warnings resolved (`ptr_arg`, `needless_range_loop`, `needless_as_bytes`,
+  `needless_borrows_for_generic_args`).
+
 ## [0.5.1] - 2026-05-13
 
 ### Added

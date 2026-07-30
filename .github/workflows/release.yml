@@ -98,6 +98,9 @@ jobs:
           path: dist/
           merge-multiple: true
 
+      - name: Add W.bin to dist
+        run: cp calibration/data/W.bin dist/W.bin
+
       - name: Extract changelog entry
         id: changelog
         run: |
