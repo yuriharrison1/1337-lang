@@ -952,7 +952,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "leet-bridge"
-version = "0.5.1"
+version = "1.0.0"
 dependencies = [
  "leet-core",
  "reqwest",
@@ -966,7 +966,7 @@ dependencies = [
 
 [[package]]
 name = "leet-cli"
-version = "0.5.1"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -989,7 +989,7 @@ dependencies = [
 
 [[package]]
 name = "leet-core"
-version = "0.5.1"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "crc32fast",
@@ -1003,7 +1003,7 @@ dependencies = [
 
 [[package]]
 name = "leet-mcp"
-version = "0.5.1"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "leet-bridge",
@@ -1021,7 +1021,7 @@ dependencies = [
 
 [[package]]
 name = "leet-service"
-version = "0.5.1"
+version = "1.0.0"
 dependencies = [
  "bincode",
  "clap",

@@ -6,8 +6,11 @@
 pub mod axes;
 pub mod codec;
 pub mod error;
+pub mod ffi;
 pub mod operators;
 pub mod protocol;
+#[cfg(feature = "python")]
+pub mod python;
 pub mod types;
 pub mod user_error;
 pub mod validate;

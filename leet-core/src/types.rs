@@ -73,6 +73,7 @@ pub struct Cogon {
     /// Unix timestamp millis.
     pub stamp: i64,
     /// Optional raw attachment.
+    #[serde(default)]
     pub raw: Option<RawField>,
 }
 

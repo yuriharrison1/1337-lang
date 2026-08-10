@@ -14,6 +14,9 @@ documentation = "https://docs.rs/leet-core"
 readme = "README.md"
 exclude = ["tests/fixtures/*", "benches/*"]
 
+[lib]
+crate-type = ["rlib", "cdylib"]
+
 [dependencies]
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }

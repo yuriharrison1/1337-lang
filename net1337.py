@@ -200,10 +200,10 @@ if _rust is None:
     import glob
     
     search_paths = [
-        "leet1337/target/release/libleet_core.so",
-        "leet1337/target/release/libleet_core.dylib",
-        "../leet1337/target/release/libleet_core.so",
-        "../leet1337/target/release/libleet_core.dylib",
+        "target/release/libleet_core.so",
+        "target/release/libleet_core.dylib",
+        "../target/release/libleet_core.so",
+        "../target/release/libleet_core.dylib",
     ]
     for path in search_paths:
         matches = glob.glob(path)
@@ -219,8 +219,34 @@ if _rust is None:
 if RUST_BACKEND is None:
     print("⚠ Rust backend NÃO disponível. Humano usará fallback pure-python.")
     print("  Para ativar Rust:")
-    print("    PyO3:  cd leet1337 && maturin develop --features python")
-    print("    FFI:   cd leet1337 && cargo build --release")
+    print("    PyO3:  maturin develop --manifest-path leet-core/Cargo.toml --features python")
+    print("    FFI:   cargo build --release --package leet-core")
+
+
+def _inject_default_unc(json_str: str) -> str:
+    """leet-core (v0.5.1) Cogon has no `unc` field (replaced by axis P6_CONFIDENCE).
+    The local Python Cogon here still requires it, so we backfill zeros at this
+    single boundary rather than touching the Rust type or every call site."""
+    d = json.loads(json_str)
+    d.setdefault("unc", [0.0] * FIXED_DIMS)
+    return json.dumps(d)
+
+
+def _ffi_owned_str(ptr: int) -> Optional[str]:
+    """Decode + free a `char*` owned by leet-core, returned as a raw address.
+
+    IMPORTANT: the ctypes call site MUST set `.restype = ctypes.c_void_p`
+    (not `c_char_p`) so we get the raw pointer back — `c_char_p` restype
+    makes ctypes auto-copy the bytes and discard the pointer, so there is
+    nothing left to hand to `leet_free_string` (passing the copy back in
+    causes `CString::from_raw` to free memory Rust never allocated —
+    undefined behavior / heap corruption).
+    """
+    if not ptr:
+        return None
+    s = ctypes.cast(ptr, ctypes.c_char_p).value.decode("utf-8")
+    _lib.leet_free_string(ctypes.c_void_p(ptr))
+    return s
 
 
 class RustBridge:
@@ -228,41 +254,50 @@ class RustBridge:
 
     def __init__(self):
         self.mode = RUST_BACKEND
+        if self.mode == "ffi" and _lib:
+            _lib.leet_free_string.argtypes = [ctypes.c_void_p]
+            _lib.leet_free_string.restype = None
+            _lib.leet_cogon_zero.restype = ctypes.c_void_p
+            _lib.leet_cogon_new.restype = ctypes.c_void_p
+            _lib.leet_cogon_new.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.c_size_t]
+            _lib.leet_blend.restype = ctypes.c_void_p
+            _lib.leet_blend.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_float]
+            _lib.leet_dist.restype = ctypes.c_float
+            _lib.leet_dist.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+            _lib.leet_version.restype = ctypes.c_void_p
 
     def available(self) -> bool:
         return self.mode is not None
 
     def create_cogon(self, sem: list[float], unc: list[float]) -> str:
-        """Cria COGON via Rust. Retorna JSON."""
+        """Cria COGON via Rust. Retorna JSON. `unc` é ignorado pelo Rust
+        (v0.5.1 não tem esse campo) e reintroduzido como zeros no retorno."""
         if self.mode == "pyo3" and _rust:
-            return _rust.cogon_new(sem, unc)
+            return _inject_default_unc(_rust.cogon_new(sem))
         elif self.mode == "ffi" and _lib:
             c_sem = (ctypes.c_float * 32)(*sem)
-            c_unc = (ctypes.c_float * 32)(*unc)
-            _lib.leet_cogon_new.restype = ctypes.c_char_p
-            result = _lib.leet_cogon_new(c_sem, c_unc, 32)
-            return result.decode("utf-8") if result else None
+            json_str = _ffi_owned_str(_lib.leet_cogon_new(c_sem, 32))
+            return _inject_default_unc(json_str) if json_str else None
         return None
 
     def cogon_zero(self) -> str:
         """COGON_ZERO via Rust."""
         if self.mode == "pyo3" and _rust:
-            return _rust.cogon_zero()
+            return _inject_default_unc(_rust.cogon_zero())
         elif self.mode == "ffi" and _lib:
-            _lib.leet_cogon_zero.restype = ctypes.c_char_p
-            result = _lib.leet_cogon_zero()
-            return result.decode("utf-8") if result else None
+            json_str = _ffi_owned_str(_lib.leet_cogon_zero())
+            return _inject_default_unc(json_str) if json_str else None
         return None
 
     def blend(self, c1_json: str, c2_json: str, alpha: float) -> str:
         """BLEND via Rust."""
         if self.mode == "pyo3" and _rust:
-            return _rust.blend(c1_json, c2_json, alpha)
+            return _inject_default_unc(_rust.blend(c1_json, c2_json, alpha))
         elif self.mode == "ffi" and _lib:
-            _lib.leet_blend.restype = ctypes.c_char_p
-            _lib.leet_blend.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_float]
-            result = _lib.leet_blend(c1_json.encode(), c2_json.encode(), alpha)
-            return result.decode("utf-8") if result else None
+            json_str = _ffi_owned_str(
+                _lib.leet_blend(c1_json.encode(), c2_json.encode(), alpha)
+            )
+            return _inject_default_unc(json_str) if json_str else None
         return None
 
     def dist(self, c1_json: str, c2_json: str) -> float:
@@ -270,8 +305,6 @@ class RustBridge:
         if self.mode == "pyo3" and _rust:
             return _rust.dist(c1_json, c2_json)
         elif self.mode == "ffi" and _lib:
-            _lib.leet_dist.restype = ctypes.c_float
-            _lib.leet_dist.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
             return _lib.leet_dist(c1_json.encode(), c2_json.encode())
         return 0.0
 
@@ -279,8 +312,7 @@ class RustBridge:
         if self.mode == "pyo3" and _rust:
             return _rust.version()
         elif self.mode == "ffi" and _lib:
-            _lib.leet_version.restype = ctypes.c_char_p
-            return _lib.leet_version().decode("utf-8")
+            return _ffi_owned_str(_lib.leet_version()) or "N/A"
         return "N/A"
 
 
