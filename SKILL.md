@@ -48,9 +48,8 @@ bus, enabling lossless, compressed communication without natural language overhe
 │   │   ├── bridge.py         ← MockProjector, text_to_cogon, cogon_to_text
 │   │   └── cli.py            ← Click CLI: encode|decode|zero|blend|dist|axes|validate
 │   └── tests/
-├── examples/
-│   └── net1337.py            ← Interactive IRC-style multi-agent simulator
-└── prompts/                  ← Implementation prompts (PROMPT_00..06)
+└── examples/
+    └── net1337.py            ← Interactive IRC-style multi-agent simulator
 ```
 
 ---
