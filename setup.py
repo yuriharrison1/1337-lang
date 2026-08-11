@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-setup.py — Configuração interativa do protocolo 1337.
-Lê/salva em .env e opcionalmente atualiza docker-compose.yml.
+setup.py — Interactive configuration for the 1337 protocol.
+Reads/writes .env and optionally updates docker-compose.yml.
 """
 
 import os
@@ -75,7 +75,7 @@ def get(env: dict, key: str, default: str = "") -> str:
 
 def ask(prompt: str, current: str = "", hint: str = "") -> str:
     """Single-line prompt. Enter keeps current value."""
-    display_current = dim(f"[{current}]") if current else dim("[vazio]")
+    display_current = dim(f"[{current}]") if current else dim("[empty]")
     hint_str = f"  {dim(hint)}" if hint else ""
     full_prompt = f"  {cyan('›')} {prompt} {display_current}{hint_str}: "
     try:
@@ -93,7 +93,7 @@ def ask_choice(prompt: str, options: list, current: str = "") -> str:
         print(f"    {marker} {i}. {opt}")
     display_current = dim(f"[{current}]") if current else ""
     try:
-        raw = input(f"  Escolha (número ou Enter para manter {display_current}): ").strip()
+        raw = input(f"  Choose (number or Enter to keep {display_current}): ").strip()
     except (EOFError, KeyboardInterrupt):
         print()
         return current
@@ -106,13 +106,13 @@ def ask_choice(prompt: str, options: list, current: str = "") -> str:
     except ValueError:
         if raw in options:
             return raw
-    print(red("  Opção inválida, mantendo valor atual."))
+    print(red("  Invalid option, keeping current value."))
     return current
 
 def ask_secret(prompt: str, current: str = "") -> str:
     """Prompt for secret — shows masked current value."""
     masked = ("*" * min(len(current), 8) + current[-4:]) if len(current) > 4 else ("*" * len(current))
-    display = dim(f"[{masked}]") if current else dim("[não configurado]")
+    display = dim(f"[{masked}]") if current else dim("[not configured]")
     full_prompt = f"  {cyan('›')} {prompt} {display}: "
     try:
         val = input(full_prompt).strip()
@@ -122,7 +122,7 @@ def ask_secret(prompt: str, current: str = "") -> str:
     return val if val else current
 
 def confirm(prompt: str, default: bool = True) -> bool:
-    suffix = dim("S/n") if default else dim("s/N")
+    suffix = dim("Y/n") if default else dim("y/N")
     try:
         raw = input(f"  {cyan('?')} {prompt} [{suffix}]: ").strip().lower()
     except (EOFError, KeyboardInterrupt):
@@ -155,21 +155,21 @@ def info(msg: str):
 # ─── Configuration sections ───────────────────────────────────────────────────
 
 def configure_service(env: dict) -> dict:
-    header("SERVIÇO 1337  (leet-service)")
+    header("1337 SERVICE  (leet-service)")
 
-    section("Rede")
-    env["LEET_PORT"] = ask("Porta gRPC", get(env, "LEET_PORT", "50051"))
+    section("Network")
+    env["LEET_PORT"] = ask("gRPC port", get(env, "LEET_PORT", "50051"))
 
-    section("Backend de computação")
+    section("Compute backend")
     env["LEET_BACKEND"] = ask_choice(
-        "Backend de projeção vetorial",
+        "Vector projection backend",
         ["simd", "cpu", "mock"],
         get(env, "LEET_BACKEND", "simd"),
     )
 
     section("Store")
     store_type = ask_choice(
-        "Backend de armazenamento",
+        "Storage backend",
         ["memory", "redis", "sqlite"],
         "redis" if get(env, "LEET_STORE", "memory").startswith("redis") else
         "sqlite" if get(env, "LEET_STORE", "memory").startswith("sqlite") else "memory",
@@ -178,29 +178,29 @@ def configure_service(env: dict) -> dict:
         env["LEET_STORE"] = "memory"
     elif store_type == "redis":
         env["LEET_STORE"] = ask(
-            "URL Redis", get(env, "LEET_STORE", "redis://localhost:6379"),
-            "ex: redis://localhost:6379"
+            "Redis URL", get(env, "LEET_STORE", "redis://localhost:6379"),
+            "e.g.: redis://localhost:6379"
         )
     else:
         env["LEET_STORE"] = ask(
-            "URL SQLite", get(env, "LEET_STORE", "sqlite://./leet.db"),
-            "ex: sqlite://./leet.db"
+            "SQLite URL", get(env, "LEET_STORE", "sqlite://./leet.db"),
+            "e.g.: sqlite://./leet.db"
         )
 
-    section("Batch de encoding")
+    section("Encoding batch")
     env["LEET_BATCH_WINDOW"] = ask(
-        "Janela de batch (ms)",
+        "Batch window (ms)",
         get(env, "LEET_BATCH_WINDOW", "10"),
-        "tempo de espera para agrupar chamadas",
+        "wait time to group calls together",
     )
     env["LEET_BATCH_MAX"] = ask(
-        "Tamanho máximo do batch",
+        "Maximum batch size",
         get(env, "LEET_BATCH_MAX", "64"),
     )
 
     section("Logging")
     env["RUST_LOG"] = ask_choice(
-        "Nível de log (Rust)",
+        "Log level (Rust)",
         ["error", "warn", "info", "debug", "trace"],
         get(env, "RUST_LOG", "info"),
     )
@@ -209,10 +209,10 @@ def configure_service(env: dict) -> dict:
 
 
 def configure_embedding(env: dict) -> dict:
-    header("EMBEDDING  (modelo de projeção semântica)")
+    header("EMBEDDING  (semantic projection model)")
 
     model = ask_choice(
-        "Modelo de embedding",
+        "Embedding model",
         ["mock", "openai"],
         get(env, "LEET_EMBED_MODEL", "mock"),
     )
@@ -220,19 +220,19 @@ def configure_embedding(env: dict) -> dict:
 
     if model == "openai":
         env["LEET_EMBED_URL"] = ask(
-            "URL do endpoint OpenAI embeddings",
+            "OpenAI embeddings endpoint URL",
             get(env, "LEET_EMBED_URL", "https://api.openai.com/v1/embeddings"),
         )
         env["LEET_EMBED_KEY"] = ask_secret(
-            "Chave API OpenAI (LEET_EMBED_KEY)",
+            "OpenAI API key (LEET_EMBED_KEY)",
             get(env, "LEET_EMBED_KEY", ""),
         )
 
-    section("Matriz W")
+    section("W matrix")
     w_path = ask(
-        "Caminho para arquivo da matriz W",
+        "Path to W matrix file",
         get(env, "LEET_W_PATH", ""),
-        "deixe vazio para usar inicialização identidade",
+        "leave empty to use identity initialization",
     )
     if w_path:
         env["LEET_W_PATH"] = w_path
@@ -243,7 +243,7 @@ def configure_embedding(env: dict) -> dict:
 
 
 def configure_api_keys(env: dict) -> dict:
-    header("CHAVES DE API")
+    header("API KEYS")
 
     providers = [
         ("DEEPSEEK_API_KEY",   "DeepSeek",   "sk-..."),
@@ -255,14 +255,14 @@ def configure_api_keys(env: dict) -> dict:
 
     for key, name, hint in providers:
         current = get(env, key, "")
-        status = green("✓ configurado") if current else yellow("não configurado")
+        status = green("✓ configured") if current else yellow("not configured")
         print(f"\n  {bold(name)}  {status}")
-        if current or confirm(f"Configurar {name}?", default=not bool(current)):
-            val = ask_secret(f"Chave {name}", current)
+        if current or confirm(f"Configure {name}?", default=not bool(current)):
+            val = ask_secret(f"{name} key", current)
             if val:
                 env[key] = val
             elif key in env:
-                if confirm(f"Remover chave {name}?", default=False):
+                if confirm(f"Remove {name} key?", default=False):
                     del env[key]
 
     return env
@@ -271,44 +271,44 @@ def configure_api_keys(env: dict) -> dict:
 def configure_python_sdk(env: dict) -> dict:
     header("PYTHON SDK  (leet-py / python/leet)")
 
-    section("Conexão com o serviço")
+    section("Service connection")
     env["LEET_SERVER_HOST"] = ask(
-        "Host do serviço", get(env, "LEET_SERVER_HOST", "localhost")
+        "Service host", get(env, "LEET_SERVER_HOST", "localhost")
     )
     env["LEET_SERVER_PORT"] = ask(
-        "Porta do serviço", get(env, "LEET_SERVER_PORT", "50051")
+        "Service port", get(env, "LEET_SERVER_PORT", "50051")
     )
     env["LEET_SERVER_TIMEOUT"] = ask(
-        "Timeout (segundos)", get(env, "LEET_SERVER_TIMEOUT", "30.0")
+        "Timeout (seconds)", get(env, "LEET_SERVER_TIMEOUT", "30.0")
     )
 
     section("Cache")
     env["LEET_CACHE_BACKEND"] = ask_choice(
-        "Backend de cache do SDK",
+        "SDK cache backend",
         ["memory", "redis", "sqlite"],
         get(env, "LEET_CACHE_BACKEND", "memory"),
     )
     env["LEET_CACHE_TTL_SECONDS"] = ask(
-        "TTL do cache (segundos)", get(env, "LEET_CACHE_TTL_SECONDS", "3600")
+        "Cache TTL (seconds)", get(env, "LEET_CACHE_TTL_SECONDS", "3600")
     )
 
-    section("Projeção semântica")
+    section("Semantic projection")
     env["LEET_PROJECTION_BACKEND"] = ask_choice(
-        "Backend de projeção",
+        "Projection backend",
         ["mock", "anthropic", "openai", "grpc"],
         get(env, "LEET_PROJECTION_BACKEND", "mock"),
     )
 
     section("Debug")
     debug_val = ask_choice(
-        "Modo debug",
+        "Debug mode",
         ["false", "true"],
         get(env, "LEET_DEBUG", "false"),
     )
     env["LEET_DEBUG"] = debug_val
 
     env["LEET_LOG_LEVEL"] = ask_choice(
-        "Nível de log Python",
+        "Python log level",
         ["DEBUG", "INFO", "WARNING", "ERROR"],
         get(env, "LEET_LOG_LEVEL", "INFO"),
     )
@@ -317,25 +317,25 @@ def configure_python_sdk(env: dict) -> dict:
 
 
 def configure_experiment(env: dict) -> dict:
-    header("EXPERIMENTO DE COMPARAÇÃO  (comparison_1337_vs_english.py)")
+    header("COMPARISON EXPERIMENT  (comparison_1337_vs_english.py)")
 
-    section("Parâmetros do experimento")
+    section("Experiment parameters")
     env["LEET_EXP_ROUNDS"] = ask(
-        "Número de rounds", get(env, "LEET_EXP_ROUNDS", "25")
+        "Number of rounds", get(env, "LEET_EXP_ROUNDS", "25")
     )
     env["LEET_EXP_TOPIC"] = ask(
-        "Tópico de discussão", get(env, "LEET_EXP_TOPIC", "Eros (Amor)")
+        "Discussion topic", get(env, "LEET_EXP_TOPIC", "Eros (Amor)")
     )
     env["LEET_EXP_THRESHOLD"] = ask(
-        "Threshold delta semântico", get(env, "LEET_EXP_THRESHOLD", "0.01"),
-        "eixos com |Δ| acima disso entram no SparseDelta",
+        "Semantic delta threshold", get(env, "LEET_EXP_THRESHOLD", "0.01"),
+        "axes with |Δ| above this enter the SparseDelta",
     )
     env["LEET_EXP_WORKERS"] = ask(
-        "Workers paralelos (DeepSeek)", get(env, "LEET_EXP_WORKERS", "5")
+        "Parallel workers (DeepSeek)", get(env, "LEET_EXP_WORKERS", "5")
     )
 
     env["LEET_EXP_REPORT_DIR"] = ask(
-        "Diretório de relatórios", get(env, "LEET_EXP_REPORT_DIR", "./comparison_reports")
+        "Reports directory", get(env, "LEET_EXP_REPORT_DIR", "./comparison_reports")
     )
 
     return env
@@ -346,61 +346,61 @@ def configure_claude_code(env: dict) -> dict:
 
     import subprocess
 
-    # ── Verifica se cargo está disponível ──────────────────────────────────────
+    # ── Check whether cargo is available ────────────────────────────────────────
     if not shutil.which("cargo"):
-        warn("cargo não encontrado no PATH. Instale o Rust antes de continuar.")
+        warn("cargo not found in PATH. Install Rust before continuing.")
         return env
 
     # ── Build + install leet-mcp ───────────────────────────────────────────────
-    section("Instalando leet-mcp")
-    info("cargo install --path leet-mcp --bin leet-mcp  (pode demorar na primeira vez)")
+    section("Installing leet-mcp")
+    info("cargo install --path leet-mcp --bin leet-mcp  (may take a while on first run)")
     result = subprocess.run(
         ["cargo", "install", "--path", "leet-mcp", "--bin", "leet-mcp"],
         capture_output=True, text=True
     )
     if result.returncode != 0:
-        warn("Falha ao instalar leet-mcp:")
-        print(red(result.stderr[-800:] if result.stderr else "(sem output)"))
+        warn("Failed to install leet-mcp:")
+        print(red(result.stderr[-800:] if result.stderr else "(no output)"))
         return env
-    ok("leet-mcp instalado em ~/.cargo/bin/leet-mcp")
+    ok("leet-mcp installed at ~/.cargo/bin/leet-mcp")
 
     # ── Build + install leet CLI ───────────────────────────────────────────────
-    section("Instalando leet CLI")
+    section("Installing leet CLI")
     result = subprocess.run(
         ["cargo", "install", "--path", "leet-cli", "--bin", "leet"],
         capture_output=True, text=True
     )
     if result.returncode != 0:
-        warn("Falha ao instalar leet CLI:")
-        print(red(result.stderr[-800:] if result.stderr else "(sem output)"))
+        warn("Failed to install leet CLI:")
+        print(red(result.stderr[-800:] if result.stderr else "(no output)"))
         return env
-    ok("leet instalado em ~/.cargo/bin/leet")
+    ok("leet installed at ~/.cargo/bin/leet")
 
     # ── leet setup claude-code ─────────────────────────────────────────────────
-    section("Configurando Claude Code")
+    section("Configuring Claude Code")
     leet_bin = shutil.which("leet")
     if not leet_bin:
-        # tenta ~/.cargo/bin diretamente
+        # try ~/.cargo/bin directly
         candidate = Path.home() / ".cargo" / "bin" / "leet"
         leet_bin = str(candidate) if candidate.exists() else None
 
     if not leet_bin:
-        warn("leet não encontrado no PATH após instalação. Adicione ~/.cargo/bin ao PATH e rode:")
+        warn("leet not found in PATH after installation. Add ~/.cargo/bin to your PATH and run:")
         print(dim("    leet setup claude-code"))
         return env
 
     result = subprocess.run([leet_bin, "setup", "claude-code"], capture_output=True, text=True)
     if result.returncode != 0:
-        warn("Falha em 'leet setup claude-code':")
+        warn("Failed running 'leet setup claude-code':")
         print(red(result.stderr[-800:] if result.stderr else result.stdout[-800:]))
         return env
 
-    # Mostra output do setup (já é compacto)
+    # Show setup output (already compact)
     for line in result.stdout.splitlines():
         print(f"  {line}")
 
     print()
-    info("Reinicie o Claude Code para o servidor MCP ser carregado.")
+    info("Restart Claude Code for the MCP server to be loaded.")
 
     return env
 
@@ -410,18 +410,18 @@ def configure_docker(env: dict) -> dict:
 
     compose_path = Path("docker-compose.yml")
     if not compose_path.exists():
-        warn("docker-compose.yml não encontrado, pulando.")
+        warn("docker-compose.yml not found, skipping.")
         return env
 
-    print(f"\n  Arquivo: {dim(str(compose_path.resolve()))}")
+    print(f"\n  File: {dim(str(compose_path.resolve()))}")
 
-    if not confirm("Atualizar docker-compose.yml com as configurações atuais?", default=False):
+    if not confirm("Update docker-compose.yml with the current settings?", default=False):
         return env
 
     # Backup
     backup = compose_path.with_suffix(".yml.bak")
     shutil.copy(compose_path, backup)
-    ok(f"Backup salvo em {backup}")
+    ok(f"Backup saved at {backup}")
 
     content = compose_path.read_text()
 
@@ -447,7 +447,7 @@ def configure_docker(env: dict) -> dict:
             updated += n
 
     compose_path.write_text(content)
-    ok(f"docker-compose.yml atualizado ({updated} variáveis)")
+    ok(f"docker-compose.yml updated ({updated} variables)")
 
     return env
 
@@ -455,27 +455,27 @@ def configure_docker(env: dict) -> dict:
 # ─── Main menu ────────────────────────────────────────────────────────────────
 
 MENU_ITEMS = [
-    ("1", "Serviço 1337 (porta, backend, store, batch)"),
-    ("2", "Embedding (modelo, URL, chave, matriz W)"),
-    ("3", "Chaves de API (DeepSeek, Anthropic, OpenAI, Gemini…)"),
-    ("4", "Python SDK (host, cache, projeção, log)"),
-    ("5", "Experimento de comparação (rounds, tópico, threshold)"),
-    ("6", "Docker (atualizar docker-compose.yml)"),
-    ("7", "Claude Code (instalar leet-mcp + skill)"),
-    ("8", "Mostrar configuração atual"),
-    ("s", "Salvar .env e sair"),
-    ("q", "Sair sem salvar"),
+    ("1", "1337 Service (port, backend, store, batch)"),
+    ("2", "Embedding (model, URL, key, W matrix)"),
+    ("3", "API Keys (DeepSeek, Anthropic, OpenAI, Gemini…)"),
+    ("4", "Python SDK (host, cache, projection, log)"),
+    ("5", "Comparison experiment (rounds, topic, threshold)"),
+    ("6", "Docker (update docker-compose.yml)"),
+    ("7", "Claude Code (install leet-mcp + skill)"),
+    ("8", "Show current configuration"),
+    ("s", "Save .env and exit"),
+    ("q", "Exit without saving"),
 ]
 
 
 def show_current(env: dict):
-    header("CONFIGURAÇÃO ATUAL")
+    header("CURRENT CONFIGURATION")
     sections = {
-        "Serviço": ["LEET_PORT", "LEET_BACKEND", "LEET_STORE", "LEET_BATCH_WINDOW", "LEET_BATCH_MAX", "RUST_LOG"],
+        "Service": ["LEET_PORT", "LEET_BACKEND", "LEET_STORE", "LEET_BATCH_WINDOW", "LEET_BATCH_MAX", "RUST_LOG"],
         "Embedding": ["LEET_EMBED_MODEL", "LEET_EMBED_URL", "LEET_W_PATH"],
         "API Keys": ["DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "MOONSHOT_API_KEY"],
         "Python SDK": ["LEET_SERVER_HOST", "LEET_SERVER_PORT", "LEET_CACHE_BACKEND", "LEET_PROJECTION_BACKEND", "LEET_DEBUG", "LEET_LOG_LEVEL"],
-        "Experimento": ["LEET_EXP_ROUNDS", "LEET_EXP_TOPIC", "LEET_EXP_THRESHOLD", "LEET_EXP_WORKERS"],
+        "Experiment": ["LEET_EXP_ROUNDS", "LEET_EXP_TOPIC", "LEET_EXP_THRESHOLD", "LEET_EXP_WORKERS"],
     }
     secrets = {"DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "MOONSHOT_API_KEY", "LEET_EMBED_KEY"}
 
@@ -494,7 +494,7 @@ def show_current(env: dict):
 
 def print_menu(env: dict):
     print()
-    print(bold("  O que deseja configurar?"))
+    print(bold("  What would you like to configure?"))
     print()
     for key, label in MENU_ITEMS:
         print(f"    {bold(cyan(key))})  {label}")
@@ -502,87 +502,87 @@ def print_menu(env: dict):
 
 
 HELP_TEXT = """\
-setup.py — Configuração interativa do protocolo 1337
-=====================================================
+setup.py — Interactive configuration for the 1337 protocol
+============================================================
 
-Gera e atualiza o arquivo .env com todas as variáveis necessárias
-para rodar o leet-service (Rust), o Python SDK e os experimentos.
+Generates and updates the .env file with all the variables needed
+to run leet-service (Rust), the Python SDK, and the experiments.
 
-USO
-  python setup.py           Abre o menu interativo
-  python setup.py --help    Exibe esta ajuda
-  python setup.py --show    Mostra configuração atual sem entrar no menu
+USAGE
+  python setup.py           Opens the interactive menu
+  python setup.py --help    Shows this help
+  python setup.py --show    Shows current configuration without entering the menu
 
-MENU PRINCIPAL
-  1  Serviço 1337          Configura o leet-service (gRPC Rust)
+MAIN MENU
+  1  1337 Service          Configures leet-service (gRPC Rust)
                            Vars: LEET_PORT, LEET_BACKEND, LEET_STORE,
                                  LEET_BATCH_WINDOW, LEET_BATCH_MAX, RUST_LOG
 
-  2  Embedding             Configura o modelo de projeção semântica
+  2  Embedding             Configures the semantic projection model
                            Vars: LEET_EMBED_MODEL, LEET_EMBED_URL,
                                  LEET_EMBED_KEY, LEET_W_PATH
 
-  3  Chaves de API         Configura chaves dos providers LLM
+  3  API Keys              Configures LLM provider keys
                            Vars: DEEPSEEK_API_KEY, ANTHROPIC_API_KEY,
                                  OPENAI_API_KEY, GEMINI_API_KEY, MOONSHOT_API_KEY
 
-  4  Python SDK            Configura o SDK Python (python/leet e leet-py)
+  4  Python SDK            Configures the Python SDK (python/leet and leet-py)
                            Vars: LEET_SERVER_HOST, LEET_SERVER_PORT,
                                  LEET_CACHE_BACKEND, LEET_PROJECTION_BACKEND,
                                  LEET_DEBUG, LEET_LOG_LEVEL
 
-  5  Experimento           Configura defaults do benchmark de comparação
+  5  Experiment            Configures defaults for the comparison benchmark
                            Vars: LEET_EXP_ROUNDS, LEET_EXP_TOPIC,
                                  LEET_EXP_THRESHOLD, LEET_EXP_WORKERS,
                                  LEET_EXP_REPORT_DIR
 
-  6  Docker                Atualiza docker-compose.yml com os valores do .env
-                           Faz backup automático em docker-compose.yml.bak
+  6  Docker                Updates docker-compose.yml with the .env values
+                           Creates an automatic backup at docker-compose.yml.bak
 
-  7  Claude Code           Instala leet-mcp e a skill 1337 no Claude Code
-                           Executa: cargo install leet-mcp + leet setup claude-code
-                           Estado de cada projeto em .leet/store.bin (auto-criado)
+  7  Claude Code           Installs leet-mcp and the 1337 skill in Claude Code
+                           Runs: cargo install leet-mcp + leet setup claude-code
+                           Per-project state in .leet/store.bin (auto-created)
 
-  8  Mostrar               Exibe configuração atual (chaves mascaradas)
+  8  Show                  Displays current configuration (keys masked)
 
-  s  Salvar e sair         Grava .env preservando comentários e ordem
-  q  Sair sem salvar       Descarta alterações não salvas
+  s  Save and exit         Writes .env, preserving comments and order
+  q  Exit without saving   Discards unsaved changes
 
-COMPORTAMENTO DAS PROMPTS
-  › Porta gRPC [50051]:    Enter mantém o valor entre colchetes
-  › Chave [********af41]:  Chaves secretas sempre mascaradas na tela
-  ● 1. simd               Opção marcada com ● é a atual
+PROMPT BEHAVIOR
+  › gRPC port [50051]:     Enter keeps the value shown in brackets
+  › Key [********af41]:    Secret keys are always masked on screen
+  ● 1. simd               The option marked with ● is the current one
 
-EXEMPLOS DE USO
+USAGE EXAMPLES
 
-  Configuração mínima para rodar o benchmark com DeepSeek:
+  Minimal setup to run the benchmark with DeepSeek:
     python setup.py
-    → escolha 3  (Chaves de API)
+    → choose 3  (API Keys)
     → configure DEEPSEEK_API_KEY
-    → pressione s  (salvar)
+    → press s  (save)
     source .env
     python comparison_1337_vs_english.py --rounds 25 --deepseek
 
-  Configuração completa para produção com Redis:
+  Full production setup with Redis:
     python setup.py
-    → escolha 1  → LEET_STORE = redis://redis:6379
-    → escolha 2  → LEET_EMBED_MODEL = openai + chave
-    → escolha 3  → configure todas as chaves necessárias
-    → escolha 6  → atualizar docker-compose.yml
-    → pressione s
+    → choose 1  → LEET_STORE = redis://redis:6379
+    → choose 2  → LEET_EMBED_MODEL = openai + key
+    → choose 3  → configure all the required keys
+    → choose 6  → update docker-compose.yml
+    → press s
     docker compose up
 
-  Ver configuração atual sem editar:
+  View current configuration without editing:
     python setup.py --show
 
-ARQUIVO .env GERADO
-  Formato: CHAVE=valor (uma por linha, # para comentários)
-  Localização: mesmo diretório deste script
-  Compatível com: source .env | docker compose --env-file .env
+GENERATED .env FILE
+  Format: KEY=value (one per line, # for comments)
+  Location: same directory as this script
+  Compatible with: source .env | docker compose --env-file .env
 
-DOCUMENTAÇÃO COMPLETA
-  Consulte GUIDE.md para referência detalhada de todos os componentes,
-  exemplos de uso e descrição de cada variável de ambiente.
+FULL DOCUMENTATION
+  See GUIDE.md for a detailed reference of all components,
+  usage examples, and a description of each environment variable.
 """
 
 
@@ -601,14 +601,14 @@ def main():
 
     print()
     print(bold(cyan("════════════════════════════════════════════════════════════")))
-    print(bold(cyan("  ⚙  CONFIGURAÇÃO DO PROTOCOLO 1337")))
+    print(bold(cyan("  ⚙  1337 PROTOCOL CONFIGURATION")))
     print(bold(cyan("════════════════════════════════════════════════════════════")))
 
     env_path = ENV_FILE.resolve()
     if ENV_FILE.exists():
-        ok(f".env carregado de {env_path}")
+        ok(f".env loaded from {env_path}")
     else:
-        info(f".env não encontrado — será criado em {env_path}")
+        info(f".env not found — it will be created at {env_path}")
 
     env = load_env()
 
@@ -630,7 +630,7 @@ def main():
     while True:
         print_menu(env)
         try:
-            choice = input(f"  {bold('Opção')}: ").strip().lower()
+            choice = input(f"  {bold('Option')}: ").strip().lower()
         except (EOFError, KeyboardInterrupt):
             print()
             choice = "q"
@@ -639,19 +639,19 @@ def main():
             env = handlers[choice](env)
         elif choice == "s":
             save_env(env)
-            ok(f".env salvo em {env_path}")
+            ok(f".env saved at {env_path}")
             print()
-            print(bold("  Para aplicar ao serviço Rust:"))
+            print(bold("  To apply to the Rust service:"))
             print(dim("    source .env && cargo run --release -p leet-service"))
-            print(bold("  Para aplicar com Docker:"))
+            print(bold("  To apply with Docker:"))
             print(dim("    docker compose up --env-file .env"))
             print()
             break
         elif choice == "q":
-            warn("Saindo sem salvar.")
+            warn("Exiting without saving.")
             break
         else:
-            warn("Opção inválida.")
+            warn("Invalid option.")
 
 
 if __name__ == "__main__":

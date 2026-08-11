@@ -1,11 +1,11 @@
 #!/bin/bash
-# build.sh — Build completo do projeto 1337 v0.5.1
+# build.sh — Full build for the 1337 v0.5.1 project
 #
-# Uso:
-#   ./build.sh           → build + testes (Rust + Python se disponível)
-#   ./build.sh --release → build release Rust
-#   ./build.sh --rust    → só Rust
-#   ./build.sh --python  → só Python
+# Usage:
+#   ./build.sh           → build + tests (Rust + Python if available)
+#   ./build.sh --release → Rust release build
+#   ./build.sh --rust    → Rust only
+#   ./build.sh --python  → Python only
 
 set -e
 
@@ -75,7 +75,7 @@ if [[ "$ONLY_RUST" != "true" ]]; then
             if [[ -d "$REPO_ROOT/$pkg_dir/tests" ]]; then
                 echo "  → pytest $pkg_dir/tests"
                 python -m pytest "$REPO_ROOT/$pkg_dir/tests" -q --tb=short 2>/dev/null \
-                    || echo -e "    ${YELLOW}(pytest falhou ou não instalado)${NC}"
+                    || echo -e "    ${YELLOW}(pytest failed or not installed)${NC}"
             fi
             PYTHON_BUILT=true
         fi
@@ -84,20 +84,20 @@ if [[ "$ONLY_RUST" != "true" ]]; then
     if [[ "$PYTHON_BUILT" == "true" ]]; then
         echo -e "${GREEN}✅ Python OK${NC}"
     else
-        echo -e "    ${YELLOW}Nenhum pacote Python encontrado (python/ ou leet-py/)${NC}"
+        echo -e "    ${YELLOW}No Python package found (python/ or leet-py/)${NC}"
     fi
 fi
 
-# ── Sumário ────────────────────────────────────────────────────────────────────
+# ── Summary ──────────────────────────────────────────────────────────────────────
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
-echo -e "${GREEN}  ✓ Build completo${NC}"
+echo -e "${GREEN}  ✓ Build complete${NC}"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
-echo "Para iniciar o serviço:"
+echo "To start the service:"
 echo "  cargo run --release -p leet-service --bin leet-server"
 echo ""
-echo "Para usar o CLI:"
+echo "To use the CLI:"
 echo "  cargo run -p leet-cli -- encode 'urgente deploy falhou'"
 echo "  cargo run -p leet-cli -- chat"

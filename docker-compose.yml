@@ -1,15 +1,15 @@
 # 1337 Service — Docker Compose
 #
-# Uso:
-#   docker-compose up -d    # Inicia serviço
-#   docker-compose logs -f  # Acompanha logs
-#   docker-compose down     # Para serviço
+# Usage:
+#   docker-compose up -d    # Start the service
+#   docker-compose logs -f  # Follow logs
+#   docker-compose down     # Stop the service
 
 version: "3.8"
 
 services:
   # ═════════════════════════════════════════════════════════════════════════════
-  # leet-service — Serviço principal gRPC + ZeroMQ
+  # leet-service — Main gRPC + ZeroMQ service
   # ═════════════════════════════════════════════════════════════════════════════
   leet-service:
     build:
@@ -44,7 +44,7 @@ services:
       start_period: 10s
 
   # ═════════════════════════════════════════════════════════════════════════════
-  # redis — Cache e store para COGONs
+  # redis — Cache and store for COGONs
   # ═════════════════════════════════════════════════════════════════════════════
   redis:
     image: redis:7-alpine
@@ -63,7 +63,7 @@ services:
       retries: 3
 
   # ═════════════════════════════════════════════════════════════════════════════
-  # prometheus — Métricas (opcional)
+  # prometheus — Metrics (optional)
   # ═════════════════════════════════════════════════════════════════════════════
   prometheus:
     image: prom/prometheus:latest

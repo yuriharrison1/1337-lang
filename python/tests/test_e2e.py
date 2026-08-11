@@ -1,9 +1,9 @@
 """
-Testes de integração end-to-end para 1337 v0.4.
-Validam o fluxo completo de tipos, operadores, validação e bridge.
-Todos usam MockProjector — sem API key necessária.
+End-to-end integration tests for 1337 v0.4.
+Validate the full flow of types, operators, validation, and bridge.
+All use MockProjector — no API key required.
 
-Rodar com: pytest tests/test_e2e.py -v
+Run with: pytest tests/test_e2e.py -v
 """
 
 import pytest
@@ -26,17 +26,17 @@ from leet.axes import CANONICAL_AXES, A8_ESTADO, A9_PROCESSO, C1_URGENCIA, C3_AC
 
 class TestCogonZero:
     def test_creation(self):
-        """COGON_ZERO tem valores exatos da spec."""
+        """COGON_ZERO has exact values from the spec."""
         zero = Cogon.zero()
         assert len(zero.sem) == 32
         assert len(zero.unc) == 32
-        assert all(s == 1.0 for s in zero.sem), "sem deve ser [1]*32"
-        assert all(u == 0.0 for u in zero.unc), "unc deve ser [0]*32"
+        assert all(s == 1.0 for s in zero.sem), "sem must be [1]*32"
+        assert all(u == 0.0 for u in zero.unc), "unc must be [0]*32"
         assert zero.stamp == 0
         assert zero.is_zero()
 
     def test_serialization_roundtrip(self):
-        """COGON_ZERO serializa e desserializa sem perda."""
+        """COGON_ZERO serializes and deserializes without loss."""
         zero = Cogon.zero()
         json_str = zero.to_json()
         restored = Cogon.from_json(json_str)
@@ -46,18 +46,18 @@ class TestCogonZero:
         assert restored.is_zero()
 
     def test_zero_id_is_nil(self):
-        """ID do COGON_ZERO é nil UUID."""
+        """COGON_ZERO ID is nil UUID."""
         zero = Cogon.zero()
         assert zero.id == "00000000-0000-0000-0000-000000000000"
 
     def test_zero_no_low_confidence(self):
-        """COGON_ZERO não tem flags de baixa confiança (unc=0 em tudo)."""
+        """COGON_ZERO has no low-confidence flags (unc=0 everywhere)."""
         zero = Cogon.zero()
         assert zero.low_confidence_dims() == []
 
 
 # ═══════════════════════════════════════════════════════════════════
-# TEST 2: Texto → COGON → Texto (roundtrip com MockProjector)
+# TEST 2: Text → COGON → Text (roundtrip with MockProjector)
 # ═══════════════════════════════════════════════════════════════════
 
 class TestTextRoundtrip:
@@ -67,89 +67,89 @@ class TestTextRoundtrip:
 
     @pytest.mark.asyncio
     async def test_urgent_text(self, projector):
-        """'urgente' deve ter URGÊNCIA e AÇÃO altos."""
+        """'urgente' keyword should yield high URGÊNCIA and AÇÃO."""
         cogon = await encode("Situação urgente no servidor", projector)
-        assert cogon.sem[C1_URGENCIA] > 0.8, "C1_URGÊNCIA deve ser alto"
-        assert cogon.sem[C3_ACAO] > 0.7, "C3_AÇÃO deve ser alto"
+        assert cogon.sem[C1_URGENCIA] > 0.8, "C1_URGÊNCIA should be high"
+        assert cogon.sem[C3_ACAO] > 0.7, "C3_AÇÃO should be high"
 
     @pytest.mark.asyncio
     async def test_failure_text(self, projector):
-        """'servidor caiu' deve ter ANOMALIA e ESTADO altos."""
+        """'servidor caiu' keyword should yield high ANOMALIA and ESTADO."""
         cogon = await encode("O servidor caiu", projector)
-        assert cogon.sem[A8_ESTADO] > 0.7, "A8_ESTADO deve ser alto"
-        assert cogon.sem[C5_ANOMALIA] > 0.7, "C5_ANOMALIA deve ser alto"
+        assert cogon.sem[A8_ESTADO] > 0.7, "A8_ESTADO should be high"
+        assert cogon.sem[C5_ANOMALIA] > 0.7, "C5_ANOMALIA should be high"
 
     @pytest.mark.asyncio
     async def test_roundtrip_preserves_semantics(self, projector):
-        """Encode → decode preserva eixos dominantes."""
+        """Encode → decode preserves dominant axes."""
         original = "Situação urgente no servidor"
         cogon = await encode(original, projector)
         reconstructed = await decode(cogon, projector)
-        # O texto reconstruído deve mencionar os eixos dominantes
+        # The reconstructed text should mention the dominant axes
         assert isinstance(reconstructed, str)
         assert len(reconstructed) > 0
 
     @pytest.mark.asyncio
     async def test_generic_text(self, projector):
-        """Texto genérico tem valores moderados."""
-        cogon = await encode("Bom dia", projector)
-        # Sem keywords especiais, valores devem ser ~0.5
+        """Generic text has moderate values."""
+        cogon = await encode("Good morning", projector)
+        # No special keywords, values should be ~0.5
         avg = sum(cogon.sem) / len(cogon.sem)
-        assert 0.3 < avg < 0.7, "Texto genérico deve ter média moderada"
+        assert 0.3 < avg < 0.7, "Generic text should have moderate average"
 
 
 # ═══════════════════════════════════════════════════════════════════
-# TEST 3: DAG — Raciocínio Composto
+# TEST 3: DAG — Composite Reasoning
 # ═══════════════════════════════════════════════════════════════════
 
 class TestDag:
     def test_simple_dag(self):
-        """DAG com 3 nós e 2 edges — cenário de incidente."""
-        # A: "Houve um deploy" (PROCESSO alto)
+        """DAG with 3 nodes and 2 edges — incident scenario."""
+        # A: "There was a deploy" (PROCESSO high)
         a_sem = [0.5] * 32
         a_sem[A9_PROCESSO] = 0.85
         a = Cogon(sem=a_sem, unc=[0.1] * 32, stamp=1, id="a" * 36)
 
-        # B: "O sistema caiu" (ANOMALIA alto)
+        # B: "The system crashed" (ANOMALIA high)
         b_sem = [0.5] * 32
         b_sem[C5_ANOMALIA] = 0.9
         b_sem[A8_ESTADO] = 0.9
         b = Cogon(sem=b_sem, unc=[0.1] * 32, stamp=2, id="b" * 36)
 
-        # C: "Precisamos reverter" (AÇÃO + URGÊNCIA altos)
+        # C: "We need to roll back" (AÇÃO + URGÊNCIA high)
         c_sem = [0.5] * 32
         c_sem[C3_ACAO] = 0.9
         c_sem[C1_URGENCIA] = 0.85
         c = Cogon(sem=c_sem, unc=[0.1] * 32, stamp=3, id="c" * 36)
 
-        # Montar DAG
+        # Build DAG
         dag = Dag.from_root(a)
         dag.add_node(b)
         dag.add_node(c)
         dag.add_edge(Edge(from_id=a.id, to_id=b.id, edge_type="CAUSA", weight=0.9))
         dag.add_edge(Edge(from_id=b.id, to_id=c.id, edge_type="CONDICIONA", weight=0.85))
 
-        # Validar topological order
+        # Validate topological order
         order = dag.topological_order()
         assert len(order) == 3
         assert order.index(a.id) < order.index(b.id)
         assert order.index(b.id) < order.index(c.id)
 
     def test_dag_cycle_detection(self):
-        """DAG com ciclo deve falhar (R4)."""
+        """DAG with a cycle should fail (R4)."""
         a = Cogon(sem=[0.5] * 32, unc=[0.1] * 32, stamp=1, id="a" * 36)
         b = Cogon(sem=[0.5] * 32, unc=[0.1] * 32, stamp=2, id="b" * 36)
 
         dag = Dag.from_root(a)
         dag.add_node(b)
         dag.add_edge(Edge(from_id=a.id, to_id=b.id, edge_type="CAUSA", weight=0.9))
-        dag.add_edge(Edge(from_id=b.id, to_id=a.id, edge_type="CAUSA", weight=0.9))  # ciclo!
+        dag.add_edge(Edge(from_id=b.id, to_id=a.id, edge_type="CAUSA", weight=0.9))  # cycle!
 
         with pytest.raises((ValueError, Exception)):
             dag.topological_order()
 
     def test_dag_single_node(self):
-        """DAG com nó único é válido."""
+        """DAG with a single node is valid."""
         a = Cogon(sem=[0.5] * 32, unc=[0.1] * 32, stamp=1, id="a" * 36)
         dag = Dag.from_root(a)
         order = dag.topological_order()
@@ -162,25 +162,25 @@ class TestDag:
 
 class TestDeltaCompression:
     def test_delta_only_urgency(self):
-        """DELTA entre dois estados que diferem só em urgência."""
+        """DELTA between two states that differ only in urgency."""
         sem_before = [0.5] * 32
         sem_after = [0.5] * 32
-        sem_after[C1_URGENCIA] = 0.95  # só urgência mudou
+        sem_after[C1_URGENCIA] = 0.95  # only urgency changed
 
         prev = Cogon(sem=sem_before, unc=[0.1] * 32, stamp=1, id="p" * 36)
         curr = Cogon(sem=sem_after, unc=[0.1] * 32, stamp=2, id="c" * 36)
 
         d = delta(prev, curr)
         assert len(d) == 32
-        # Só índice 22 (C1_URGÊNCIA) deve ser != 0
+        # Only index 22 (C1_URGÊNCIA) should be != 0
         for i, v in enumerate(d):
             if i == C1_URGENCIA:
-                assert abs(v - 0.45) < 0.01, "Delta de urgência deve ser ~0.45"
+                assert abs(v - 0.45) < 0.01, "Urgency delta should be ~0.45"
             else:
-                assert abs(v) < 0.001, f"Delta no eixo {i} deve ser ~0"
+                assert abs(v) < 0.001, f"Delta at axis {i} should be ~0"
 
     def test_apply_patch_roundtrip(self):
-        """Aplica patch → resultado = estado novo."""
+        """Applies patch → result = new state."""
         sem_before = [0.5] * 32
         sem_after = [0.5] * 32
         sem_after[C1_URGENCIA] = 0.95
@@ -193,23 +193,23 @@ class TestDeltaCompression:
 
         for i in range(32):
             assert abs(restored.sem[i] - curr.sem[i]) < 0.001, \
-                f"Eixo {i}: {restored.sem[i]} != {curr.sem[i]}"
+                f"Axis {i}: {restored.sem[i]} != {curr.sem[i]}"
 
     def test_patch_clamp(self):
-        """Patch que levaria acima de 1.0 é clamped."""
+        """Patch that would go above 1.0 is clamped."""
         base = Cogon(sem=[0.9] * 32, unc=[0.1] * 32, stamp=1, id="b" * 36)
-        patch = [0.5] * 32  # 0.9 + 0.5 = 1.4 → clamped a 1.0
+        patch = [0.5] * 32  # 0.9 + 0.5 = 1.4 → clamped to 1.0
         result = apply_patch(base, patch)
         assert all(s <= 1.0 for s in result.sem)
 
 
 # ═══════════════════════════════════════════════════════════════════
-# TEST 5: BLEND de Dois Agentes
+# TEST 5: BLEND of Two Agents
 # ═══════════════════════════════════════════════════════════════════
 
 class TestBlend:
     def test_midpoint_blend(self):
-        """α=0.5 entre opostos → meio termo."""
+        """α=0.5 between opposites → midpoint."""
         c1 = Cogon(sem=[1.0] * 32, unc=[0.0] * 32, stamp=1, id="a" * 36)
         c2 = Cogon(sem=[0.0] * 32, unc=[0.0] * 32, stamp=2, id="b" * 36)
         result = blend(c1, c2, 0.5)
@@ -217,15 +217,15 @@ class TestBlend:
             assert abs(s - 0.5) < 0.001
 
     def test_conservative_uncertainty(self):
-        """unc do BLEND é max dos dois (conservadora)."""
+        """BLEND's unc is the max of the two (conservative)."""
         c1 = Cogon(sem=[0.5] * 32, unc=[0.1] * 32, stamp=1, id="a" * 36)
         c2 = Cogon(sem=[0.5] * 32, unc=[0.9] * 32, stamp=2, id="b" * 36)
         result = blend(c1, c2, 0.5)
         for u in result.unc:
-            assert abs(u - 0.9) < 0.001, "UNC deve ser max(0.1, 0.9) = 0.9"
+            assert abs(u - 0.9) < 0.001, "UNC should be max(0.1, 0.9) = 0.9"
 
     def test_alpha_extremes(self):
-        """α=1.0 retorna c1, α=0.0 retorna c2."""
+        """α=1.0 returns c1, α=0.0 returns c2."""
         c1 = Cogon(sem=[1.0] * 32, unc=[0.0] * 32, stamp=1, id="a" * 36)
         c2 = Cogon(sem=[0.0] * 32, unc=[0.0] * 32, stamp=2, id="b" * 36)
 
@@ -236,7 +236,7 @@ class TestBlend:
         assert all(abs(s - 0.0) < 0.001 for s in r0.sem)
 
     def test_two_agents_different_domains(self):
-        """Agente técnico (SISTEMA) + Agente empático (AFETO) → BLEND."""
+        """Technical agent (SISTEMA) + empathic agent (AFETO) → BLEND."""
         tech = Cogon(sem=[0.5] * 32, unc=[0.2] * 32, stamp=1, id="a" * 36)
         tech.sem[7] = 0.95   # A7_SISTEMA
         tech.unc[7] = 0.05
@@ -246,18 +246,18 @@ class TestBlend:
         empathic.unc[27] = 0.05
 
         result = blend(tech, empathic, 0.5)
-        # Ambos devem ter ~0.725 nos seus eixos dominantes
-        assert result.sem[7] > 0.6, "SISTEMA deve estar presente"
-        assert result.sem[27] > 0.6, "AFETO deve estar presente"
+        # Both should have ~0.725 in their dominant axes
+        assert result.sem[7] > 0.6, "SISTEMA should be present"
+        assert result.sem[27] > 0.6, "AFETO should be present"
 
 
 # ═══════════════════════════════════════════════════════════════════
-# TEST 6: Validação R1-R21
+# TEST 6: R1-R21 Validation
 # ═══════════════════════════════════════════════════════════════════
 
 class TestValidation:
     def _make_valid_msg(self, intent=Intent.ASSERT):
-        """Helper: cria MSG_1337 válida."""
+        """Helper: creates a valid MSG_1337."""
         cogon = Cogon(sem=[0.5] * 32, unc=[0.1] * 32, stamp=1, id="c" * 36)
         return Msg1337(
             id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -280,12 +280,12 @@ class TestValidation:
         )
 
     def test_valid_msg_passes(self):
-        """MSG_1337 válida passa validação."""
+        """Valid MSG_1337 passes validation."""
         msg = self._make_valid_msg()
         assert validate(msg) is None
 
     def test_r2_delta_without_ref(self):
-        """R2: DELTA sem ref deve falhar."""
+        """R2: DELTA without ref should fail."""
         msg = self._make_valid_msg(Intent.DELTA)
         msg.ref_hash = None
         msg.patch = None
@@ -294,14 +294,14 @@ class TestValidation:
         assert "R2" in result or "delta" in result.lower() or "ref" in result.lower()
 
     def test_r2_non_delta_with_patch(self):
-        """R2: ASSERT com patch deve falhar."""
+        """R2: ASSERT with patch should fail."""
         msg = self._make_valid_msg(Intent.ASSERT)
         msg.patch = [0.1] * 32
         result = validate(msg)
         assert result is not None
 
     def test_r6_human_required_no_urgency(self):
-        """R6: human_required=true sem urgency deve falhar."""
+        """R6: human_required=true without urgency should fail."""
         msg = self._make_valid_msg()
         msg.surface.human_required = True
         msg.surface.urgency = None
@@ -309,7 +309,7 @@ class TestValidation:
         assert result is not None
 
     def test_r6_human_required_with_urgency(self):
-        """R6: human_required=true COM urgency deve passar."""
+        """R6: human_required=true WITH urgency should pass."""
         msg = self._make_valid_msg()
         msg.surface.human_required = True
         msg.surface.urgency = 0.85
@@ -317,21 +317,21 @@ class TestValidation:
         assert result is None
 
     def test_r8_broadcast_assert_fails(self):
-        """R8: BROADCAST com ASSERT deve falhar."""
+        """R8: BROADCAST with ASSERT should fail."""
         msg = self._make_valid_msg(Intent.ASSERT)
         msg.receiver = Receiver.broadcast()
         result = validate(msg)
         assert result is not None
 
     def test_r8_broadcast_anomaly_passes(self):
-        """R8: BROADCAST com ANOMALY deve passar."""
+        """R8: BROADCAST with ANOMALY should pass."""
         msg = self._make_valid_msg(Intent.ANOMALY)
         msg.receiver = Receiver.broadcast()
         result = validate(msg)
         assert result is None
 
     def test_r8_broadcast_sync_passes(self):
-        """R8: BROADCAST com SYNC deve passar."""
+        """R8: BROADCAST with SYNC should pass."""
         msg = self._make_valid_msg(Intent.SYNC)
         msg.receiver = Receiver.broadcast()
         result = validate(msg)
@@ -339,12 +339,12 @@ class TestValidation:
 
 
 # ═══════════════════════════════════════════════════════════════════
-# TEST 7: MSG_1337 Completa — Envelope Roundtrip
+# TEST 7: Full MSG_1337 — Envelope Roundtrip
 # ═══════════════════════════════════════════════════════════════════
 
 class TestMsgEnvelope:
     def test_full_envelope_roundtrip(self):
-        """Cria MSG_1337 → serializa → hash → desserializa → revalida."""
+        """Creates MSG_1337 → serializes → hashes → deserializes → revalidates."""
         cogon = Cogon(sem=[0.7] * 32, unc=[0.1] * 32, stamp=1, id="c" * 36)
         msg = Msg1337(
             id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -366,7 +366,7 @@ class TestMsgEnvelope:
             ),
         )
 
-        # Serializa
+        # Serialize
         json_str = msg.to_json()
         assert isinstance(json_str, str)
         assert len(json_str) > 100
@@ -376,20 +376,20 @@ class TestMsgEnvelope:
         assert isinstance(h, str)
         assert len(h) == 64  # SHA256 hex
 
-        # Desserializa
+        # Deserialize
         restored = Msg1337.from_json(json_str)
         assert restored.intent == msg.intent
         assert restored.sender == msg.sender
         assert restored.c5.schema_ver == "0.4.0"
 
-        # Hash do restaurado deve ser igual
-        assert restored.hash() == h, "Roundtrip deve preservar hash"
+        # Hash of the restored message should match
+        assert restored.hash() == h, "Roundtrip should preserve hash"
 
-        # Revalida
-        assert validate(restored) is None, "Restored msg deve ser válida"
+        # Revalidate
+        assert validate(restored) is None, "Restored msg should be valid"
 
     def test_msg_with_dag_payload(self):
-        """MSG_1337 com payload DAG (não COGON simples)."""
+        """MSG_1337 with DAG payload (not a plain COGON)."""
         a = Cogon(sem=[0.8] * 32, unc=[0.1] * 32, stamp=1, id="a" * 36)
         b = Cogon(sem=[0.3] * 32, unc=[0.2] * 32, stamp=2, id="b" * 36)
         dag = Dag.from_root(a)
@@ -421,7 +421,7 @@ class TestMsgEnvelope:
         assert validate(restored) is None
 
     def test_msg_with_raw_bridge(self):
-        """MSG_1337 com RAW BRIDGE (interoperabilidade)."""
+        """MSG_1337 with RAW BRIDGE (interoperability)."""
         raw = Raw(
             content_type="protocol/mcp",
             content={"tool": "search", "query": "1337 spec"},
@@ -451,7 +451,7 @@ class TestMsgEnvelope:
 
         json_str = msg.to_json()
         restored = Msg1337.from_json(json_str)
-        # RAW deve sobreviver o roundtrip
+        # RAW should survive the roundtrip
         payload = restored.payload
         assert payload.raw is not None
         assert payload.raw.role == RawRole.BRIDGE
@@ -459,30 +459,30 @@ class TestMsgEnvelope:
 
 
 # ═══════════════════════════════════════════════════════════════════
-# TEST 8: Operadores Adicionais
+# TEST 8: Additional Operators
 # ═══════════════════════════════════════════════════════════════════
 
 class TestOperatorsE2E:
     def test_focus_ontological_only(self):
-        """FOCUS nos eixos ontológicos (0-13)."""
+        """FOCUS on ontological axes (0-13)."""
         c = Cogon(sem=[0.8] * 32, unc=[0.1] * 32, stamp=1, id="c" * 36)
         focused = focus(c, list(range(14)))  # A0-A13
-        # Eixos 0-13 mantém valores
+        # Axes 0-13 keep their values
         for i in range(14):
             assert focused.sem[i] == 0.8
-        # Eixos 14-31 zerados, unc=1.0
+        # Axes 14-31 zeroed, unc=1.0
         for i in range(14, 32):
             assert focused.sem[i] == 0.0
             assert focused.unc[i] == 1.0
 
     def test_dist_zero_for_identical(self):
-        """Distância entre COGONs idênticos é ~0."""
+        """Distance between identical COGONs is ~0."""
         c = Cogon(sem=[0.5] * 32, unc=[0.0] * 32, stamp=1, id="c" * 36)
         d = dist(c, c)
         assert d < 0.001
 
     def test_dist_increases_with_difference(self):
-        """Distância aumenta conforme COGONs divergem."""
+        """Distance increases as COGONs diverge."""
         base = Cogon(sem=[0.5] * 32, unc=[0.0] * 32, stamp=1, id="a" * 36)
         similar = Cogon(sem=[0.6] * 32, unc=[0.0] * 32, stamp=2, id="b" * 36)
         different = Cogon(sem=[0.0] * 32, unc=[0.0] * 32, stamp=3, id="c" * 36)
@@ -492,22 +492,22 @@ class TestOperatorsE2E:
         assert d_similar < d_different
 
     def test_anomaly_score_outlier(self):
-        """COGON fora do padrão histórico tem score alto."""
-        # Histórico: tudo em 0.5
+        """COGON outside the historical pattern has a high score."""
+        # History: everything at 0.5
         history = [Cogon(sem=[0.5] * 32, unc=[0.0] * 32, stamp=i, id=str(i) * 36) for i in range(5)]
-        # Outlier: tudo em 0.0
+        # Outlier: everything at 0.0
         outlier = Cogon(sem=[0.0] * 32, unc=[0.0] * 32, stamp=10, id="x" * 36)
 
         score = anomaly_score(outlier, history)
-        assert score > 0.5, "Outlier deve ter anomaly score alto"
+        assert score > 0.5, "Outlier should have high anomaly score"
 
     def test_anomaly_score_normal(self):
-        """COGON dentro do padrão tem score baixo."""
+        """COGON within the pattern has a low score."""
         history = [Cogon(sem=[0.5] * 32, unc=[0.0] * 32, stamp=i, id=str(i) * 36) for i in range(5)]
         normal = Cogon(sem=[0.5] * 32, unc=[0.0] * 32, stamp=10, id="x" * 36)
 
         score = anomaly_score(normal, history)
-        assert score < 0.1, "Normal deve ter anomaly score baixo"
+        assert score < 0.1, "Normal should have low anomaly score"
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -516,28 +516,28 @@ class TestOperatorsE2E:
 
 class TestAxes:
     def test_32_axes_defined(self):
-        """Todos os 32 eixos estão definidos."""
+        """All 32 axes are defined."""
         assert len(CANONICAL_AXES) == 32
 
     def test_axes_indices_sequential(self):
-        """Índices de 0 a 31 sequenciais."""
+        """Indices 0 to 31 are sequential."""
         for i, ax in enumerate(CANONICAL_AXES):
             assert ax.index == i
 
     def test_group_a_ontological(self):
-        """Grupo A tem 14 eixos (0-13)."""
+        """Group A has 14 axes (0-13)."""
         from leet.axes import axes_in_group, AxisGroup
         group_a = axes_in_group(AxisGroup.ONTOLOGICAL)
         assert len(group_a) == 14
 
     def test_group_b_epistemic(self):
-        """Grupo B tem 8 eixos (14-21)."""
+        """Group B has 8 axes (14-21)."""
         from leet.axes import axes_in_group, AxisGroup
         group_b = axes_in_group(AxisGroup.EPISTEMIC)
         assert len(group_b) == 8
 
     def test_group_c_pragmatic(self):
-        """Grupo C tem 10 eixos (22-31)."""
+        """Group C has 10 axes (22-31)."""
         from leet.axes import axes_in_group, AxisGroup
         group_c = axes_in_group(AxisGroup.PRAGMATIC)
         assert len(group_c) == 10

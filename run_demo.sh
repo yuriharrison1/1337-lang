@@ -1,5 +1,5 @@
 #!/bin/bash
-# run_demo.sh — Configura e inicia a rede 1337 com demo interativa
+# run_demo.sh — Sets up and starts the 1337 network with an interactive demo
 
 set -e
 
@@ -12,45 +12,45 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}   1337 v0.5.1 — Demo Interativa${NC}"
+echo -e "${BLUE}   1337 v0.5.1 — Interactive Demo${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 
-# Verificar LEET_API_KEY (Anthropic/Claude)
+# Check LEET_API_KEY (Anthropic/Claude)
 if [ -z "${LEET_API_KEY:-}" ]; then
-    echo -e "${YELLOW}⚠  LEET_API_KEY não encontrada. Usando backend mock.${NC}"
+    echo -e "${YELLOW}⚠  LEET_API_KEY not found. Using mock backend.${NC}"
     BACKEND="mock"
 else
-    echo -e "${GREEN}✅ LEET_API_KEY encontrada${NC}"
+    echo -e "${GREEN}✅ LEET_API_KEY found${NC}"
     BACKEND="anthropic"
 fi
 
 # Setup Python
 echo ""
-echo -e "${BLUE}🐍 Instalando dependências Python...${NC}"
+echo -e "${BLUE}🐍 Installing Python dependencies...${NC}"
 for pkg_dir in python leet-py; do
     if [[ -f "$REPO_ROOT/$pkg_dir/pyproject.toml" ]]; then
         pip install -e "$REPO_ROOT/$pkg_dir" --quiet
-        echo -e "  ✓ $pkg_dir instalado"
+        echo -e "  ✓ $pkg_dir installed"
     fi
 done
 
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}   🚀 INICIANDO REDE 1337${NC}"
+echo -e "${BLUE}   🚀 STARTING 1337 NETWORK${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 echo "Backend: $BACKEND"
-echo "Cenário: devops (3 agentes)"
+echo "Scenario: devops (3 agents)"
 echo ""
-echo "Comandos disponíveis:"
-echo "  /status        - Ver estado dos agentes"
-echo "  /inject <msg>  - Enviar mensagem para todos"
-echo "  /talk 1 <msg>  - Falar com agente específico"
-echo "  /agents chat   - Agentes conversam entre si"
-echo "  /heatmap all   - Ver heatmap dos eixos"
-echo "  /quit          - Sair"
+echo "Available commands:"
+echo "  /status        - View agent state"
+echo "  /inject <msg>  - Send a message to everyone"
+echo "  /talk 1 <msg>  - Talk to a specific agent"
+echo "  /agents chat   - Agents converse among themselves"
+echo "  /heatmap all   - View axis heatmap"
+echo "  /quit          - Exit"
 echo ""
-echo -e "${YELLOW}💡 Pressione ENTER para iniciar ou Ctrl+C para cancelar${NC}"
+echo -e "${YELLOW}💡 Press ENTER to start or Ctrl+C to cancel${NC}"
 read
 
 python net1337.py --scenario devops --backend "$BACKEND" << 'PYTHON_EOF'
@@ -64,5 +64,5 @@ python net1337.py --scenario devops --backend "$BACKEND" << 'PYTHON_EOF'
 PYTHON_EOF
 
 echo ""
-echo -e "${GREEN}✅ Demo finalizada!${NC}"
-echo "Log exportado para: demo_log.json"
+echo -e "${GREEN}✅ Demo finished!${NC}"
+echo "Log exported to: demo_log.json"

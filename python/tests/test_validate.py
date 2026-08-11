@@ -9,7 +9,7 @@ from leet.validate import validate
 
 
 def _make_valid_msg(intent=Intent.ASSERT):
-    """Helper: cria MSG_1337 válida."""
+    """Helper: creates a valid MSG_1337."""
     cogon = Cogon.new(sem=[0.5] * 32, unc=[0.1] * 32)
     return Msg1337(
         id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -34,7 +34,7 @@ def _make_valid_msg(intent=Intent.ASSERT):
 
 class TestValidation:
     def test_valid_msg_passes(self):
-        """MSG_1337 válida passa validação."""
+        """A valid MSG_1337 passes validation."""
         msg = _make_valid_msg()
         assert validate(msg) is None
 

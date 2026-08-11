@@ -101,7 +101,7 @@ W = W.T   # shape: (32, D)
 # Ensure projections fall within [0, 1]
 preds = np.clip(embeddings @ W.T, 0, 1)
 error = np.mean(np.abs(preds - targets))
-print(f"MAE médio: {error:.4f}")  # target: < 0.08
+print(f"Mean MAE: {error:.4f}")  # target: < 0.08
 ```
 
 ### 4. Save W.bin

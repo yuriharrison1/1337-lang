@@ -14,21 +14,21 @@ def projector():
 @pytest.mark.asyncio
 class TestMockEncode:
     async def test_mock_encode_basic(self):
-        """Texto → COGON."""
+        """Text → COGON."""
         projector = MockProjector()
-        sem, unc = await projector.project("olá mundo")
+        sem, unc = await projector.project("hello world")
         assert len(sem) == 32
         assert len(unc) == 32
 
     async def test_mock_encode_urgent(self):
-        """Urgência alta quando texto contém 'urgente'."""
+        """High urgency when text contains 'urgente'."""
         from leet.axes import C1_URGENCIA, C3_ACAO
         cogon = await encode("situação urgente no servidor")
         assert cogon.sem[C1_URGENCIA] > 0.8
         assert cogon.sem[C3_ACAO] > 0.7
 
     async def test_mock_encode_failure(self):
-        """Anomalia alta quando texto contém erro."""
+        """High anomaly when text contains an error."""
         from leet.axes import A8_ESTADO, C5_ANOMALIA
         cogon = await encode("o servidor caiu")
         assert cogon.sem[A8_ESTADO] > 0.7
@@ -38,7 +38,7 @@ class TestMockEncode:
 @pytest.mark.asyncio
 class TestMockDecode:
     async def test_mock_decode(self):
-        """COGON → texto com eixos dominantes."""
+        """COGON → text with dominant axes."""
         projector = MockProjector()
         cogon = Cogon.new(sem=[0.5] * 32, unc=[0.1] * 32)
         cogon.sem[22] = 0.95  # URGÊNCIA
@@ -52,7 +52,7 @@ class TestMockDecode:
 @pytest.mark.asyncio
 class TestRoundtrip:
     async def test_roundtrip(self):
-        """Encode → decode preserva semântica."""
+        """Encode → decode preserves semantics."""
         projector = MockProjector()
         original = "situação urgente"
         cogon = await encode(original, projector)
@@ -60,13 +60,13 @@ class TestRoundtrip:
         
         assert isinstance(reconstructed, str)
         assert len(reconstructed) > 0
-        # Verifica que urgência foi preservada
+        # Verify that urgency was preserved
         assert cogon.sem[22] > 0.8
 
 
 class TestAnthropicProjector:
     def test_anthropic_projector_init_fails_without_key(self):
-        """Falha sem api_key (mas não crasha)."""
+        """Fails without api_key (but doesn't crash)."""
         import os
         # Remove key if exists
         old_key = os.environ.pop("ANTHROPIC_API_KEY", None)

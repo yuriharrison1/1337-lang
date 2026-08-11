@@ -1,11 +1,11 @@
-"""Testes de integração do SDK 1337.
+"""Integration tests for the 1337 SDK.
 
-Testam fluxos completos:
-- Configuração
+Test complete flows:
+- Configuration
 - Cache
-- Métricas
+- Metrics
 - Batch processing
-- Cliente resiliente
+- Resilient client
 """
 
 import asyncio
@@ -23,7 +23,7 @@ from leet.config import init_config
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes de Configuração
+# Configuration Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestConfig:
@@ -50,12 +50,12 @@ class TestConfig:
         config2 = LeetConfig()
         config2.server.host = "other.host"
         
-        # Config2 deve ter prioridade
+        # Config2 should take priority
         assert config2.server.host == "other.host"
     
     def test_config_validation(self):
         config = LeetConfig()
-        config.server.port = 99999  # Porta inválida
+        config.server.port = 99999  # Invalid port
         
         errors = config.validate()
         assert len(errors) > 0
@@ -63,7 +63,7 @@ class TestConfig:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes de Cache
+# Cache Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestCache:
@@ -79,7 +79,7 @@ class TestCache:
         cache.set("key1", "value1")
         assert cache.get("key1") == "value1"
         
-        # Espera expirar
+        # Wait for it to expire
         import time
         time.sleep(0.02)
         
@@ -90,7 +90,7 @@ class TestCache:
         
         cache.set("key1", "value1")
         cache.set("key2", "value2")
-        cache.set("key3", "value3")  # Deve evictar key1
+        cache.set("key3", "value3")  # Should evict key1
         
         assert cache.size() <= 2
     
@@ -104,15 +104,15 @@ class TestCache:
             call_count += 1
             return "computed"
         
-        # Primeira chamada computa
+        # First call computes
         result1 = cache.get_or_compute("key1", compute)
         assert result1 == "computed"
         assert call_count == 1
         
-        # Segunda chamada usa cache
+        # Second call uses cache
         result2 = cache.get_or_compute("key1", compute)
         assert result2 == "computed"
-        assert call_count == 1  # Não computou de novo
+        assert call_count == 1  # Did not compute again
     
     def test_projection_cache(self):
         cache = Cache(backend="memory")
@@ -120,16 +120,16 @@ class TestCache:
         sem = [0.5] * 32
         unc = [0.1] * 32
         
-        cache.set_projection("texto", sem, unc)
+        cache.set_projection("text", sem, unc)
         
-        cached = cache.get_projection("texto")
+        cached = cache.get_projection("text")
         assert cached is not None
         assert cached[0] == sem
         assert cached[1] == unc
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes de Métricas
+# Metrics Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestMetrics:
@@ -166,8 +166,8 @@ class TestMetrics:
         assert hist.avg == 20.0
         
         buckets = hist.get_buckets()
-        assert buckets["le_25"] == 2  # 10 e 20
-        assert buckets["le_50"] == 3  # todos
+        assert buckets["le_25"] == 2  # 10 and 20
+        assert buckets["le_50"] == 3  # all
     
     def test_metrics_collector(self):
         metrics = MetricsCollector()
@@ -199,7 +199,7 @@ class TestMetrics:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes de Batch Processing
+# Batch Processing Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestBatchProcessing:
@@ -233,7 +233,7 @@ class TestBatchProcessing:
         results = await processor.process_to_list(items)
         
         assert len(results) == 5
-        assert results[2].success is False  # Item 3 falhou
+        assert results[2].success is False  # Item 3 failed
         assert results[2].error is not None
     
     @pytest.mark.asyncio
@@ -257,7 +257,7 @@ class TestBatchProcessing:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes de Integração
+# Integration Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestEndToEnd:
@@ -265,28 +265,28 @@ class TestEndToEnd:
     async def test_full_flow_with_cache(self):
         cache = Cache(backend="memory")
         
-        # Simula projeção com cache
+        # Simulate projection with cache
         async def project(text: str):
-            # Verifica cache
+            # Check cache
             cached = cache.get_projection(text)
             if cached:
                 return cached
             
-            # Projeta (mock)
+            # Project (mock)
             sem = [0.5] * 32
             unc = [0.1] * 32
             
-            # Armazena no cache
+            # Store in cache
             cache.set_projection(text, sem, unc)
             return sem, unc
         
-        # Primeira chamada
+        # First call
         result1 = await project("hello")
         
-        # Segunda chamada (deve usar cache)
+        # Second call (should use cache)
         result2 = await project("hello")
         
-        # Mesmo resultado
+        # Same result
         assert result1 == result2
 
 

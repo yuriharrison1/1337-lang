@@ -23,7 +23,7 @@ from leet.adapters.base import (
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes Base
+# Base Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestAdapterContext:
@@ -74,18 +74,18 @@ class TestAdapterContext:
 class TestAdapterResponse:
     def test_response_success(self):
         resp = AdapterResponse(
-            text="Resposta",
+            text="Response",
             exit_code=0,
             files_modified=["file.py"]
         )
         
         assert resp.success
-        assert resp.text == "Resposta"
+        assert resp.text == "Response"
         assert "file.py" in resp.files_modified
     
     def test_response_failure(self):
         resp = AdapterResponse(
-            text="Erro",
+            text="Error",
             exit_code=1
         )
         
@@ -105,7 +105,7 @@ class TestAdapterResponse:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes Factory
+# Factory Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestFactory:
@@ -132,7 +132,7 @@ class TestFactory:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes Claude Code
+# Claude Code Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestClaudeCodeAdapter:
@@ -176,7 +176,7 @@ Modified README.md
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes Codex
+# Codex Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestCodexAdapter:
@@ -204,7 +204,7 @@ class TestCodexAdapter:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes Kimi
+# Kimi Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestKimiAdapter:
@@ -224,7 +224,7 @@ class TestKimiAdapter:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes Aider
+# Aider Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestAiderAdapter:
@@ -242,7 +242,7 @@ class TestAiderAdapter:
             AiderAdapter()
     
     def test_git_repo_detection(self, tmp_path):
-        # Cria repo git fake
+        # Create fake git repo
         git_dir = tmp_path / ".git"
         git_dir.mkdir()
         
@@ -251,25 +251,25 @@ class TestAiderAdapter:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Testes de Integração
+# Integration Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestIntegration:
     async def test_mock_send_message(self, tmp_path):
-        """Testa envio de mensagem com mock."""
+        """Test sending a message with a mock."""
         adapter = KimiAdapter(project_dir=str(tmp_path))
         
-        # Mock do método de projeção
+        # Mock the projection method
         adapter.projector = Mock()
         adapter.projector.project = AsyncMock(return_value=([0.5]*32, [0.1]*32))
         
-        # Mock da disponibilidade
+        # Mock availability
         with patch.object(adapter, 'is_available', return_value=False):
-            # Não chama API real
+            # Does not call the real API
             pass
     
     def test_compute_delta(self, tmp_path):
-        """Testa computação de delta entre COGONs."""
+        """Test delta computation between COGONs."""
         from leet import Cogon
         
         adapter = KimiAdapter(project_dir=str(tmp_path))
@@ -280,5 +280,5 @@ class TestIntegration:
         delta = adapter.compute_delta(c1, c2)
         
         assert len(delta) == 32
-        # Delta deve ser ~0.2
+        # Delta should be ~0.2
         assert abs(delta[0] - 0.2) < 0.01

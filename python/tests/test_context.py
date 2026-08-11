@@ -1,5 +1,5 @@
 """
-Testes para o módulo de context-aware projection.
+Tests for the context-aware projection module.
 """
 
 import pytest
@@ -11,10 +11,10 @@ from leet.types import Cogon, FIXED_DIMS
 
 
 class TestContextProfile:
-    """Testes para ContextProfile."""
+    """Tests for ContextProfile."""
     
     def test_creation(self):
-        """Criação básica de perfil."""
+        """Basic profile creation."""
         profile = ContextProfile(
             name="test",
             description="Test profile",
@@ -27,7 +27,7 @@ class TestContextProfile:
         assert len(profile.axis_weights) == FIXED_DIMS
     
     def test_to_cogon(self):
-        """Conversão para COGON."""
+        """Conversion to COGON."""
         profile = ContextProfile(
             name="technical",
             description="Technical context",
@@ -38,11 +38,11 @@ class TestContextProfile:
         cogon = profile.to_cogon()
         assert len(cogon.sem) == FIXED_DIMS
         assert len(cogon.unc) == FIXED_DIMS
-        # Eixos dominantes devem ter menor incerteza
+        # Dominant axes should have lower uncertainty
         assert cogon.unc[7] < cogon.unc[10]
     
     def test_serialization(self):
-        """Serialização/deserialização."""
+        """Serialization/deserialization."""
         profile = ContextProfile(
             name="test",
             description="Test",
@@ -59,21 +59,21 @@ class TestContextProfile:
 
 
 class TestContextManager:
-    """Testes para ContextManager."""
+    """Tests for ContextManager."""
     
     @pytest.fixture
     def manager(self):
-        """Fixture para ContextManager limpo."""
+        """Fixture for a clean ContextManager."""
         return ContextManager(window_size=5)
     
     def test_builtin_profiles(self, manager):
-        """Perfis built-in disponíveis."""
+        """Built-in profiles available."""
         assert "technical" in manager.BUILTIN_PROFILES
         assert "emergency" in manager.BUILTIN_PROFILES
         assert "philosophical" in manager.BUILTIN_PROFILES
     
     def test_set_profile(self, manager):
-        """Definir perfil ativo."""
+        """Set active profile."""
         profile = manager.set_profile("technical")
         
         assert manager.current_profile is not None
@@ -81,12 +81,12 @@ class TestContextManager:
         assert profile.usage_count == 1
     
     def test_invalid_profile(self, manager):
-        """Perfil inválido deve falhar."""
+        """Invalid profile should fail."""
         with pytest.raises(ValueError):
             manager.set_profile("nonexistent")
     
     def test_add_to_history(self, manager):
-        """Adicionar COGON ao histórico."""
+        """Add COGON to history."""
         cogon = Cogon.new(sem=[0.5] * FIXED_DIMS, unc=[0.1] * FIXED_DIMS)
         
         manager.add_to_history(cogon)
@@ -96,7 +96,7 @@ class TestContextManager:
         assert len(manager.history) == 2
     
     def test_history_window_size(self, manager):
-        """Histórico respeita tamanho da janela."""
+        """History respects window size."""
         manager = ContextManager(window_size=3)
         
         for i in range(5):
@@ -106,12 +106,12 @@ class TestContextManager:
         assert len(manager.history) == 3
     
     def test_get_context_cogon_no_history(self, manager):
-        """Contexto sem histórico retorna None."""
+        """Context without history returns None."""
         cogon = manager.get_context_cogon()
         assert cogon is None
     
     def test_get_context_cogon_with_profile(self, manager):
-        """Contexto com perfil definido."""
+        """Context with a defined profile."""
         manager.set_profile("technical")
         cogon = manager.get_context_cogon()
         
@@ -119,7 +119,7 @@ class TestContextManager:
         assert len(cogon.sem) == FIXED_DIMS
     
     def test_get_context_cogon_with_history(self, manager):
-        """Contexto com histórico."""
+        """Context with history."""
         for i in range(3):
             cogon = Cogon.new(sem=[0.5 + i*0.1] * FIXED_DIMS, unc=[0.1] * FIXED_DIMS)
             manager.add_to_history(cogon)
@@ -128,8 +128,8 @@ class TestContextManager:
         assert context is not None
     
     def test_adjust_projection(self, manager):
-        """Ajustar projeção com contexto."""
-        # Define um perfil que enfatiza urgência
+        """Adjust projection with context."""
+        # Set a profile that emphasizes urgency
         manager.set_profile("emergency")
         
         sem = [0.5] * FIXED_DIMS
@@ -139,11 +139,11 @@ class TestContextManager:
         
         assert len(adjusted_sem) == FIXED_DIMS
         assert len(adjusted_unc) == FIXED_DIMS
-        # Valores devem ser diferentes após ajuste
+        # Values should differ after adjustment
         assert adjusted_sem != sem or adjusted_unc != unc
     
     def test_adjust_projection_no_context(self, manager):
-        """Ajuste sem contexto retorna original."""
+        """Adjustment without context returns original."""
         sem = [0.5] * FIXED_DIMS
         unc = [0.2] * FIXED_DIMS
         
@@ -153,26 +153,26 @@ class TestContextManager:
         assert adjusted_unc == unc
     
     def test_detect_context_drift(self, manager):
-        """Detecção de mudança de contexto."""
-        # Histórico vazio - sem drift
+        """Detection of context change."""
+        # Empty history - no drift
         assert manager.detect_context_drift() is None
         
-        # Adiciona COGONs similares
+        # Add similar COGONs
         for _ in range(3):
             cogon = Cogon.new(sem=[0.5] * FIXED_DIMS, unc=[0.1] * FIXED_DIMS)
             manager.add_to_history(cogon)
         
-        # Ainda sem drift (similares)
+        # Still no drift (similar)
         assert manager.detect_context_drift(threshold=0.5) is None
     
     def test_create_custom_profile(self, manager):
-        """Criar perfil customizado."""
+        """Create custom profile."""
         
         def mock_project(text: str):
-            # Mock simples (função regular, não async)
+            # Simple mock (regular function, not async)
             sem = [0.5] * FIXED_DIMS
             if "urgente" in text:
-                sem[22] = 0.9  # urgência
+                sem[22] = 0.9  # urgency
             return sem, [0.1] * FIXED_DIMS
         
         profile = manager.create_custom_profile(
@@ -187,7 +187,7 @@ class TestContextManager:
         assert len(profile.dominant_axes) == 5
     
     def test_import_export_profile(self, manager, tmp_path):
-        """Importar/exportar perfil."""
+        """Import/export profile."""
         manager.set_profile("technical")
         
         export_path = tmp_path / "profile.json"
@@ -199,7 +199,7 @@ class TestContextManager:
         assert imported.name == "technical"
     
     def test_get_stats(self, manager):
-        """Estatísticas do contexto."""
+        """Context statistics."""
         stats = manager.get_stats()
         
         assert "history_size" in stats
@@ -208,23 +208,23 @@ class TestContextManager:
 
 
 class TestGlobalContext:
-    """Testes para funções globais de contexto."""
+    """Tests for global context functions."""
     
     def test_get_context_manager_singleton(self):
-        """get_context_manager retorna singleton."""
+        """get_context_manager returns a singleton."""
         m1 = get_context_manager()
         m2 = get_context_manager()
         assert m1 is m2
     
     def test_set_context_profile_global(self):
-        """set_context_profile define globalmente."""
+        """set_context_profile sets globally."""
         profile = set_context_profile("philosophical")
         
         manager = get_context_manager()
         assert manager.current_profile.name == "philosophical"
     
     def test_adjust_with_context_global(self):
-        """adjust_with_context usa contexto global."""
+        """adjust_with_context uses global context."""
         set_context_profile("technical")
         
         sem = [0.5] * FIXED_DIMS
@@ -237,11 +237,11 @@ class TestGlobalContext:
 
 
 class TestContextIntegration:
-    """Testes de integração com bridge."""
+    """Integration tests with bridge."""
     
     @pytest.mark.asyncio
     async def test_projection_with_context(self):
-        """Projeção usando contexto."""
+        """Projection using context."""
         from leet.bridge import MockProjector
         from leet import encode
         
@@ -250,12 +250,12 @@ class TestContextIntegration:
         
         projector = MockProjector()
         
-        # Projeta texto
+        # Project text
         cogon = await encode("Servidor caiu", projector)
         
-        # Adiciona ao histórico
+        # Add to history
         manager.add_to_history(cogon)
         
-        # Verifica que contexto existe
+        # Verify that context exists
         context = manager.get_context_cogon()
         assert context is not None

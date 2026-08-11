@@ -34,11 +34,11 @@ class TestQuantization:
         assert _uint8_to_float(255) == 1.0
     
     def test_roundtrip_approximate(self):
-        """Quantização é aproximada devido à precisão limitada."""
+        """Quantization is approximate due to limited precision."""
         original = 0.734
         quantized = _float_to_uint8(original)
         recovered = _uint8_to_float(quantized)
-        # Tolerância de 1/255 (~0.4%)
+        # Tolerance of 1/255 (~0.4%)
         assert abs(original - recovered) < 0.004
 
 
@@ -60,7 +60,7 @@ class TestBinaryCodec:
         recovered = decode_cogon(data)
         
         assert recovered.id == original.id
-        # Valores devem ser aproximados devido à quantização
+        # Values should be approximate due to quantization
         for i in range(32):
             assert abs(recovered.sem[i] - original.sem[i]) < 0.004
             assert abs(recovered.unc[i] - original.unc[i]) < 0.004

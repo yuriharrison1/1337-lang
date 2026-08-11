@@ -1,5 +1,5 @@
 #!/bin/bash
-# demo_auto.sh — Demo automático sem interação
+# demo_auto.sh — Automatic demo, no interaction required
 
 set -e
 
@@ -11,24 +11,24 @@ NC='\033[0m'
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-# Verificar chave
+# Check key
 if [ -z "${LEET_API_KEY:-}" ]; then
-    echo -e "${YELLOW}LEET_API_KEY não encontrada. Usando mock.${NC}"
+    echo -e "${YELLOW}LEET_API_KEY not found. Using mock.${NC}"
     BACKEND="mock"
 else
-    echo -e "${GREEN}✅ LEET_API_KEY encontrada${NC}"
+    echo -e "${GREEN}✅ LEET_API_KEY found${NC}"
     BACKEND="anthropic"
 fi
 
 # Setup Python
-echo -e "${BLUE}🔧 Setup Python...${NC}"
+echo -e "${BLUE}🔧 Python setup...${NC}"
 for pkg_dir in python leet-py; do
     if [[ -f "$REPO_ROOT/$pkg_dir/pyproject.toml" ]]; then
         pip install -e "$REPO_ROOT/$pkg_dir" --quiet 2>/dev/null
     fi
 done
 
-echo -e "${BLUE}🚀 Iniciando REDE 1337 com $BACKEND${NC}"
+echo -e "${BLUE}🚀 Starting 1337 NETWORK with $BACKEND${NC}"
 echo ""
 
 timeout 90 python net1337.py --scenario devops --backend "$BACKEND" << 'EOF' || true
@@ -41,5 +41,5 @@ timeout 90 python net1337.py --scenario devops --backend "$BACKEND" << 'EOF' || 
 EOF
 
 echo ""
-echo -e "${GREEN}✅ Demo finalizada!${NC}"
-ls -la demo_*.json 2>/dev/null || echo "Nenhum log gerado"
+echo -e "${GREEN}✅ Demo finished!${NC}"
+ls -la demo_*.json 2>/dev/null || echo "No log generated"
