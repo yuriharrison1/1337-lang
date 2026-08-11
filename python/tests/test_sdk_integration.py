@@ -59,7 +59,7 @@ class TestConfig:
         
         errors = config.validate()
         assert len(errors) > 0
-        assert "Porta inválida" in errors[0]
+        assert "Invalid port" in errors[0]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

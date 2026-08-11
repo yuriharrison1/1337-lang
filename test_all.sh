@@ -1,5 +1,5 @@
 #!/bin/bash
-# test_all.sh — Full test suite for the 1337 v0.5.1 project
+# test_all.sh — Full test suite for the 1337 v1.0.0 project
 
 set -e
 
@@ -20,7 +20,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "   🧪 FULL TEST — 1337 v0.5.1"
+echo "   🧪 FULL TEST — 1337 v1.0.0"
 echo "═══════════════════════════════════════════════════════════════"
 
 # ── 1. Rust: clippy ────────────────────────────────────────────────────────────
@@ -46,17 +46,17 @@ else
 fi
 
 # ── 3. Consistent version ───────────────────────────────────────────────────────
-step "3. Crate versions (should be 0.5.1 across the board)"
+step "3. Crate versions (should be 1.0.0 across the board)"
 VERSION_MISMATCHES=$(cargo metadata --no-deps --format-version 1 2>/dev/null \
     | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
-bad = [p['name'] + '=' + p['version'] for p in data['packages'] if p['version'] != '0.5.1']
+bad = [p['name'] + '=' + p['version'] for p in data['packages'] if p['version'] != '1.0.0']
 print('\n'.join(bad))
 " 2>/dev/null || true)
 
 if [[ -z "$VERSION_MISMATCHES" ]]; then
-    ok "all crates on v0.5.1"
+    ok "all crates on v1.0.0"
 else
     fail "version mismatches: $VERSION_MISMATCHES"
 fi
