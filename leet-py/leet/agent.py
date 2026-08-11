@@ -24,10 +24,10 @@ def agent(name: str = "", backend: str = "default"):
     Decorator to register a function as a 1337 agent.
 
     Usage:
-        @agent(name="analisador")
-        async def analisador(cogon: Cogon, ctx: AgentContext) -> Cogon:
+        @agent(name="analyzer")
+        async def analyzer(cogon: Cogon, ctx: AgentContext) -> Cogon:
             ...
-            return ctx.assert_("resultado da análise")
+            return ctx.assert_("analysis result")
     """
     def decorator(fn: Callable) -> Callable:
         fn._leet_agent   = True

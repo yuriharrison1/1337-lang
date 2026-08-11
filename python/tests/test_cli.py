@@ -13,7 +13,7 @@ import pytest
 
 class TestCliZero:
     def test_cli_zero(self):
-        """Saída = COGON_ZERO JSON."""
+        """Output = COGON_ZERO JSON."""
         # Run as module
         result = subprocess.run(
             [sys.executable, "-m", "leet.cli", "zero"],
@@ -46,7 +46,7 @@ class TestCliZero:
         assert leet.__version__ in result.stdout
 
     def test_cli_axes(self):
-        """Lista 32 eixos."""
+        """Lists 32 axes."""
         result = subprocess.run(
             [sys.executable, "-m", "leet.cli", "axes"],
             capture_output=True,
@@ -61,7 +61,7 @@ class TestCliZero:
         assert len(lines) == 32
 
     def test_cli_axes_group_a(self):
-        """Filtra grupo A."""
+        """Filters group A."""
         result = subprocess.run(
             [sys.executable, "-m", "leet.cli", "axes", "--group", "A"],
             capture_output=True,
@@ -73,12 +73,12 @@ class TestCliZero:
         
         assert result.returncode == 0
         lines = [l for l in result.stdout.strip().split("\n") if l.strip()]
-        assert len(lines) == 14  # Grupo A tem 14 eixos
+        assert len(lines) == 14  # Group A has 14 axes
 
 
 class TestCliEncode:
     def test_cli_encode(self):
-        """Texto → JSON válido."""
+        """Text → valid JSON."""
         result = subprocess.run(
             [sys.executable, "-m", "leet.cli", "encode", "teste"],
             capture_output=True,
@@ -97,7 +97,7 @@ class TestCliEncode:
 
 class TestCliBlend:
     def test_cli_blend(self):
-        """BLEND dois COGONs."""
+        """BLEND two COGONs."""
         from leet import Cogon
         
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -120,5 +120,5 @@ class TestCliBlend:
             
             assert result.returncode == 0
             data = json.loads(result.stdout)
-            # α=0.5 entre 1.0 e 0.0 = 0.5
+            # α=0.5 between 1.0 and 0.0 = 0.5
             assert abs(data["sem"][0] - 0.5) < 0.01

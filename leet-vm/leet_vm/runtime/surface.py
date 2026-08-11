@@ -20,8 +20,8 @@ class SurfaceC4:
 
         parts = []
         for name, val, unc, _ in axes_scored[:depth]:
-            level = "alto" if val > 0.6 else ("baixo" if val < 0.4 else "médio")
-            conf  = "alta certeza" if unc < 0.3 else ("incerto" if unc > 0.7 else "")
+            level = "high" if val > 0.6 else ("low" if val < 0.4 else "medium")
+            conf  = "high confidence" if unc < 0.3 else ("uncertain" if unc > 0.7 else "")
             desc  = f"{name}={level}"
             if conf:
                 desc += f" ({conf})"
