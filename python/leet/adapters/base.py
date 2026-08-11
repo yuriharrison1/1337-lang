@@ -1,6 +1,6 @@
 """Base classes for IDE adapters.
 
-Define a interface comum que todos os adaptadores devem implementar.
+Defines the common interface that all adapters must implement.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from leet.bridge import MockProjector, SemanticProjector
 
 
 class MessageRole(Enum):
-    """Papel de uma mensagem na conversação."""
+    """Role of a message in the conversation."""
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -30,19 +30,19 @@ class MessageRole(Enum):
 
 @dataclass
 class AdapterContext:
-    """Contexto para uma interação com o adaptador.
-    
+    """Context for an interaction with the adapter.
+
     Attributes:
-        file_path: Arquivo atual sendo editado
-        project_dir: Diretório raiz do projeto
-        selection: Texto selecionado no editor
-        line_number: Linha atual do cursor
-        column: Coluna atual do cursor
-        language: Linguagem de programação detectada
-        git_branch: Branch git atual
-        git_commit: Commit hash atual
-        env_vars: Variáveis de ambiente relevantes
-        metadata: Metadados adicionais
+        file_path: Current file being edited
+        project_dir: Project root directory
+        selection: Text selected in the editor
+        line_number: Current cursor line
+        column: Current cursor column
+        language: Detected programming language
+        git_branch: Current git branch
+        git_commit: Current commit hash
+        env_vars: Relevant environment variables
+        metadata: Additional metadata
     """
     file_path: Optional[str] = None
     project_dir: Optional[str] = None
@@ -54,10 +54,10 @@ class AdapterContext:
     git_commit: Optional[str] = None
     env_vars: dict[str, str] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
-    
+
     @classmethod
     def from_vscode(cls, data: dict) -> AdapterContext:
-        """Cria contexto a partir de dados do VS Code."""
+        """Creates a context from VS Code data."""
         return cls(
             file_path=data.get('fileName'),
             project_dir=data.get('workspaceFolder'),
@@ -66,59 +66,59 @@ class AdapterContext:
             column=data.get('column'),
             language=data.get('languageId'),
         )
-    
+
     @classmethod
     def from_neovim(cls, data: dict) -> AdapterContext:
-        """Cria contexto a partir de dados do Neovim."""
+        """Creates a context from Neovim data."""
         return cls(
             file_path=data.get('file'),
             selection=data.get('selection'),
             line_number=data.get('line'),
             column=data.get('col'),
         )
-    
+
     def to_cogon_projection(self) -> tuple[list[float], list[float]]:
-        """Converte o contexto em projeção semântica (sem, unc).
-        
-        Retorna valores baseados no tipo de contexto:
-        - Código → A9_PROCESSO alto, C9_NATUREZA verbo
-        - Arquivo → A8_ESTADO alto
+        """Converts the context into a semantic projection (sem, unc).
+
+        Returns values based on the context type:
+        - Code → high A9_PROCESSO, C9_NATUREZA verb
+        - File → high A8_ESTADO
         - Git → B2_TEMPORALIDADE, B7_ORIGEM
         """
         sem = [0.5] * 32
         unc = [0.3] * 32
-        
-        # A8_ESTADO — configuracional
+
+        # A8_ESTADO — configurational
         if self.file_path:
             sem[8] = 0.8  # A8_ESTADO
             unc[8] = 0.1
-        
-        # A9_PROCESSO — transformação
+
+        # A9_PROCESSO — transformation
         if self.selection:
             sem[9] = 0.7  # A9_PROCESSO
-            sem[30] = 0.6  # C9_NATUREZA (verbo)
+            sem[30] = 0.6  # C9_NATUREZA (verb)
             unc[9] = 0.15
-        
-        # B2_TEMPORALIDADE — âncora temporal
+
+        # B2_TEMPORALIDADE — temporal anchor
         if self.git_branch or self.git_commit:
             sem[15] = 0.75  # B2_TEMPORALIDADE
             unc[15] = 0.1
-        
+
         return sem, unc
 
 
 @dataclass
 class AdapterResponse:
-    """Resposta de um adaptador IDE.
-    
+    """Response from an IDE adapter.
+
     Attributes:
-        text: Texto da resposta
-        cogon: Representação semântica da resposta
-        role: Papel da mensagem
-        files_modified: Arquivos modificados pela ação
-        exit_code: Código de saída (0 = sucesso)
-        command_executed: Comando que foi executado
-        metadata: Metadados adicionais
+        text: Response text
+        cogon: Semantic representation of the response
+        role: Message role
+        files_modified: Files modified by the action
+        exit_code: Exit code (0 = success)
+        command_executed: Command that was executed
+        metadata: Additional metadata
     """
     text: str
     cogon: Optional[Cogon] = None
@@ -128,14 +128,14 @@ class AdapterResponse:
     command_executed: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
-    
+
     @property
     def success(self) -> bool:
-        """Retorna True se a operação foi bem-sucedida."""
+        """Returns True if the operation succeeded."""
         return self.exit_code == 0
-    
+
     def to_dict(self) -> dict[str, Any]:
-        """Serializa para dicionário."""
+        """Serializes to a dictionary."""
         return {
             'text': self.text,
             'role': self.role.value,
@@ -148,44 +148,44 @@ class AdapterResponse:
 
 
 class BaseIDEAdapter(ABC):
-    """Classe base para todos os adaptadores IDE.
-    
-    Todos os adaptadores devem implementar:
-    - send_message: Enviar mensagem e receber resposta
-    - is_available: Verificar se a ferramenta está instalada
-    - get_version: Obter versão da ferramenta
-    
-    Opcionalmente podem sobrescrever:
-    - stream_message: Streaming de resposta
-    - execute_command: Execução de comandos específicos
-    - project_to_cogon: Projeção semântica customizada
+    """Base class for all IDE adapters.
+
+    All adapters must implement:
+    - send_message: Send a message and receive a response
+    - is_available: Check whether the tool is installed
+    - get_version: Get the tool's version
+
+    Optionally, they may override:
+    - stream_message: Response streaming
+    - execute_command: Execution of specific commands
+    - project_to_cogon: Custom semantic projection
     """
-    
-    # Nome do adaptador (deve ser sobrescrito)
+
+    # Adapter name (should be overridden)
     name: str = "base"
-    
-    # Comando para verificar instalação
+
+    # Command used to check installation
     version_command: tuple[str, ...] = ()
-    
+
     def __init__(
         self,
         projector: Optional[SemanticProjector] = None,
         project_dir: Optional[str] = None,
         auto_project: bool = True,
     ):
-        """Inicializa o adaptador.
-        
+        """Initializes the adapter.
+
         Args:
-            projector: Projetor semântico (None = MockProjector)
-            project_dir: Diretório raiz do projeto
-            auto_project: Se True, projeta todas as mensagens em COGONs
+            projector: Semantic projector (None = MockProjector)
+            project_dir: Project root directory
+            auto_project: If True, projects every message into COGONs
         """
         self.projector = projector or MockProjector()
         self.project_dir = project_dir
         self.auto_project = auto_project
         self._history: list[AdapterResponse] = []
         self._session_cogons: list[Cogon] = []
-    
+
     @abstractmethod
     async def send_message(
         self,
@@ -193,53 +193,53 @@ class BaseIDEAdapter(ABC):
         context: Optional[AdapterContext] = None,
         **kwargs
     ) -> AdapterResponse:
-        """Envia uma mensagem para a ferramenta IDE.
-        
+        """Sends a message to the IDE tool.
+
         Args:
-            message: Texto da mensagem
-            context: Contexto opcional (arquivo, seleção, etc)
-            **kwargs: Argumentos adicionais específicos do adaptador
-            
+            message: Message text
+            context: Optional context (file, selection, etc)
+            **kwargs: Additional adapter-specific arguments
+
         Returns:
-            AdapterResponse com o resultado
+            AdapterResponse with the result
         """
         pass
-    
+
     async def stream_message(
         self,
         message: str,
         context: Optional[AdapterContext] = None,
         **kwargs
     ) -> AsyncIterator[str]:
-        """Stream de resposta da ferramenta IDE.
-        
+        """Streams a response from the IDE tool.
+
         Yields:
-            Chunks de texto da resposta
-            
-        Padrão: acumula tudo e yield uma vez.
-        Adaptadores devem sobrescrever para verdadeiro streaming.
+            Text chunks of the response
+
+        Default: accumulates everything and yields once.
+        Adapters should override this for true streaming.
         """
         response = await self.send_message(message, context, **kwargs)
         yield response.text
-    
+
     @abstractmethod
     def is_available(self) -> bool:
-        """Verifica se a ferramenta IDE está instalada e acessível.
-        
+        """Checks whether the IDE tool is installed and accessible.
+
         Returns:
-            True se disponível, False caso contrário
+            True if available, False otherwise
         """
         pass
-    
+
     def get_version(self) -> Optional[str]:
-        """Obtém a versão da ferramenta IDE.
-        
+        """Gets the IDE tool's version.
+
         Returns:
-            String da versão ou None se não disponível
+            Version string or None if unavailable
         """
         if not self.version_command:
             return None
-        
+
         try:
             result = subprocess.run(
                 self.version_command,
@@ -252,25 +252,25 @@ class BaseIDEAdapter(ABC):
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
         return None
-    
+
     async def execute_command(
         self,
         command: str,
         args: list[str],
         cwd: Optional[str] = None
     ) -> AdapterResponse:
-        """Executa um comando diretamente na ferramenta.
-        
+        """Executes a command directly on the tool.
+
         Args:
-            command: Comando principal
-            args: Argumentos do comando
-            cwd: Diretório de trabalho
-            
+            command: Main command
+            args: Command arguments
+            cwd: Working directory
+
         Returns:
-            AdapterResponse com saída do comando
+            AdapterResponse with the command's output
         """
         full_cmd = [command] + args
-        
+
         try:
             proc = await asyncio.create_subprocess_exec(
                 *full_cmd,
@@ -278,94 +278,94 @@ class BaseIDEAdapter(ABC):
                 stderr=asyncio.subprocess.PIPE,
                 cwd=cwd or self.project_dir
             )
-            
+
             stdout, stderr = await asyncio.wait_for(
                 proc.communicate(),
                 timeout=60.0
             )
-            
+
             output = stdout.decode() if stdout else ""
             error = stderr.decode() if stderr else ""
-            
+
             text = output if proc.returncode == 0 else f"{output}\n{error}"
-            
+
             return AdapterResponse(
                 text=text.strip(),
                 exit_code=proc.returncode,
                 command_executed=" ".join(full_cmd)
             )
-            
+
         except asyncio.TimeoutError:
             return AdapterResponse(
-                text="Timeout executando comando",
+                text="Timeout executing command",
                 exit_code=-1,
                 command_executed=" ".join(full_cmd)
             )
         except Exception as e:
             return AdapterResponse(
-                text=f"Erro: {e}",
+                text=f"Error: {e}",
                 exit_code=-1,
                 command_executed=" ".join(full_cmd)
             )
-    
+
     async def project_to_cogon(self, text: str) -> Cogon:
-        """Projeta texto em COGON.
-        
+        """Projects text into a COGON.
+
         Args:
-            text: Texto a projetar
-            
+            text: Text to project
+
         Returns:
-            COGON com sem[32] e unc[32]
+            COGON with sem[32] and unc[32]
         """
         sem, unc = await self.projector.project(text)
         return Cogon.new(sem=sem, unc=unc)
-    
+
     def compute_delta(self, prev: Cogon, curr: Cogon) -> list[float]:
-        """Computa delta entre dois COGONs.
-        
+        """Computes the delta between two COGONs.
+
         Args:
-            prev: COGON anterior
-            curr: COGON atual
-            
+            prev: Previous COGON
+            curr: Current COGON
+
         Returns:
-            Vetor de diferença (32 dimensões)
+            Difference vector (32 dimensions)
         """
         from leet import delta
         return delta(prev, curr)
-    
+
     def get_convergence_score(self) -> float:
-        """Computa score de convergência da sessão.
-        
-        Retorna média das distâncias entre COGONs consecutivos.
-        Valor baixo = conversação convergiu.
+        """Computes the session's convergence score.
+
+        Returns the average distance between consecutive COGONs.
+        Low value = conversation converged.
         """
         if len(self._session_cogons) < 2:
             return 1.0
-        
+
         distances = []
         for i in range(1, len(self._session_cogons)):
             d = dist(self._session_cogons[i-1], self._session_cogons[i])
             distances.append(d)
-        
+
         return sum(distances) / len(distances)
-    
+
     def clear_history(self):
-        """Limpa histórico de mensagens."""
+        """Clears the message history."""
         self._history.clear()
         self._session_cogons.clear()
-    
+
     def _add_to_history(self, response: AdapterResponse):
-        """Adiciona resposta ao histórico."""
+        """Adds a response to the history."""
         self._history.append(response)
         if response.cogon:
             self._session_cogons.append(response.cogon)
 
 
 class ToolNotFoundError(Exception):
-    """Exceção quando a ferramenta IDE não está instalada."""
+    """Exception raised when the IDE tool is not installed."""
     pass
 
 
 class AdapterError(Exception):
-    """Exceção genérica de adaptador."""
+    """Generic adapter exception."""
     pass

@@ -1,7 +1,7 @@
-"""Claude Code Adapter — Integração com a CLI da Anthropic.
+"""Claude Code Adapter — Integration with Anthropic's CLI.
 
-Claude Code é a ferramenta oficial da Anthropic para coding com Claude.
-Documentação: https://docs.anthropic.com/claude/docs/claude-code
+Claude Code is Anthropic's official tool for coding with Claude.
+Documentation: https://docs.anthropic.com/claude/docs/claude-code
 """
 
 from __future__ import annotations
@@ -17,31 +17,31 @@ from .base import AdapterContext, AdapterResponse, BaseIDEAdapter, MessageRole, 
 
 
 class ClaudeCodeAdapter(BaseIDEAdapter):
-    """Adaptador para Claude Code (CLI da Anthropic).
-    
-    Claude Code permite interação com Claude diretamente do terminal,
-    com acesso ao filesystem, git, e execução de comandos.
-    
-    Features suportadas:
-        - Chat interativo via CLI
-        - Modo não-interativo (--output)
-        - Contexto de arquivos automático
-        - Integração git
-        - Execução de comandos sandboxed
-    
+    """Adapter for Claude Code (Anthropic's CLI).
+
+    Claude Code enables interacting with Claude directly from the terminal,
+    with access to the filesystem, git, and command execution.
+
+    Supported features:
+        - Interactive chat via CLI
+        - Non-interactive mode (--output)
+        - Automatic file context
+        - Git integration
+        - Sandboxed command execution
+
     Example:
         >>> adapter = ClaudeCodeAdapter(project_dir="/path/to/project")
         >>> if adapter.is_available():
-        ...     resp = await adapter.send_message("Explique este código")
+        ...     resp = await adapter.send_message("Explain this code")
         ...     print(resp.text)
-    
-    Configuração:
-        A CLI usa a variável ANTHROPIC_API_KEY ou busca em ~/.anthropic/.
+
+    Configuration:
+        The CLI uses the ANTHROPIC_API_KEY variable or looks in ~/.anthropic/.
     """
-    
+
     name = "claude-code"
     version_command = ("claude", "--version")
-    
+
     def __init__(
         self,
         project_dir: Optional[str] = None,
@@ -51,34 +51,34 @@ class ClaudeCodeAdapter(BaseIDEAdapter):
         verbose: bool = False,
         **kwargs
     ):
-        """Inicializa adaptador Claude Code.
-        
+        """Initializes the Claude Code adapter.
+
         Args:
-            project_dir: Diretório do projeto (obrigatório)
-            api_key: API key Anthropic (opcional, usa env)
-            model: Modelo Claude a usar
-            auto_accept: Se True, aceita automaticamente sugestões
-            verbose: Modo verboso para debug
+            project_dir: Project directory (required)
+            api_key: Anthropic API key (optional, uses env)
+            model: Claude model to use
+            auto_accept: If True, automatically accepts suggestions
+            verbose: Verbose mode for debugging
         """
         super().__init__(project_dir=project_dir, **kwargs)
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self.model = model
         self.auto_accept = auto_accept
         self.verbose = verbose
-        
-        # Verifica se tem projeto configurado
+
+        # Check whether a project is configured
         self._check_project()
-    
+
     def _check_project(self):
-        """Verifica se o diretório do projeto é válido."""
+        """Checks whether the project directory is valid."""
         if self.project_dir and not Path(self.project_dir).exists():
-            raise ValueError(f"Diretório do projeto não existe: {self.project_dir}")
-    
+            raise ValueError(f"Project directory does not exist: {self.project_dir}")
+
     def is_available(self) -> bool:
-        """Verifica se 'claude' CLI está instalado.
-        
+        """Checks whether the 'claude' CLI is installed.
+
         Returns:
-            True se claude command está no PATH
+            True if the claude command is on the PATH
         """
         try:
             result = subprocess.run(
@@ -89,52 +89,52 @@ class ClaudeCodeAdapter(BaseIDEAdapter):
             return result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
-    
+
     def _build_command(
         self,
         message: str,
         context: Optional[AdapterContext] = None,
         files: Optional[list[str]] = None
     ) -> list[str]:
-        """Constrói comando claude com argumentos.
-        
+        """Builds the claude command with arguments.
+
         Args:
-            message: Mensagem para Claude
-            context: Contexto opcional
-            files: Arquivos específicos para incluir
-            
+            message: Message for Claude
+            context: Optional context
+            files: Specific files to include
+
         Returns:
-            Lista de argumentos para subprocess
+            List of arguments for subprocess
         """
         cmd = ["claude"]
-        
-        # Modo não-interativo (captura output)
+
+        # Non-interactive mode (captures output)
         cmd.append("--output")
-        
-        # Modelo
+
+        # Model
         cmd.extend(["--model", self.model])
-        
-        # Diretório do projeto
+
+        # Project directory
         if self.project_dir:
             cmd.extend(["--cwd", self.project_dir])
-        
-        # Arquivos de contexto
+
+        # Context files
         if context and context.file_path:
             cmd.extend(["--file", context.file_path])
-        
+
         if files:
             for f in files:
                 cmd.extend(["--file", f])
-        
-        # Auto-accept (perigoso, use com cautela)
+
+        # Auto-accept (dangerous, use with caution)
         if self.auto_accept:
             cmd.append("--yes")
-        
-        # Mensagem
+
+        # Message
         cmd.append(message)
-        
+
         return cmd
-    
+
     async def send_message(
         self,
         message: str,
@@ -142,32 +142,32 @@ class ClaudeCodeAdapter(BaseIDEAdapter):
         files: Optional[list[str]] = None,
         **kwargs
     ) -> AdapterResponse:
-        """Envia mensagem para Claude Code.
-        
+        """Sends a message to Claude Code.
+
         Args:
-            message: Texto da mensagem
-            context: Contexto com arquivo/seleção
-            files: Arquivos adicionais para contexto
-            
+            message: Message text
+            context: Context with file/selection
+            files: Additional files for context
+
         Returns:
-            AdapterResponse com texto e metadados
-            
+            AdapterResponse with text and metadata
+
         Raises:
-            ToolNotFoundError: Se claude não estiver instalado
+            ToolNotFoundError: If claude is not installed
         """
         if not self.is_available():
             raise ToolNotFoundError(
-                "Claude Code não encontrado. "
-                "Instale: https://docs.anthropic.com/claude/docs/claude-code"
+                "Claude Code not found. "
+                "Install: https://docs.anthropic.com/claude/docs/claude-code"
             )
-        
+
         cmd = self._build_command(message, context, files)
-        
-        # Executa comando
+
+        # Execute command
         env = os.environ.copy()
         if self.api_key:
             env["ANTHROPIC_API_KEY"] = self.api_key
-        
+
         try:
             proc = await __import__('asyncio').create_subprocess_exec(
                 *cmd,
@@ -176,27 +176,27 @@ class ClaudeCodeAdapter(BaseIDEAdapter):
                 env=env,
                 cwd=self.project_dir
             )
-            
+
             stdout, stderr = await __import__('asyncio').wait_for(
                 proc.communicate(),
                 timeout=120.0
             )
-            
+
             output = stdout.decode() if stdout else ""
             error = stderr.decode() if stderr else ""
-            
-            # Claude Code retorna 0 mesmo com warnings
+
+            # Claude Code returns 0 even with warnings
             success = proc.returncode == 0
             text = output if success else f"{output}\n{error}"
-            
-            # Extrai arquivos modificados do output
+
+            # Extract modified files from the output
             files_modified = self._extract_file_changes(text)
-            
-            # Projeta resposta em COGON se auto_project ativado
+
+            # Project response into a COGON if auto_project is enabled
             cogon = None
             if self.auto_project:
                 cogon = await self.project_to_cogon(text)
-            
+
             response = AdapterResponse(
                 text=text.strip(),
                 cogon=cogon,
@@ -210,109 +210,109 @@ class ClaudeCodeAdapter(BaseIDEAdapter):
                     "has_error": not success,
                 }
             )
-            
+
             self._add_to_history(response)
             return response
-            
+
         except __import__('asyncio').TimeoutError:
             return AdapterResponse(
-                text="Timeout: Claude Code demorou mais de 120s",
+                text="Timeout: Claude Code took longer than 120s",
                 exit_code=-1,
                 command_executed=" ".join(cmd)
             )
         except Exception as e:
             return AdapterResponse(
-                text=f"Erro executando Claude Code: {e}",
+                text=f"Error running Claude Code: {e}",
                 exit_code=-1,
                 command_executed=" ".join(cmd)
             )
-    
+
     async def stream_message(
         self,
         message: str,
         context: Optional[AdapterContext] = None,
         **kwargs
     ) -> AsyncIterator[str]:
-        """Stream de resposta do Claude Code.
-        
-        NOTA: Claude Code não suporta streaming nativo no modo --output.
-        Esta implementação simula streaming por linhas.
-        
+        """Streams a response from Claude Code.
+
+        NOTE: Claude Code does not support native streaming in --output mode.
+        This implementation simulates streaming line by line.
+
         Yields:
-            Linhas do output
+            Lines of the output
         """
         response = await self.send_message(message, context, **kwargs)
-        
-        # Simula streaming por linhas
+
+        # Simulate streaming line by line
         for line in response.text.split('\n'):
             yield line + '\n'
-            await __import__('asyncio').sleep(0.01)  # Simula delay
-    
+            await __import__('asyncio').sleep(0.01)  # Simulate delay
+
     def _extract_file_changes(self, output: str) -> list[str]:
-        """Extrai lista de arquivos modificados do output.
-        
-        Claude Code indica mudanças com padrões como:
+        """Extracts the list of modified files from the output.
+
+        Claude Code indicates changes with patterns such as:
         - "I will edit X"
         - "Edited X"
         - "Created X"
         """
         files = []
-        
+
         patterns = [
             r'(?:edited|created|modified|deleted)\s+["\']?(\S+\.(?:py|rs|js|ts|jsx|tsx|go|java|cpp|c|h|hpp|md|txt|json|yaml|yml|toml))["\']?',
             r'(?:file|arquivo)\s+["\']?(\S+)["\']?',
         ]
-        
+
         for pattern in patterns:
             matches = re.finditer(pattern, output, re.IGNORECASE)
             for match in matches:
                 file_path = match.group(1)
                 if file_path not in files:
                     files.append(file_path)
-        
+
         return files
-    
+
     async def diff(self, target: str = "HEAD") -> AdapterResponse:
-        """Mostra diff de mudanças propostas por Claude.
-        
+        """Shows a diff of changes proposed by Claude.
+
         Args:
-            target: Alvo do diff (HEAD, staged, etc)
-            
+            target: Diff target (HEAD, staged, etc)
+
         Returns:
-            AdapterResponse com diff
+            AdapterResponse with the diff
         """
         return await self.execute_command(
             "git",
             ["diff", target],
             cwd=self.project_dir
         )
-    
+
     async def accept_changes(self) -> AdapterResponse:
-        """Aceita mudanças propostas (quando auto_accept=False).
-        
+        """Accepts proposed changes (when auto_accept=False).
+
         Returns:
-            AdapterResponse com resultado
+            AdapterResponse with the result
         """
-        # Claude Code não tem comando explícito de "accept"
-        # Mudanças já são aplicadas automaticamente
+        # Claude Code has no explicit "accept" command
+        # Changes are already applied automatically
         return AdapterResponse(
-            text="Mudanças já aplicadas. Use git para gerenciar."
+            text="Changes already applied. Use git to manage them."
         )
-    
+
     async def reject_changes(self) -> AdapterResponse:
-        """Rejeita mudanças propostas.
-        
+        """Rejects proposed changes.
+
         Returns:
-            AdapterResponse com resultado do git checkout
+            AdapterResponse with the git checkout result
         """
         return await self.execute_command(
             "git",
             ["checkout", "--", "."],
             cwd=self.project_dir
         )
-    
+
     def get_config(self) -> dict[str, Any]:
-        """Retorna configuração atual do adaptador."""
+        """Returns the adapter's current configuration."""
         return {
             "name": self.name,
             "version": self.get_version(),

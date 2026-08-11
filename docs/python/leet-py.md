@@ -1,76 +1,76 @@
-# leet-py — SDK Público
+# leet-py — Public SDK
 
-SDK público Python para integrar qualquer aplicação com o protocolo 1337. Interface de alto nível sobre `leet-vm`.
+Public Python SDK for integrating any application with the 1337 protocol. High-level interface on top of `leet-vm`.
 
-## Instalação
+## Installation
 
 ```bash
 pip install -e leet-py/
 ```
 
-## Início Rápido
+## Quick Start
 
 ```python
 import leet
 
-# Conectar com um provider LLM
+# Connect to an LLM provider
 client = leet.connect("anthropic")
 
-# Chat com memória semântica automática
+# Chat with automatic semantic memory
 response = await client.chat("qual é o status do deploy?")
 print(response.text)
-print(f"Tokens economizados: {response.tokens_saved}")
+print(f"Tokens saved: {response.tokens_saved}")
 ```
 
 ## `leet.connect()`
 
-Ponto de entrada único. Retorna um `LeetClient` pronto para uso.
+Single entry point. Returns a `LeetClient` ready to use.
 
 ```python
 client = leet.connect(
     provider="anthropic",   # "anthropic" | "openai" | "deepseek" | "gemini" | "ollama" | "mock"
-    model=None,             # modelo específico (None = padrão do provider)
-    base_url=None,          # URL base customizada (ex: OpenAI-compatible APIs)
-    api_key=None,           # API key (None = lê de LEET_API_KEY ou variável do provider)
+    model=None,             # specific model (None = provider default)
+    base_url=None,          # custom base URL (e.g. OpenAI-compatible APIs)
+    api_key=None,           # API key (None = reads from LEET_API_KEY or the provider's variable)
     service="auto",         # "auto" | gRPC URL | "local"
     store="auto",           # "auto" | Redis URL | "memory"
-    agent_id="default",     # identificador do agente
+    agent_id="default",     # agent identifier
 )
 ```
 
-### Exemplos de Conexão
+### Connection Examples
 
 ```python
 leet.connect("anthropic")                                        # Claude via Anthropic
 leet.connect("openai")                                           # GPT via OpenAI
 leet.connect("deepseek")                                         # DeepSeek
 leet.connect("gemini")                                           # Google Gemini
-leet.connect("ollama", model="llama3")                           # Ollama local
+leet.connect("ollama", model="llama3")                           # local Ollama
 leet.connect("openai", base_url="https://api.deepseek.com", model="deepseek-chat")
-leet.connect("anthropic", service="localhost:50051")             # com leet-service
-leet.connect("anthropic", store="redis://localhost:6379")        # Redis como store
+leet.connect("anthropic", service="localhost:50051")             # with leet-service
+leet.connect("anthropic", store="redis://localhost:6379")        # Redis as store
 ```
 
 ## `LeetClient`
 
 ### `.chat(text)` → `Response`
 
-Envia uma mensagem. Memória, contexto semântico e compressão são automáticos.
+Sends a message. Memory, semantic context, and compression are automatic.
 
 ```python
 response = await client.chat("preciso de ajuda com o deploy")
 
-response.text          # str — resposta do LLM
-response.cogon         # Cogon — estado semântico da resposta
-response.tokens_saved  # int — estimativa de tokens economizados
-response.model         # str — modelo usado
-response.provider      # str — provider usado
-response.session_id    # str — UUID da sessão atual
+response.text          # str — LLM response
+response.cogon         # Cogon — semantic state of the response
+response.tokens_saved  # int — estimated tokens saved
+response.model         # str — model used
+response.provider      # str — provider used
+response.session_id    # str — current session UUID
 ```
 
 ### `.chat_stream(text)` → `AsyncIterator[str]`
 
-Versão streaming. Retorna tokens à medida que chegam.
+Streaming version. Returns tokens as they arrive.
 
 ```python
 async for token in client.chat_stream("explique o erro"):
@@ -79,7 +79,7 @@ async for token in client.chat_stream("explique o erro"):
 
 ### `.recall(query, k=5)` → `list[dict]`
 
-Busca semântica na memória do agente.
+Semantic search over the agent's memory.
 
 ```python
 results = await client.recall("status do servidor", k=3)
@@ -89,7 +89,7 @@ for r in results:
 
 ### `.remember(text)` → `None`
 
-Adiciona explicitamente ao `PersonalStore`.
+Explicitly adds to the `PersonalStore`.
 
 ```python
 await client.remember("deploy da versão 1.2 feito em 14/01")
@@ -97,7 +97,7 @@ await client.remember("deploy da versão 1.2 feito em 14/01")
 
 ### `.encode(text)` → `Cogon`
 
-Projeta texto em COGON sem gerar resposta.
+Projects text into COGON without generating a response.
 
 ```python
 cogon = await client.encode("sistema instável")
@@ -105,7 +105,7 @@ cogon = await client.encode("sistema instável")
 
 ### `.decode(cogon)` → `str`
 
-Reconstrói texto a partir de COGON.
+Reconstructs text from a COGON.
 
 ```python
 text = await client.decode(cogon)
@@ -113,7 +113,7 @@ text = await client.decode(cogon)
 
 ### `.agents(*agent_fns)` → `AgentNetwork`
 
-Cria uma rede de agentes especializados.
+Creates a network of specialized agents.
 
 ```python
 network = client.agents(resumidor, analista, executor)
@@ -122,7 +122,7 @@ response = await network.chat("analise este log de erro")
 
 ### `.new_session()`
 
-Inicia uma nova sessão (reseta o DELTA incremental).
+Starts a new session (resets the incremental DELTA).
 
 ```python
 client.new_session()
@@ -130,7 +130,7 @@ client.new_session()
 
 ### `.stats`
 
-Estatísticas acumuladas da sessão.
+Accumulated session statistics.
 
 ```python
 stats = client.stats
@@ -142,34 +142,34 @@ stats.cogons_stored  # int
 
 ## `@agent` Decorator
 
-Define agentes especializados com estado próprio:
+Defines specialized agents with their own state:
 
 ```python
 from leet import agent, AgentContext
 
 @agent(name="resumidor", specialty="summarization")
 async def resumidor(ctx: AgentContext) -> str:
-    """Resume documentos longos."""
+    """Summarizes long documents."""
     return await ctx.complete(f"Resuma: {ctx.input}")
 
 @agent(name="analista", specialty="error-analysis")
 async def analista(ctx: AgentContext) -> str:
-    """Analisa erros e sugere correções."""
+    """Analyzes errors and suggests fixes."""
     return await ctx.complete(f"Analise o erro: {ctx.input}")
 
-# Criar rede
+# Create the network
 network = client.agents(resumidor, analista)
 ```
 
-`AgentContext` expõe:
-- `ctx.input` — texto do input
-- `ctx.cogon` — COGON atual
-- `ctx.context` — COGONs de contexto
-- `ctx.complete(prompt)` — chama o LLM provider
+`AgentContext` exposes:
+- `ctx.input` — input text
+- `ctx.cogon` — current COGON
+- `ctx.context` — context COGONs
+- `ctx.complete(prompt)` — calls the LLM provider
 
 ## `AgentNetwork`
 
-Rede de agentes colaborativos — distribui COGONs entre agentes registrados.
+Network of collaborating agents — distributes COGONs among registered agents.
 
 ```python
 from leet import AgentNetwork
@@ -181,16 +181,16 @@ network.add(analista)
 response = await network.chat("qual o problema?")
 ```
 
-## Providers Suportados
+## Supported Providers
 
-| Provider | Argumento | Variável de API Key |
+| Provider | Argument | API Key Variable |
 |----------|-----------|---------------------|
 | Anthropic | `"anthropic"` | `ANTHROPIC_API_KEY` |
 | OpenAI | `"openai"` | `OPENAI_API_KEY` |
 | DeepSeek | `"deepseek"` | `DEEPSEEK_API_KEY` |
 | Google Gemini | `"gemini"` | `GEMINI_API_KEY` |
-| Ollama | `"ollama"` | — (sem key) |
-| Mock | `"mock"` | — (sem key, para testes) |
+| Ollama | `"ollama"` | — (no key) |
+| Mock | `"mock"` | — (no key, for testing) |
 
 ## Response
 
@@ -205,11 +205,11 @@ class Response:
     session_id:   str
 ```
 
-## Testes
+## Tests
 
 ```bash
 cd leet-py
-python -m pytest        # 12 testes: client, network, providers
+python -m pytest        # 12 tests: client, network, providers
 ```
 
-Todos os testes usam o provider `mock` — sem chamadas de rede.
+All tests use the `mock` provider — no network calls.

@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-1337 vs English — Debate da Consciência
-Comparação completa: protocolo 1337 (COGON) × linguagem natural (English/PT)
+1337 vs English — Consciousness Debate
+Full comparison: 1337 protocol (COGON) x natural language (English/PT)
 
-Agentes: Kant · Nietzsche · Schopenhauer · Hegel
-         Pinóquio · Bolsonaro · Alan (matemático) · Carol Capel (influencer)
+Agents: Kant · Nietzsche · Schopenhauer · Hegel
+        Pinóquio · Bolsonaro · Alan (mathematician) · Carol Capel (influencer)
 
-Métricas reais:
-  • Tokens de entrada/saída (reais da API DeepSeek)
-  • Custo USD por agente, por modo, total
-  • Bytes transferidos (protocolo wire 1337 vs texto puro)
-  • Drift semântico por round (onde diverge)
-  • Matriz de influência (quem move quem)
-  • Convergência: posições evoluem ou cristalizam?
-  • Efetividade: qualidade do debate vs custo
+Real metrics:
+  • Input/output tokens (real, from the DeepSeek API)
+  • USD cost per agent, per mode, total
+  • Bytes transferred (1337 wire protocol vs plain text)
+  • Semantic drift per round (where it diverges)
+  • Influence matrix (who moves whom)
+  • Convergence: do positions evolve or crystallize?
+  • Effectiveness: debate quality vs cost
 
-Uso:
+Usage:
     DEEPSEEK_API_KEY=sk-... python consciencia_vs_english.py --rounds 25
     DEEPSEEK_API_KEY=sk-... python consciencia_vs_english.py --rounds 30 --workers 4
-    python consciencia_vs_english.py --rounds 5 --mock   # teste local sem API
+    python consciencia_vs_english.py --rounds 5 --mock   # local test, no API
 """
 
 import os, sys, json, uuid, time, math, struct, hashlib, argparse, threading
@@ -46,14 +46,14 @@ from leet.axes import (
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DEEPSEEK CLIENT (tokens reais + custo real)
+# DEEPSEEK CLIENT (real tokens + real cost)
 # ══════════════════════════════════════════════════════════════════════════════
 
 class DeepSeekClient:
     BASE_URL  = "https://api.deepseek.com/v1/chat/completions"
     MODEL     = "deepseek-chat"
-    PRICE_IN  = 0.27  / 1_000_000   # USD por token input  (cache miss)
-    PRICE_OUT = 1.10  / 1_000_000   # USD por token output
+    PRICE_IN  = 0.27  / 1_000_000   # USD per input token  (cache miss)
+    PRICE_OUT = 1.10  / 1_000_000   # USD per output token
     _lock     = threading.Lock()
 
     def __init__(self):
@@ -61,7 +61,7 @@ class DeepSeekClient:
         self._req = urllib.request
         self.api_key = os.environ.get("DEEPSEEK_API_KEY", "")
         if not self.api_key:
-            raise RuntimeError("DEEPSEEK_API_KEY não encontrada")
+            raise RuntimeError("DEEPSEEK_API_KEY not found")
         self.total_tokens_in  = 0
         self.total_tokens_out = 0
         self.total_cost_usd   = 0.0
@@ -99,7 +99,7 @@ class DeepSeekClient:
 
 
 class MockClient:
-    """Cliente mock — responde sem chamar API."""
+    """Mock client — responds without calling the API."""
     PRICE_IN  = 0.27  / 1_000_000
     PRICE_OUT = 1.10  / 1_000_000
 
@@ -133,7 +133,7 @@ class MockClient:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PROJECTOR — texto → COGON (sem API, heurístico)
+# PROJECTOR — text → COGON (no API, heuristic)
 # ══════════════════════════════════════════════════════════════════════════════
 
 KEYWORD_AXES = [
@@ -181,9 +181,9 @@ def project_text(text: str, base_sem: List[float]) -> Cogon:
 # WIRE FORMAT 1337
 # ══════════════════════════════════════════════════════════════════════════════
 
-WIRE_HDR    = 4 + 4 + 1 + 4 + 1        # 14 bytes header fixo
-WIRE_COGON  = 16 + 32 * 4 + 8          # 152 bytes payload COGON
-SPARSE_ENTRY = 1 + 4                    # 5 bytes por eixo mudado
+WIRE_HDR    = 4 + 4 + 1 + 4 + 1        # 14 bytes fixed header
+WIRE_COGON  = 16 + 32 * 4 + 8          # 152 bytes COGON payload
+SPARSE_ENTRY = 1 + 4                    # 5 bytes per changed axis
 
 def wire_cogon_bytes(cogon: Cogon) -> int:
     return WIRE_HDR + WIRE_COGON        # 166 bytes total
@@ -196,7 +196,7 @@ def sparse_delta(prev: Cogon, curr: Cogon, threshold: float = 0.01) -> List[Tupl
             if abs(curr.sem[i] - prev.sem[i]) > threshold]
 
 def cogon_summary(cogon: Cogon, top_n: int = 5) -> str:
-    """Texto compacto representando COGON (contexto 1337 para o LLM)."""
+    """Compact text representing a COGON (1337 context for the LLM)."""
     AXIS_NAMES = [
         "VIA","CORRESPONDÊNCIA","VIBRAÇÃO","POLARIDADE","RITMO",
         "CAUSA_EFEITO","GÊNERO","SISTEMA","ESTADO","PROCESSO",
@@ -218,7 +218,7 @@ def leet_dist(c1: Cogon, c2: Cogon) -> float:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# AGENTES — 8 participantes
+# AGENTS — 8 participants
 # ══════════════════════════════════════════════════════════════════════════════
 
 AGENTS_CONFIG = [
@@ -331,7 +331,7 @@ AGENTS_CONFIG = [
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ESTRUTURAS DE DADOS
+# DATA STRUCTURES
 # ══════════════════════════════════════════════════════════════════════════════
 
 @dataclass
@@ -393,11 +393,11 @@ class SessionMetrics:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SESSÕES
+# SESSIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
 class Session1337:
-    """Debate com protocolo 1337: contexto comprimido como COGON summary."""
+    """Debate using the 1337 protocol: context compressed as a COGON summary."""
 
     def __init__(self, llm, agents_cfg: List[dict]):
         self.llm = llm
@@ -408,8 +408,8 @@ class Session1337:
     def _build_prompt_1337(self, agent: dict, prev_agent_name: str,
                             prev_text: str, prev_cogon: Cogon,
                             round_num: int) -> Tuple[str, int]:
-        """Prompt comprimido — usa COGON summary em vez de histórico completo."""
-        # Contexto semântico comprimido
+        """Compressed prompt — uses a COGON summary instead of full history."""
+        # Compressed semantic context
         my_latest = (cogon_summary(agent["history"][-1])
                      if agent["history"] else "[COGON:novo_agente]")
         prev_ctx = cogon_summary(prev_cogon)
@@ -443,7 +443,7 @@ class Session1337:
             text    = result["content"]
             cogon   = project_text(text, agent["base_sem"])
 
-            # Wire intent (ASSERT ou DELTA)
+            # Wire intent (ASSERT or DELTA)
             if agent["history"]:
                 changes = sparse_delta(agent["history"][-1], cogon, self.delta_threshold)
                 intent  = "DELTA" if len(changes) < 12 else "ASSERT"
@@ -479,7 +479,7 @@ class Session1337:
 
 
 class SessionEnglish:
-    """Debate em inglês/PT puro: contexto cresce com histórico completo."""
+    """Debate in plain English/PT: context grows with full history."""
 
     def __init__(self, llm, agents_cfg: List[dict]):
         self.llm = llm
@@ -488,7 +488,7 @@ class SessionEnglish:
 
     def _build_prompt_english(self, agent: dict, prev_agent_name: str,
                                prev_text: str, round_num: int) -> Tuple[str, int]:
-        """Prompt com histórico de texto completo — contexto cresce linearmente."""
+        """Prompt with full text history — context grows linearly."""
         history_lines = agent["text_history"][-5:]  # últimas 5 falas próprias
         history_block = "\n".join(f"  - {h[:120]}" for h in history_lines)
         if not history_block:
@@ -522,7 +522,7 @@ class SessionEnglish:
             agent["history"].append(cogon)
             agent["text_history"].append(text)
 
-            # English mode sempre ASSERT (nenhuma compressão)
+            # English mode is always ASSERT (no compression)
             turn = Turn(
                 round_num=round_num, agent_name=agent["name"],
                 text=text, cogon=cogon,
@@ -569,6 +569,8 @@ PROVOCATIONS = {
 }
 
 
+# NOTE: axis names below (VIA, CORRESP, ...) mirror the protocol's Portuguese
+# axis vocabulary (see leet.axes imports above) and are left untranslated.
 def heatmap(cogon: Cogon, width: int = 15, top: int = 6) -> str:
     NAMES = ["VIA","CORRESP","VIBR","POLAR","RITMO","CAUSA","GÊNERO","SIST",
              "ESTADO","PROC","RELAÇÃO","SINAL","ESTAB","VAL_ONT",
@@ -581,28 +583,28 @@ def heatmap(cogon: Cogon, width: int = 15, top: int = 6) -> str:
             break
         bar = "█" * int(val * width) + "░" * (width - int(val * width))
         lines.append(f"    {NAMES[idx]:12} │{bar}│ {val:.2f}")
-    return "\n".join(lines) or "    (sem eixo relevante)"
+    return "\n".join(lines) or "    (no relevant axis)"
 
 
 def run_debate(llm, rounds: int, verbose: bool = True, workers: int = 1) -> Tuple[SessionMetrics, SessionMetrics]:
     print("\n" + "═"*72)
-    print("  FASE 1 — PROTOCOLO 1337 (contexto comprimido via COGON)")
+    print("  PHASE 1 — 1337 PROTOCOL (context compressed via COGON)")
     print("═"*72)
 
     sess_1337  = Session1337(llm, AGENTS_CONFIG)
     sess_eng   = SessionEnglish(llm, AGENTS_CONFIG)
 
-    # Estímulo inicial
+    # Initial stimulus
     prev_texts_1337  = {a["id"]: STIMULUS for a in AGENTS_CONFIG}
     prev_cogons_1337 = {a["id"]: project_text(STIMULUS, a["base_sem"]) for a in AGENTS_CONFIG}
     prev_texts_eng   = dict(prev_texts_1337)
     prev_cogons_eng  = dict(prev_cogons_1337)
 
-    # ── Fase 1: 1337 ──────────────────────────────────────────────────────────
+    # ── Phase 1: 1337 ─────────────────────────────────────────────────────────
     for r in range(1, rounds + 1):
         if r in PROVOCATIONS:
             prov = PROVOCATIONS[r]
-            print(f"\n  ⚡ [MEDIADOR Round {r:02d}] {prov[:80]}...")
+            print(f"\n  ⚡ [MODERATOR Round {r:02d}] {prov[:80]}...")
             for a in AGENTS_CONFIG:
                 prev_texts_1337[a["id"]] = prov
                 prev_cogons_1337[a["id"]] = project_text(prov, a["base_sem"])
@@ -624,15 +626,15 @@ def run_debate(llm, rounds: int, verbose: bool = True, workers: int = 1) -> Tupl
             total_cost = sum(t.cost_usd for t in sess_1337.metrics.turns if t.round_num == r)
             print(f"${total_cost:.4f}")
 
-    # ── Fase 2: English ───────────────────────────────────────────────────────
+    # ── Phase 2: English ──────────────────────────────────────────────────────
     print("\n" + "═"*72)
-    print("  FASE 2 — ENGLISH/PT PURO (contexto cresce com histórico)")
+    print("  PHASE 2 — PLAIN ENGLISH/PT (context grows with history)")
     print("═"*72)
 
     for r in range(1, rounds + 1):
         if r in PROVOCATIONS:
             prov = PROVOCATIONS[r]
-            print(f"\n  ⚡ [MEDIADOR Round {r:02d}] {prov[:80]}...")
+            print(f"\n  ⚡ [MODERATOR Round {r:02d}] {prov[:80]}...")
             for a in AGENTS_CONFIG:
                 prev_texts_eng[a["id"]] = prov
 
@@ -651,14 +653,14 @@ def run_debate(llm, rounds: int, verbose: bool = True, workers: int = 1) -> Tupl
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ANÁLISE DE DIVERGÊNCIA
+# DIVERGENCE ANALYSIS
 # ══════════════════════════════════════════════════════════════════════════════
 
 def find_divergence_peaks(metrics_1337: SessionMetrics,
                            metrics_eng: SessionMetrics) -> List[Dict]:
     """
-    Detecta rounds onde o drift semântico aumentou mais vs rodada anterior.
-    Divergência = aumento na distância pairwise média.
+    Detects rounds where semantic drift increased the most vs the previous round.
+    Divergence = increase in average pairwise distance.
     """
     peaks = []
     for r, (pw_1337, pw_eng) in enumerate(
@@ -677,21 +679,21 @@ def find_divergence_peaks(metrics_1337: SessionMetrics,
 
 def influence_matrix(metrics: SessionMetrics) -> Dict[str, int]:
     """
-    Proxy de influência: agente cujas mudanças de COGON correlacionam
-    com mudanças subsequentes nos demais.
-    Simplificado: conta quantas vezes cada agente mudou de ASSERT→DELTA
-    (indica que estava sendo influenciado).
+    Influence proxy: agent whose COGON changes correlate with
+    subsequent changes in the others.
+    Simplified: counts how many times each agent switched from ASSERT→DELTA
+    (indicating it was being influenced).
     """
     influenced = defaultdict(int)
     for turn in metrics.turns:
         if turn.intent == "DELTA":
             influenced[turn.agent_name] += 1
-    # Inverte: quem menos muda = mais influente (mantém posição)
+    # Inverted: whoever changes least = most influential (holds their position)
     return dict(influenced)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# RELATÓRIO
+# REPORT
 # ══════════════════════════════════════════════════════════════════════════════
 
 def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) -> dict:
@@ -700,9 +702,9 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
 
     agent_names = [a["name"] for a in AGENTS_CONFIG]
 
-    # ── Totais ────────────────────────────────────────────────────────────────
+    # ── Totals ────────────────────────────────────────────────────────────────
     print(f"\n{sep}")
-    print("  RELATÓRIO COMPLETO — 1337 vs ENGLISH")
+    print("  FULL REPORT — 1337 vs ENGLISH")
     print(f"{sep}")
 
     tok_1337 = m1337.total_tokens_in + m1337.total_tokens_out
@@ -719,20 +721,20 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
     wire_saving_pct = (1 - wire_1337 / wire_eng) * 100 if wire_eng > 0 else 0
     prompt_saving_pct = (1 - prompt_1337 / prompt_eng) * 100 if prompt_eng > 0 else 0
 
-    print(f"\n{'─'*25} TOKENS & CUSTO {'─'*30}")
-    print(f"  {'Métrica':<30} {'1337':>12} {'English':>12} {'Economia':>10}")
+    print(f"\n{'─'*25} TOKENS & COST {'─'*30}")
+    print(f"  {'Metric':<30} {'1337':>12} {'English':>12} {'Savings':>10}")
     print(f"  {'─'*30} {'─'*12} {'─'*12} {'─'*10}")
     print(f"  {'Tokens input':30} {m1337.total_tokens_in:>12,} {meng.total_tokens_in:>12,} {(1-m1337.total_tokens_in/max(meng.total_tokens_in,1))*100:>9.1f}%")
     print(f"  {'Tokens output':30} {m1337.total_tokens_out:>12,} {meng.total_tokens_out:>12,} {(1-m1337.total_tokens_out/max(meng.total_tokens_out,1))*100:>9.1f}%")
     print(f"  {'Tokens total':30} {tok_1337:>12,} {tok_eng:>12,} {tok_saving_pct:>9.1f}%")
-    print(f"  {'Custo USD':30} ${cost_1337:>11.4f} ${cost_eng:>11.4f} {cost_saving_pct:>9.1f}%")
-    print(f"  {'Chars de prompt':30} {prompt_1337:>12,} {prompt_eng:>12,} {prompt_saving_pct:>9.1f}%")
-    print(f"  {'Bytes transferidos (wire)':30} {wire_1337:>12,} {wire_eng:>12,} {wire_saving_pct:>9.1f}%")
-    print(f"  {'Msgs totais':30} {len(m1337.turns):>12} {len(meng.turns):>12} {'—':>10}")
+    print(f"  {'Cost USD':30} ${cost_1337:>11.4f} ${cost_eng:>11.4f} {cost_saving_pct:>9.1f}%")
+    print(f"  {'Prompt chars':30} {prompt_1337:>12,} {prompt_eng:>12,} {prompt_saving_pct:>9.1f}%")
+    print(f"  {'Bytes transferred (wire)':30} {wire_1337:>12,} {wire_eng:>12,} {wire_saving_pct:>9.1f}%")
+    print(f"  {'Total msgs':30} {len(m1337.turns):>12} {len(meng.turns):>12} {'—':>10}")
 
-    # ── Por agente ────────────────────────────────────────────────────────────
-    print(f"\n{'─'*25} POR AGENTE (modo 1337) {'─'*24}")
-    print(f"  {'Agente':<14} {'Msgs':>5} {'Tokens':>8} {'Custo USD':>10} {'DELTA%':>7} {'Bytes Wire':>11}")
+    # ── Per agent ─────────────────────────────────────────────────────────────
+    print(f"\n{'─'*25} PER AGENT (1337 mode) {'─'*24}")
+    print(f"  {'Agent':<14} {'Msgs':>5} {'Tokens':>8} {'Cost USD':>10} {'DELTA%':>7} {'Wire Bytes':>11}")
     print(f"  {'─'*14} {'─'*5} {'─'*8} {'─'*10} {'─'*7} {'─'*11}")
     for name in agent_names:
         msgs   = m1337.agent_messages.get(name, 0)
@@ -743,8 +745,8 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
         wbytes = m1337.agent_wire_bytes.get(name, 0)
         print(f"  {name:<14} {msgs:>5} {tokens:>8,} ${cost:>9.4f} {delta_pct:>6.1f}% {wbytes:>11,}")
 
-    print(f"\n{'─'*25} POR AGENTE (modo English) {'─'*21}")
-    print(f"  {'Agente':<14} {'Msgs':>5} {'Tokens':>8} {'Custo USD':>10} {'Chars ctx':>10}")
+    print(f"\n{'─'*25} PER AGENT (English mode) {'─'*21}")
+    print(f"  {'Agent':<14} {'Msgs':>5} {'Tokens':>8} {'Cost USD':>10} {'Ctx chars':>10}")
     print(f"  {'─'*14} {'─'*5} {'─'*8} {'─'*10} {'─'*10}")
     for name in agent_names:
         msgs   = meng.agent_messages.get(name, 0)
@@ -754,12 +756,12 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
         avg_ctx = sum(t.prompt_chars for t in turns_agent) / max(len(turns_agent), 1)
         print(f"  {name:<14} {msgs:>5} {tokens:>8,} ${cost:>9.4f} {avg_ctx:>10.0f}")
 
-    # ── Semântica & divergência ───────────────────────────────────────────────
-    print(f"\n{'─'*25} DIVERGÊNCIA PAIRWISE (estado final) {'─'*9}")
+    # ── Semantics & divergence ───────────────────────────────────────────────
+    print(f"\n{'─'*25} PAIRWISE DIVERGENCE (final state) {'─'*9}")
     final_1337 = m1337.pairwise_per_round[-1] if m1337.pairwise_per_round else {}
     final_eng  = meng.pairwise_per_round[-1]  if meng.pairwise_per_round  else {}
     all_pairs  = sorted(set(list(final_1337.keys()) + list(final_eng.keys())))
-    print(f"  {'Par':<28} {'1337':>8} {'English':>8} {'Δ':>7}")
+    print(f"  {'Pair':<28} {'1337':>8} {'English':>8} {'Δ':>7}")
     print(f"  {'─'*28} {'─'*8} {'─'*8} {'─'*7}")
     for pair in all_pairs[:15]:
         d1  = final_1337.get(pair, 0)
@@ -768,24 +770,24 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
         bar = "►" if diff > 0.02 else ("◄" if diff < -0.02 else "≈")
         print(f"  {pair:<28} {d1:>8.4f} {de:>8.4f} {diff:>+7.4f} {bar}")
 
-    # ── Onde divergiu mais ────────────────────────────────────────────────────
-    print(f"\n{'─'*25} TOP 5 ROUNDS DE MAIOR DIVERGÊNCIA ENTRE MODOS {'─'*1}")
+    # ── Where it diverged most ───────────────────────────────────────────────
+    print(f"\n{'─'*25} TOP 5 ROUNDS OF GREATEST DIVERGENCE BETWEEN MODES {'─'*1}")
     peaks = find_divergence_peaks(m1337, meng)
-    print(f"  {'Round':>6} {'1337 dist':>10} {'Eng dist':>10} {'Δ':>8} {'Interpretação'}")
+    print(f"  {'Round':>6} {'1337 dist':>10} {'Eng dist':>10} {'Δ':>8} {'Interpretation'}")
     print(f"  {'─'*6} {'─'*10} {'─'*10} {'─'*8} {'─'*30}")
     for p in peaks:
-        interp = ("1337 mais divergente" if p["diff"] > 0.01
-                  else "English mais divergente" if p["diff"] < -0.01
-                  else "modos similares")
-        # Verifica se havia provocação nesse round
+        interp = ("1337 more divergent" if p["diff"] > 0.01
+                  else "English more divergent" if p["diff"] < -0.01
+                  else "modes similar")
+        # Check whether there was a provocation in this round
         if p["round"] in PROVOCATIONS:
-            interp += " [PROVOCAÇÃO]"
+            interp += " [PROVOCATION]"
         print(f"  {p['round']:>6} {p['avg_dist_1337']:>10.4f} {p['avg_dist_english']:>10.4f} "
               f"{p['diff']:>+8.4f} {interp}")
 
-    # ── Efetividade ───────────────────────────────────────────────────────────
-    print(f"\n{'─'*25} EFETIVIDADE {'─'*34}")
-    # Convergência: distância pairwise média diminuiu?
+    # ── Effectiveness ─────────────────────────────────────────────────────────
+    print(f"\n{'─'*25} EFFECTIVENESS {'─'*34}")
+    # Convergence: did the average pairwise distance decrease?
     def avg_pw(pw_list, idx):
         pw = pw_list[idx] if idx < len(pw_list) else {}
         return sum(pw.values()) / len(pw) if pw else 0
@@ -799,11 +801,11 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
     delta_eng  = conv_eng_end  - conv_eng_start
 
     def convergence_verdict(d):
-        if d < -0.02:  return f"CONVERGIU ({d:+.4f}) ✓"
-        elif d > 0.02: return f"DIVERGIU ({d:+.4f}) ✗"
-        else:          return f"ESTÁVEL ({d:+.4f}) ~"
+        if d < -0.02:  return f"CONVERGED ({d:+.4f}) ✓"
+        elif d > 0.02: return f"DIVERGED ({d:+.4f}) ✗"
+        else:          return f"STABLE ({d:+.4f}) ~"
 
-    print(f"  Distância pairwise média — Round 1 → Round {rounds}")
+    print(f"  Average pairwise distance — Round 1 → Round {rounds}")
     print(f"  1337   : {conv_1337_start:.4f} → {conv_1337_end:.4f}  {convergence_verdict(delta_1337)}")
     print(f"  English: {conv_eng_start:.4f} → {conv_eng_end:.4f}  {convergence_verdict(delta_eng)}")
 
@@ -812,34 +814,34 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
     n_total_1337 = len(m1337.turns)
     delta_eff = n_delta_1337 / max(n_total_1337, 1) * 100
     print(f"\n  DELTA efficiency (1337): {n_delta_1337}/{n_total_1337} msgs = {delta_eff:.1f}%")
-    print(f"  (DELTA = conteúdo reutilizou referência anterior — evitou retransmissão)")
+    print(f"  (DELTA = content reused a prior reference — avoided retransmission)")
 
-    # Custo-efetividade
-    print(f"\n  Custo por mensagem:")
+    # Cost-effectiveness
+    print(f"\n  Cost per message:")
     print(f"    1337   : ${cost_1337/max(len(m1337.turns),1):.5f}/msg")
     print(f"    English: ${cost_eng/max(len(meng.turns),1):.5f}/msg")
     if cost_eng > 0:
-        print(f"  Economia total: ${cost_eng - cost_1337:.4f} USD  ({cost_saving_pct:.1f}%)")
+        print(f"  Total savings: ${cost_eng - cost_1337:.4f} USD  ({cost_saving_pct:.1f}%)")
 
-    # ── Heatmaps finais ───────────────────────────────────────────────────────
-    print(f"\n{'─'*25} ESTADO SEMÂNTICO FINAL (modo 1337) {'─'*10}")
+    # ── Final heatmaps ────────────────────────────────────────────────────────
+    print(f"\n{'─'*25} FINAL SEMANTIC STATE (1337 mode) {'─'*10}")
     for a in AGENTS_CONFIG:
         cogons_a = m1337.cogons.get(a["name"], [])
         if cogons_a:
             print(f"\n  [{a['name']}]")
             print(heatmap(cogons_a[-1]))
 
-    # ── Resumo executivo ──────────────────────────────────────────────────────
+    # ── Executive summary ─────────────────────────────────────────────────────
     print(f"\n{sep}")
-    print("  RESUMO EXECUTIVO")
+    print("  EXECUTIVE SUMMARY")
     print(sep)
     print(f"  Rounds         : {rounds}")
-    print(f"  Agentes        : {len(AGENTS_CONFIG)}")
+    print(f"  Agents         : {len(AGENTS_CONFIG)}")
     print(f"  Tokens 1337    : {tok_1337:,}  ({tok_saving_pct:+.1f}% vs English)")
-    print(f"  Custo 1337     : ${cost_1337:.4f}  ({cost_saving_pct:+.1f}% vs English)")
+    print(f"  Cost 1337      : ${cost_1337:.4f}  ({cost_saving_pct:+.1f}% vs English)")
     print(f"  Wire bytes 1337: {wire_1337:,}  ({wire_saving_pct:+.1f}% vs English)")
     print(f"  DELTA% (1337)  : {delta_eff:.1f}%")
-    print(f"  Convergência   : 1337={convergence_verdict(delta_1337)} | English={convergence_verdict(delta_eng)}")
+    print(f"  Convergence    : 1337={convergence_verdict(delta_1337)} | English={convergence_verdict(delta_eng)}")
     print(sep)
 
     report = {
@@ -905,34 +907,34 @@ def print_full_report(m1337: SessionMetrics, meng: SessionMetrics, rounds: int) 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="1337 vs English — Debate da Consciência com 8 agentes"
+        description="1337 vs English — Consciousness Debate with 8 agents"
     )
     parser.add_argument("--rounds",  type=int, default=25,
-                        help="Rounds de dialética, mínimo 25 (default: 25)")
+                        help="Dialectic rounds, minimum 25 (default: 25)")
     parser.add_argument("--workers", type=int, default=1,
-                        help="Workers paralelos (default: 1)")
+                        help="Parallel workers (default: 1)")
     parser.add_argument("--mock",    action="store_true",
-                        help="Usar cliente mock (sem API, para teste)")
+                        help="Use the mock client (no API, for testing)")
     parser.add_argument("--quiet",   action="store_true",
-                        help="Sem detalhes por round")
+                        help="No per-round details")
     parser.add_argument("--output",  type=str, default=None,
-                        help="Arquivo JSON de saída adicional")
+                        help="Additional output JSON file")
     args = parser.parse_args()
 
     if args.rounds < 25:
-        print(f"  ⚠  rounds={args.rounds} < 25 mínimo — ajustando para 25.")
+        print(f"  ⚠  rounds={args.rounds} < 25 minimum — adjusting to 25.")
         args.rounds = 25
 
     # ── header ────────────────────────────────────────────────────────────────
     print("=" * 72)
-    print("  1337 VS ENGLISH — DEBATE DA CONSCIÊNCIA")
+    print("  1337 VS ENGLISH — CONSCIOUSNESS DEBATE")
     print("  Kant · Nietzsche · Schopenhauer · Hegel ·")
     print("  Pinóquio · Bolsonaro · Alan · Carol Capel")
     print("=" * 72)
     print(f"  Rounds  : {args.rounds}")
-    print(f"  Agentes : {len(AGENTS_CONFIG)}")
-    print(f"  Backend : {'mock (sem custo)' if args.mock else 'DeepSeek deepseek-chat'}")
-    print(f"  Preços  : $0.27/M input · $1.10/M output (deepseek-chat)")
+    print(f"  Agents  : {len(AGENTS_CONFIG)}")
+    print(f"  Backend : {'mock (no cost)' if args.mock else 'DeepSeek deepseek-chat'}")
+    print(f"  Pricing : $0.27/M input · $1.10/M output (deepseek-chat)")
     print()
 
     # ── client ────────────────────────────────────────────────────────────────
@@ -940,7 +942,7 @@ def main():
         llm = MockClient()
     else:
         if not os.environ.get("DEEPSEEK_API_KEY"):
-            print("  ✗ DEEPSEEK_API_KEY não encontrada. Use --mock para teste.")
+            print("  ✗ DEEPSEEK_API_KEY not found. Use --mock for testing.")
             sys.exit(1)
         llm = DeepSeekClient()
 
@@ -950,21 +952,21 @@ def main():
                              verbose=not args.quiet, workers=args.workers)
     elapsed = time.perf_counter() - t0
 
-    print(f"\n  ⏱  Tempo total: {elapsed/60:.1f} min")
+    print(f"\n  ⏱  Total time: {elapsed/60:.1f} min")
 
     # ── report ────────────────────────────────────────────────────────────────
     report = print_full_report(m1337, meng, args.rounds)
 
-    # Salvar
+    # Save
     fname = f"consciencia_comparison_{int(time.time())}.json"
     with open(fname, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
-    print(f"\n  💾 Relatório salvo: {fname}")
+    print(f"\n  💾 Report saved: {fname}")
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
-        print(f"  💾 Cópia adicional: {args.output}")
+        print(f"  💾 Additional copy: {args.output}")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mede compressão em janelas deslizantes para encontrar o pico de eficiência.
+Measures compression over sliding windows to find the peak efficiency point.
 """
 
 import json
@@ -9,72 +9,72 @@ from pathlib import Path
 import math
 
 def entropia_shannon(palavras):
-    """Calcula entropia de Shannon do vocabulário."""
+    """Computes the Shannon entropy of the vocabulary."""
     from collections import Counter
-    
+
     if not palavras:
         return 0
-    
+
     freq = Counter(palavras)
     total = len(palavras)
-    
+
     H = 0
     for count in freq.values():
         p = count / total
         if p > 0:
             H -= p * math.log2(p)
-    
+
     return H
 
 def analisar_janelas(report_file: str, window: int = 10):
-    """Analisa compressão em janelas deslizantes."""
-    
+    """Analyzes compression over sliding windows."""
+
     with open(report_file) as f:
         report = json.load(f)
-    
+
     timeline = report['timeline']
-    
+
     print("=" * 80)
-    print(f"   📊 ANÁLISE POR JANELAS (window={window})")
+    print(f"   📊 SLIDING-WINDOW ANALYSIS (window={window})")
     print("=" * 80)
     print()
-    
+
     resultados = []
     step = max(1, window // 2)  # 50% overlap
-    
-    print("Janela    | Msgs | Chars  | Compr. | Entropia | Conceitos")
+
+    print("Window    | Msgs | Chars  | Compr. | Entropy | Concepts")
     print("-" * 80)
-    
+
     for i in range(0, len(timeline) - window + 1, step):
         janela = timeline[i:i+window]
-        
-        # Métricas básicas
+
+        # Basic metrics
         chars = sum(len(m.get('text_preview', '')) for m in janela)
         vectors = len(janela)
         compression = chars / (vectors * 32 * 4) if vectors > 0 else 0
-        
-        # Entropia do vocabulário
+
+        # Vocabulary entropy
         todas_palavras = []
         for m in janela:
             text = m.get('text_preview', '').lower()
             palavras = [p.strip('.,!?;:"()[]') for p in text.split()]
             todas_palavras.extend(palavras)
-        
+
         H = entropia_shannon(todas_palavras)
-        
-        # Contar conceitos únicos mencionados
+
+        # Count unique concepts mentioned
         conceitos = set()
         for m in janela:
             text = m.get('text_preview', '').lower()
             if 'eros' in text or 'amor' in text:
                 conceitos.add('eros')
             if 'belez' in text or 'kalos' in text:
-                conceitos.add('beleza')
+                conceitos.add('beauty')
             if 'alma' in text or 'psyche' in text:
-                conceitos.add('alma')
+                conceitos.add('soul')
             if 'daimon' in text:
                 conceitos.add('daimon')
-        
+
         resultados.append({
             'inicio': i,
             'fim': i + window,
@@ -83,77 +83,77 @@ def analisar_janelas(report_file: str, window: int = 10):
             'conceitos': len(conceitos),
             'chars': chars
         })
-        
+
         print(f"{i:3}-{i+window:3} | {vectors:4} | {chars:6} | {compression:6.2f}:1 | "
               f"{H:8.2f} | {len(conceitos):9}")
-    
-    # Análise
+
+    # Analysis
     print()
-    print("📈 ANÁLISE:")
+    print("📈 ANALYSIS:")
     print()
-    
+
     if len(timeline) < window:
-        print(f"  ⚠️ Apenas {len(timeline)} mensagens. Não é possível analisar janelas de {window}.")
+        print(f"  ⚠️ Only {len(timeline)} messages. Cannot analyze windows of {window}.")
         return
-    
+
     if resultados:
-        # Encontrar pico de compressão
+        # Find the compression peak
         pico = max(resultados, key=lambda x: x['compressao'])
-        print(f"  🏆 Pico de compressão: {pico['compressao']:.2f}:1")
-        print(f"     Ocorreu na janela: msgs {pico['inicio']}-{pico['fim']}")
-        print(f"     Entropia: {pico['entropia']:.2f}")
+        print(f"  🏆 Compression peak: {pico['compressao']:.2f}:1")
+        print(f"     Occurred in window: msgs {pico['inicio']}-{pico['fim']}")
+        print(f"     Entropy: {pico['entropia']:.2f}")
         print()
-        
-        # Encontrar menor entropia (convergência máxima)
+
+        # Find the lowest entropy (maximum convergence)
         convergencia = min(resultados, key=lambda x: x['entropia'])
-        print(f"  🎯 Maior convergência vocabulário: entropia {convergencia['entropia']:.2f}")
-        print(f"     Janela: msgs {convergencia['inicio']}-{convergencia['fim']}")
+        print(f"  🎯 Strongest vocabulary convergence: entropy {convergencia['entropia']:.2f}")
+        print(f"     Window: msgs {convergencia['inicio']}-{convergencia['fim']}")
         print()
-        
-        # Médias
+
+        # Averages
         avg_comp = sum(r['compressao'] for r in resultados) / len(resultados)
         avg_entr = sum(r['entropia'] for r in resultados) / len(resultados)
-        
-        print(f"  📊 Médias:")
-        print(f"     Compressão: {avg_comp:.2f}:1")
-        print(f"     Entropia:   {avg_entr:.2f}")
+
+        print(f"  📊 Averages:")
+        print(f"     Compression: {avg_comp:.2f}:1")
+        print(f"     Entropy:     {avg_entr:.2f}")
         print()
-        
-        # Correlação
+
+        # Correlation
         if len(resultados) > 2:
-            # Correlação compressão vs entropia
+            # Compression vs entropy correlation
             n = len(resultados)
             sum_x = sum(r['compressao'] for r in resultados)
             sum_y = sum(r['entropia'] for r in resultados)
             sum_xy = sum(r['compressao'] * r['entropia'] for r in resultados)
             sum_x2 = sum(r['compressao']**2 for r in resultados)
             sum_y2 = sum(r['entropia']**2 for r in resultados)
-            
+
             numerador = n * sum_xy - sum_x * sum_y
             denominador = math.sqrt((n * sum_x2 - sum_x**2) * (n * sum_y2 - sum_y**2))
-            
+
             if denominador != 0:
                 correlacao = numerador / denominador
-                print(f"  🔗 Correlação compressão × entropia: {correlacao:.3f}")
+                print(f"  🔗 Compression × entropy correlation: {correlacao:.3f}")
                 if correlacao < -0.5:
-                    print("     → Compressão alta quando entropia BAIXA (convergência!)")
+                    print("     → Compression is high when entropy is LOW (convergence!)")
                 elif correlacao > 0.5:
-                    print("     → Compressão alta quando entropia ALTA (divergência?)")
+                    print("     → Compression is high when entropy is HIGH (divergence?)")
                 else:
-                    print("     → Sem correlação forte")
-    
+                    print("     → No strong correlation")
+
     print()
-    print("💡 CONCLUSÃO:")
+    print("💡 CONCLUSION:")
     print()
     if pico['compressao'] > 1.5:
-        print(f"  ✅ Descoberta confirmada! Pico de {pico['compressao']:.2f}:1")
-        print(f"     na janela {pico['inicio']}-{pico['fim']}")
+        print(f"  ✅ Finding confirmed! Peak of {pico['compressao']:.2f}:1")
+        print(f"     in window {pico['inicio']}-{pico['fim']}")
         print()
-        print("  A compressão 1337 melhora significativamente")
-        print("  conforme os agentes estabelecem vocabulário compartilhado.")
+        print("  1337 compression improves significantly")
+        print("  as agents establish shared vocabulary.")
     else:
-        print("  ⚠️ Compressão moderada. Talvez a conversa não tenha")
-        print("     atingido convergência semântica suficiente.")
+        print("  ⚠️ Moderate compression. The conversation may not have")
+        print("     reached sufficient semantic convergence.")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -161,10 +161,10 @@ if __name__ == "__main__":
     else:
         files = list(Path('.').glob('plato_1337_report_*.json'))
         if not files:
-            print("❌ Nenhum relatório encontrado")
+            print("❌ No report found")
             sys.exit(1)
         report_file = max(files, key=lambda p: p.stat().st_mtime)
-    
+
     window = int(sys.argv[2]) if len(sys.argv) > 2 else 10
-    
+
     analisar_janelas(report_file, window)

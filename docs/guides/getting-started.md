@@ -1,12 +1,12 @@
-# Primeiros Passos
+# Getting Started
 
-## Pré-requisitos
+## Prerequisites
 
 - Rust 1.75+ (`rustup update`)
 - Python 3.11+
-- `cargo` e `pip`
+- `cargo` and `pip`
 
-## 1. Clonar e Compilar
+## 1. Clone and Build
 
 ```bash
 git clone <repo>
@@ -14,23 +14,23 @@ cd 1337
 cargo build --workspace --release
 ```
 
-O binário principal estará em `target/release/leet`.
+The main binary will be at `target/release/leet`.
 
-## 2. Verificar a Instalação
+## 2. Verify the Installation
 
 ```bash
 ./target/release/leet version
-./target/release/leet axes    # lista os 32 eixos canônicos
+./target/release/leet axes    # lists the 32 canonical axes
 ```
 
-## 3. Primeiro COGON
+## 3. First COGON
 
 ```bash
-# Encode: texto → vetor semântico
+# Encode: text → semantic vector
 ./target/release/leet encode "deploy urgente falhou em produção"
 ```
 
-Saída típica:
+Typical output:
 ```
 G8  URGENCY          ████████████████████ 0.95
 P3  ANOMALY          ███████████████████  0.90
@@ -40,53 +40,53 @@ D2  PROCESS          ███████████████      0.75
 ...
 ```
 
-## 4. Distância Semântica
+## 4. Semantic Distance
 
 ```bash
 ./target/release/leet dist "urgente" "tranquilo"
-# → 0.82 (muito diferentes)
+# → 0.82 (very different)
 
 ./target/release/leet dist "deploy falhou" "falha no deploy"
-# → 0.04 (semanticamente equivalentes — skip re-envio)
+# → 0.04 (semantically equivalent — skip re-send)
 ```
 
-## 5. Blend de Contextos
+## 5. Context Blending
 
 ```bash
 ./target/release/leet blend "sistema estável" "alerta crítico" --alpha 0.3
-# 30% estável, 70% crítico
+# 30% stable, 70% critical
 ```
 
-## 6. SDK Python
+## 6. Python SDK
 
 ```bash
-# Instalar dependências
+# Install dependencies
 pip install -e python/
 pip install -e leet-vm/
 pip install -e leet-py/
 
-# Testar importação
+# Test the import
 python3 -c "import leet; print('OK')"
 ```
 
-### Uso básico
+### Basic Usage
 
 ```python
 import asyncio
 import leet
 
 async def main():
-    # Modo mock (sem API key necessária)
+    # Mock mode (no API key required)
     client = leet.connect("mock")
     
     response = await client.chat("qual é o status?")
     print(response.text)
-    print(f"Tokens economizados: {response.tokens_saved}")
+    print(f"Tokens saved: {response.tokens_saved}")
 
 asyncio.run(main())
 ```
 
-### Com Anthropic
+### With Anthropic
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -97,7 +97,7 @@ client = leet.connect("anthropic")
 response = await client.chat("resuma o contexto do projeto")
 ```
 
-## 7. Suíte de Testes
+## 7. Test Suite
 
 ```bash
 # Rust
@@ -108,26 +108,26 @@ cd python && python -m pytest
 cd ../leet-vm && python -m pytest
 cd ../leet-py && python -m pytest
 
-# Auditoria completa (clippy + testes + PT names + CLI + Python)
+# Full audit (clippy + tests + PT names + CLI + Python)
 bash test_all.sh
 ```
 
-## 8. Verificar o MCP Server
+## 8. Verify the MCP Server
 
-Se estiver usando Claude Code, o MCP server já está configurado via `.claude/settings.json`.
+If you're using Claude Code, the MCP server is already configured via `.claude/settings.json`.
 
 ```bash
-# Verificar se o servidor arranca
+# Check that the server starts
 python3 mcp/leet_mcp.py &
 
-# No Claude Code, as tools estarão disponíveis:
+# In Claude Code, the tools will be available:
 # encode(), dist(), blend(), axes(), inspect()
 ```
 
-## Próximos Passos
+## Next Steps
 
-- [COGON](../COGON.md) — entender o vetor semântico e os 32 eixos
-- [leet-cli](../crates/leet-cli.md) — todos os subcomandos
-- [leet-py](../python/leet-py.md) — SDK Python completo
-- [Claude Code / MCP](mcp-claude-code.md) — integração com Claude Code
-- [Deploy](deployment.md) — rodar em produção com systemd
+- [COGON](../COGON.md) — understand the semantic vector and the 32 axes
+- [leet-cli](../crates/leet-cli.md) — all subcommands
+- [leet-py](../python/leet-py.md) — full Python SDK
+- [Claude Code / MCP](mcp-claude-code.md) — integration with Claude Code
+- [Deploy](deployment.md) — running in production with systemd

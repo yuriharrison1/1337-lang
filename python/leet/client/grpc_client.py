@@ -1,10 +1,10 @@
-"""gRPC Client para leet-service.
+"""gRPC Client for leet-service.
 
-Conecta com o serviço gRPC do 1337 para:
-- Encode: texto → COGON
-- Decode: COGON → texto
-- Delta: computar diferenças
-- Recall: recuperar COGONs similares
+Connects to the 1337 gRPC service for:
+- Encode: text → COGON
+- Decode: COGON → text
+- Delta: compute differences
+- Recall: retrieve similar COGONs
 - Health: health check
 
 Example:
@@ -21,50 +21,50 @@ from dataclasses import dataclass
 from typing import Optional, AsyncIterator, Callable
 import warnings
 
-# Tenta importar gRPC
+# Try to import gRPC
 try:
     import grpc
     import grpc.aio
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
-    warnings.warn("grpcio não instalado. Cliente gRPC não disponível.")
+    warnings.warn("grpcio not installed. gRPC client unavailable.")
 
 from leet import Cogon
 
 
 @dataclass
 class GrpcConfig:
-    """Configuração do cliente gRPC."""
+    """gRPC client configuration."""
     host: str = "localhost"
     port: int = 50051
     timeout: float = 30.0
     max_retries: int = 3
-    compression: Optional[str] = None  # 'gzip' ou None
-    
+    compression: Optional[str] = None  # 'gzip' or None
+
     @property
     def target(self) -> str:
-        """Retorna string de conexão gRPC."""
+        """Returns the gRPC connection string."""
         return f"{self.host}:{self.port}"
 
 
 @dataclass
 class EncodeResult:
-    """Resultado de encode."""
+    """Encode result."""
     cogon_id: str
     sem: list[float]
     unc: list[float]
     stamp: int
     tokens_saved: int
-    
+
     def to_cogon(self) -> Cogon:
-        """Converte para Cogon."""
+        """Converts to a Cogon."""
         return Cogon.new(sem=self.sem, unc=self.unc)
 
 
 @dataclass
 class CogonRecord:
-    """Registro de COGON do store."""
+    """COGON record from the store."""
     cogon_id: str
     sem: list[float]
     unc: list[float]
@@ -73,55 +73,55 @@ class CogonRecord:
 
 
 class GrpcClient:
-    """Cliente gRPC para leet-service.
-    
-    Implementa o protocolo 1337 via gRPC:
-    - Encode: texto → COGON (sem[32], unc[32])
-    - Decode: COGON → texto
-    - Delta: computar diferença
-    - Recall: recuperar similares
-    
+    """gRPC client for leet-service.
+
+    Implements the 1337 protocol over gRPC:
+    - Encode: text → COGON (sem[32], unc[32])
+    - Decode: COGON → text
+    - Delta: compute difference
+    - Recall: retrieve similar entries
+
     Args:
-        config: Configuração gRPC
-        
+        config: gRPC configuration
+
     Example:
         >>> async with GrpcClient(GrpcConfig()) as client:
         ...     result = await client.encode("Hello", agent_id="agent1")
         ...     print(result.sem)
     """
-    
+
     def __init__(self, config: Optional[GrpcConfig] = None):
         if not GRPC_AVAILABLE:
             raise RuntimeError(
-                "grpcio não instalado. "
-                "Instale: pip install grpcio grpcio-tools"
+                "grpcio not installed. "
+                "Install with: pip install grpcio grpcio-tools"
             )
-        
+
         self.config = config or GrpcConfig()
         self._channel: Optional[grpc.aio.Channel] = None
         self._stub: Optional[object] = None
         self._connected = False
-        
+
     async def connect(self) -> "GrpcClient":
-        """Conecta ao serviço gRPC.
-        
+        """Connects to the gRPC service.
+
         Returns:
-            Self para chaining
+            Self for chaining
         """
         options = [
             ('grpc.max_receive_message_length', 50 * 1024 * 1024),  # 50MB
             ('grpc.max_send_message_length', 50 * 1024 * 1024),
         ]
-        
+
         if self.config.compression == 'gzip':
             options.append(('grpc.default_compression_algorithm', 2))  # gzip
-        
+
         self._channel = grpc.aio.insecure_channel(
             self.config.target,
             options=options
         )
-        
-        # Tenta conectar com timeout
+
+        # Try to connect with a timeout
         try:
             await asyncio.wait_for(
                 self._channel.channel_ready(),
@@ -130,34 +130,34 @@ class GrpcClient:
             self._connected = True
         except asyncio.TimeoutError:
             raise ConnectionError(
-                f"Timeout conectando a {self.config.target}"
+                f"Timeout connecting to {self.config.target}"
             )
-        
-        # Cria stub (quando temos os proto stubs gerados)
+
+        # Create stub (once the generated proto stubs are available)
         # self._stub = leet_pb2_grpc.LeetServiceStub(self._channel)
-        
+
         return self
-    
+
     async def close(self):
-        """Fecha conexão."""
+        """Closes the connection."""
         if self._channel:
             await self._channel.close()
             self._connected = False
-    
+
     async def __aenter__(self) -> "GrpcClient":
         await self.connect()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
-    
+
     async def health_check(self) -> dict:
-        """Verifica saúde do serviço.
-        
+        """Checks the health of the service.
+
         Returns:
-            Dict com status, backend e uptime
+            Dict with status, backend and uptime
         """
-        # Fallback: tenta conexão TCP
+        # Fallback: try a TCP connection
         try:
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(self.config.host, self.config.port),
@@ -177,31 +177,31 @@ class GrpcClient:
                 "error": str(e),
                 "connected": False
             }
-    
+
     async def encode(
         self,
         text: str,
         agent_id: str = "",
         session_id: str = ""
     ) -> EncodeResult:
-        """Codifica texto em COGON.
-        
+        """Encodes text into a COGON.
+
         Args:
-            text: Texto a codificar
-            agent_id: ID do agente
-            session_id: ID da sessão
-            
+            text: Text to encode
+            agent_id: Agent ID
+            session_id: Session ID
+
         Returns:
-            EncodeResult com sem[32], unc[32]
-            
+            EncodeResult with sem[32], unc[32]
+
         Raises:
-            ConnectionError: Se não conectado
-            RuntimeError: Se gRPC não disponível
+            ConnectionError: If not connected
+            RuntimeError: If gRPC unavailable
         """
         if not self._connected:
-            raise ConnectionError("Cliente não conectado. Use connect() primeiro.")
-        
-        # Quando temos stubs protobuf:
+            raise ConnectionError("Client not connected. Use connect() first.")
+
+        # Once we have protobuf stubs:
         # request = leet_pb2.EncodeRequest(
         #     text=text,
         #     agent_id=agent_id,
@@ -209,9 +209,9 @@ class GrpcClient:
         # )
         # response = await self._stub.Encode(request, timeout=self.config.timeout)
         # return EncodeResult(...)
-        
-        # Stub: retorna valores mock para teste
-        warnings.warn("Método encode requer stubs protobuf gerados. Retornando mock.")
+
+        # Stub: returns mock values for testing
+        warnings.warn("encode method requires generated protobuf stubs. Returning mock.")
         return EncodeResult(
             cogon_id="mock-cogon-id",
             sem=[0.5] * 32,
@@ -219,51 +219,51 @@ class GrpcClient:
             stamp=0,
             tokens_saved=len(text) // 4
         )
-    
+
     async def decode(
         self,
         sem: list[float],
         unc: list[float],
         lang: str = "pt"
     ) -> str:
-        """Decodifica COGON em texto.
-        
+        """Decodes a COGON into text.
+
         Args:
-            sem: Vetor semântico [32]
-            unc: Vetor de incerteza [32]
-            lang: Linguagem
-            
+            sem: Semantic vector [32]
+            unc: Uncertainty vector [32]
+            lang: Language
+
         Returns:
-            Texto reconstruído
+            Reconstructed text
         """
         if not self._connected:
-            raise ConnectionError("Cliente não conectado.")
-        
-        warnings.warn("Método decode requer stubs protobuf gerados. Retornando mock.")
+            raise ConnectionError("Client not connected.")
+
+        warnings.warn("decode method requires generated protobuf stubs. Returning mock.")
         return f"[Decoded: {sem[:3]}...]"
-    
+
     async def delta(
         self,
         sem_prev: list[float],
         sem_curr: list[float]
     ) -> tuple[list[float], float]:
-        """Computa delta entre dois vetores semânticos.
-        
+        """Computes the delta between two semantic vectors.
+
         Args:
-            sem_prev: Vetor anterior [32]
-            sem_curr: Vetor atual [32]
-            
+            sem_prev: Previous vector [32]
+            sem_curr: Current vector [32]
+
         Returns:
             Tuple (patch, magnitude)
         """
         if len(sem_prev) != 32 or len(sem_curr) != 32:
-            raise ValueError("Vetores devem ter 32 dimensões")
-        
+            raise ValueError("Vectors must have 32 dimensions")
+
         patch = [curr - prev for prev, curr in zip(sem_prev, sem_curr)]
         magnitude = sum(p ** 2 for p in patch) ** 0.5
-        
+
         return patch, magnitude
-    
+
     async def recall(
         self,
         sem: list[float],
@@ -271,70 +271,70 @@ class GrpcClient:
         agent_id: str,
         k: int = 5
     ) -> list[CogonRecord]:
-        """Recupera COGONs similares do store.
-        
+        """Retrieves similar COGONs from the store.
+
         Args:
-            sem: Query semântico [32]
-            unc: Incerteza [32]
-            agent_id: ID do agente
-            k: Número de resultados
-            
+            sem: Query semantic vector [32]
+            unc: Uncertainty [32]
+            agent_id: Agent ID
+            k: Number of results
+
         Returns:
-            Lista de CogonRecord mais similares
+            List of the most similar CogonRecords
         """
         if not self._connected:
-            raise ConnectionError("Cliente não conectado.")
-        
-        warnings.warn("Método recall requer stubs protobuf gerados. Retornando mock.")
+            raise ConnectionError("Client not connected.")
+
+        warnings.warn("recall method requires generated protobuf stubs. Returning mock.")
         return []
-    
+
     async def encode_batch(
         self,
         texts: list[str],
         agent_id: str = "",
         session_id: str = ""
     ) -> AsyncIterator[EncodeResult]:
-        """Codifica múltiplos textos em batch (streaming).
-        
+        """Encodes multiple texts in batch (streaming).
+
         Args:
-            texts: Lista de textos
-            agent_id: ID do agente
-            session_id: ID da sessão
-            
+            texts: List of texts
+            agent_id: Agent ID
+            session_id: Session ID
+
         Yields:
-            EncodeResult para cada texto
+            EncodeResult for each text
         """
         for text in texts:
             yield await self.encode(text, agent_id, session_id)
 
 
-# Fallback: Cliente HTTP/REST
+# Fallback: HTTP/REST client
 class HttpClient:
-    """Cliente HTTP fallback quando gRPC não disponível.
-    
-    Usa REST API (quando implementada no servidor).
+    """HTTP fallback client used when gRPC is unavailable.
+
+    Uses the REST API (once implemented on the server).
     """
-    
+
     def __init__(self, base_url: str = "http://localhost:8080"):
         self.base_url = base_url
         self._session: Optional[object] = None
-    
+
     async def connect(self):
-        """Inicializa sessão HTTP."""
+        """Initializes the HTTP session."""
         import aiohttp
         self._session = aiohttp.ClientSession()
         return self
-    
+
     async def close(self):
-        """Fecha sessão."""
+        """Closes the session."""
         if self._session:
             await self._session.close()
-    
+
     async def encode(self, text: str, **kwargs) -> EncodeResult:
         """Encode via HTTP POST."""
         if not self._session:
-            raise ConnectionError("Sessão não iniciada")
-        
+            raise ConnectionError("Session not started")
+
         async with self._session.post(
             f"{self.base_url}/encode",
             json={"text": text, **kwargs}

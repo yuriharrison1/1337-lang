@@ -1,8 +1,8 @@
-"""Aider Adapter — Integração com Aider (multi-LLM coding assistant).
+"""Aider Adapter — Integration with Aider (multi-LLM coding assistant).
 
-Aider é uma ferramenta popular que permite editar código em paralelo com LLMs,
-suportando múltiplos modelos (GPT-4, Claude, etc).
-Documentação: https://aider.chat/
+Aider is a popular tool that lets you edit code in parallel with LLMs,
+supporting multiple models (GPT-4, Claude, etc).
+Documentation: https://aider.chat/
 """
 
 from __future__ import annotations
@@ -18,37 +18,37 @@ from .base import AdapterContext, AdapterResponse, BaseIDEAdapter, MessageRole, 
 
 
 class AiderAdapter(BaseIDEAdapter):
-    """Adaptador para Aider.
-    
-    Aider é único porque:
-    - Suporta múltiplos LLMs (OpenAI, Anthropic, OpenRouter, etc)
-    - Edita arquivos diretamente no editor
-    - Integração com git automática
-    - Mapa de repostório para contexto
-    - Suporte a testes automáticos
-    
+    """Adapter for Aider.
+
+    Aider is unique because:
+    - Supports multiple LLMs (OpenAI, Anthropic, OpenRouter, etc)
+    - Edits files directly in the editor
+    - Automatic git integration
+    - Repository map for context
+    - Automatic test support
+
     Features:
-        - Chat com contexto de arquivos
-        - Edição direta de código
-        - Commit automático
-        - Testes (pytest, etc)
-    
+        - Chat with file context
+        - Direct code editing
+        - Automatic commits
+        - Tests (pytest, etc)
+
     Example:
         >>> adapter = AiderAdapter(
         ...     project_dir="/path",
         ...     model="gpt-4o",
         ...     auto_commit=True
         ... )
-        >>> resp = await adapter.send_message("Adicione validação de email")
-    
-    Configuração:
-        Requer OPENAI_API_KEY, ANTHROPIC_API_KEY, ou outra key
-        dependendo do modelo escolhido.
+        >>> resp = await adapter.send_message("Add email validation")
+
+    Configuration:
+        Requires OPENAI_API_KEY, ANTHROPIC_API_KEY, or another key
+        depending on the chosen model.
     """
-    
+
     name = "aider"
     version_command = ("aider", "--version")
-    
+
     MODELOS_POPULARES = [
         "gpt-4o",
         "gpt-4o-mini",
@@ -56,7 +56,7 @@ class AiderAdapter(BaseIDEAdapter):
         "claude-opus-4-20250514",
         "deepseek-chat",
     ]
-    
+
     def __init__(
         self,
         project_dir: Optional[str] = None,
@@ -68,16 +68,16 @@ class AiderAdapter(BaseIDEAdapter):
         lint_cmd: Optional[str] = None,
         **kwargs
     ):
-        """Inicializa adaptador Aider.
-        
+        """Initializes the Aider adapter.
+
         Args:
-            project_dir: Diretório do projeto (obrigatório)
-            model: Modelo principal
-            editor_model: Modelo para edições (default=model)
-            weak_model: Modelo para tarefas simples
-            auto_commit: Commit automático após mudanças
-            test_cmd: Comando para rodar testes
-            lint_cmd: Comando para linting
+            project_dir: Project directory (required)
+            model: Main model
+            editor_model: Model for edits (default=model)
+            weak_model: Model for simple tasks
+            auto_commit: Automatic commit after changes
+            test_cmd: Command to run tests
+            lint_cmd: Command for linting
         """
         super().__init__(project_dir=project_dir, **kwargs)
         self.model = model
@@ -86,23 +86,23 @@ class AiderAdapter(BaseIDEAdapter):
         self.auto_commit = auto_commit
         self.test_cmd = test_cmd
         self.lint_cmd = lint_cmd
-        
+
         if not self.project_dir:
-            raise ValueError("Aider requer project_dir")
-        
+            raise ValueError("Aider requires project_dir")
+
         self._check_project()
-    
+
     def _check_project(self):
-        """Verifica se o diretório do projeto é válido."""
+        """Checks whether the project directory is valid."""
         if not Path(self.project_dir).exists():
-            raise ValueError(f"Diretório do projeto não existe: {self.project_dir}")
-        
-        # Verifica se é um repo git (recomendado)
+            raise ValueError(f"Project directory does not exist: {self.project_dir}")
+
+        # Check whether it is a git repo (recommended)
         git_dir = Path(self.project_dir) / ".git"
         self.is_git_repo = git_dir.exists()
-    
+
     def is_available(self) -> bool:
-        """Verifica se 'aider' está instalado."""
+        """Checks whether 'aider' is installed."""
         try:
             result = subprocess.run(
                 ["aider", "--version"],
@@ -112,7 +112,7 @@ class AiderAdapter(BaseIDEAdapter):
             return result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
-    
+
     def _build_command(
         self,
         message: str,
@@ -120,48 +120,48 @@ class AiderAdapter(BaseIDEAdapter):
         files: Optional[list[str]] = None,
         read_only: Optional[list[str]] = None
     ) -> list[str]:
-        """Constrói comando aider com argumentos."""
+        """Builds the aider command with arguments."""
         cmd = ["aider"]
-        
-        # Modelos
+
+        # Models
         cmd.extend(["--model", self.model])
         if self.editor_model != self.model:
             cmd.extend(["--editor-model", self.editor_model])
         if self.weak_model:
             cmd.extend(["--weak-model", self.weak_model])
-        
+
         # Auto-commit
         if self.auto_commit:
             cmd.append("--auto-commits")
         else:
             cmd.append("--no-auto-commits")
-        
-        # Comandos de teste/lint
+
+        # Test/lint commands
         if self.test_cmd:
             cmd.extend(["--test-cmd", self.test_cmd])
         if self.lint_cmd:
             cmd.extend(["--lint-cmd", self.lint_cmd])
-        
-        # Mensagem
+
+        # Message
         cmd.extend(["--message", message])
-        
-        # Arquivos para editar
+
+        # Files to edit
         if files:
             for f in files:
                 cmd.append(f)
-        
-        # Arquivos read-only (contexto)
+
+        # Read-only files (context)
         if read_only:
             for f in read_only:
                 cmd.extend(["--read", f])
-        
-        # Arquivo de contexto
+
+        # Context file
         if context and context.file_path:
             if context.file_path not in (files or []):
                 cmd.append(context.file_path)
-        
+
         return cmd
-    
+
     async def send_message(
         self,
         message: str,
@@ -170,25 +170,25 @@ class AiderAdapter(BaseIDEAdapter):
         read_only: Optional[list[str]] = None,
         **kwargs
     ) -> AdapterResponse:
-        """Envia mensagem para Aider.
-        
+        """Sends a message to Aider.
+
         Args:
-            message: Texto da mensagem
-            context: Contexto
-            files: Arquivos para editar
-            read_only: Arquivos só para leitura (contexto)
-            
+            message: Message text
+            context: Context
+            files: Files to edit
+            read_only: Read-only files (context)
+
         Returns:
             AdapterResponse
         """
         if not self.is_available():
             raise ToolNotFoundError(
-                "Aider não encontrado. "
-                "Instale: pip install aider-chat"
+                "Aider not found. "
+                "Install: pip install aider-chat"
             )
-        
+
         cmd = self._build_command(message, context, files, read_only)
-        
+
         try:
             proc = await __import__('asyncio').create_subprocess_exec(
                 *cmd,
@@ -196,29 +196,29 @@ class AiderAdapter(BaseIDEAdapter):
                 stderr=__import__('asyncio').subprocess.PIPE,
                 cwd=self.project_dir
             )
-            
+
             stdout, stderr = await __import__('asyncio').wait_for(
                 proc.communicate(),
-                timeout=180.0  # Aider pode demorar mais
+                timeout=180.0  # Aider can take longer
             )
-            
+
             output = stdout.decode() if stdout else ""
             error = stderr.decode() if stderr else ""
-            
+
             success = proc.returncode == 0
             text = output if success else f"{output}\n{error}"
-            
-            # Extrai arquivos modificados
+
+            # Extract modified files
             files_modified = self._extract_file_changes(text)
-            
-            # Detecta commits
+
+            # Detect commits
             commits = self._extract_commits(text)
-            
-            # Projeta em COGON
+
+            # Project into COGON
             cogon = None
             if self.auto_project:
                 cogon = await self.project_to_cogon(text)
-            
+
             response = AdapterResponse(
                 text=text.strip(),
                 cogon=cogon,
@@ -235,113 +235,113 @@ class AiderAdapter(BaseIDEAdapter):
                     "has_error": not success,
                 }
             )
-            
+
             self._add_to_history(response)
             return response
-            
+
         except __import__('asyncio').TimeoutError:
             return AdapterResponse(
-                text="Timeout: Aider demorou mais de 180s",
+                text="Timeout: Aider took longer than 180s",
                 exit_code=-1
             )
         except Exception as e:
             return AdapterResponse(
-                text=f"Erro executando Aider: {e}",
+                text=f"Error running Aider: {e}",
                 exit_code=-1
             )
-    
+
     async def add_files(self, files: list[str]) -> AdapterResponse:
-        """Adiciona arquivos ao contexto do Aider.
-        
+        """Adds files to Aider's context.
+
         Args:
-            files: Lista de caminhos de arquivos
-            
+            files: List of file paths
+
         Returns:
             AdapterResponse
         """
         cmd = ["aider", "--add"] + files
         return await self.execute_command(cmd[0], cmd[1:], cwd=self.project_dir)
-    
+
     async def drop_files(self, files: list[str]) -> AdapterResponse:
-        """Remove arquivos do contexto do Aider."""
+        """Removes files from Aider's context."""
         cmd = ["aider", "--drop"] + files
         return await self.execute_command(cmd[0], cmd[1:], cwd=self.project_dir)
-    
+
     async def lint(self) -> AdapterResponse:
-        """Roda linting nos arquivos modificados."""
+        """Runs linting on the modified files."""
         if not self.lint_cmd:
             return AdapterResponse(
-                text="Lint não configurado. Defina lint_cmd."
+                text="Lint not configured. Set lint_cmd."
             )
         return await self.send_message("/lint")
-    
+
     async def test(self) -> AdapterResponse:
-        """Roda testes."""
+        """Runs tests."""
         if not self.test_cmd:
             return AdapterResponse(
-                text="Testes não configurados. Defina test_cmd."
+                text="Tests not configured. Set test_cmd."
             )
         return await self.send_message("/test")
-    
+
     async def commit(self, message: Optional[str] = None) -> AdapterResponse:
-        """Faz commit das mudanças.
-        
+        """Commits the changes.
+
         Args:
-            message: Mensagem do commit (opcional)
+            message: Commit message (optional)
         """
         if message:
             return await self.send_message(f"/commit {message}")
         return await self.send_message("/commit")
-    
+
     async def undo(self) -> AdapterResponse:
-        """Desfaz última mudança."""
+        """Undoes the last change."""
         return await self.send_message("/undo")
-    
+
     async def reset(self) -> AdapterResponse:
-        """Reseta para último commit."""
+        """Resets to the last commit."""
         return await self.send_message("/reset")
-    
+
     def _extract_file_changes(self, output: str) -> list[str]:
-        """Extrai arquivos modificados do output do Aider."""
+        """Extracts modified files from Aider's output."""
         files = []
-        
-        # Padrões do Aider
+
+        # Aider patterns
         patterns = [
             r'(?:Edited|Created|Deleted)\s+["\']?(\S+)["\']?',
             r'(?:editou|criou|deletou)\s+["\']?(\S+)["\']?',
             r'◀\s+(\S+\.(?:py|rs|js|ts|go|java|cpp|c|md|json|yaml|toml))',
         ]
-        
+
         for pattern in patterns:
             matches = re.finditer(pattern, output, re.IGNORECASE)
             for match in matches:
                 file_path = match.group(1)
                 if file_path not in files:
                     files.append(file_path)
-        
+
         return files
-    
+
     def _extract_commits(self, output: str) -> list[str]:
-        """Extrai hashes de commits."""
+        """Extracts commit hashes."""
         commits = []
         pattern = r'(?:commit|committed)\s+([a-f0-9]{7,40})'
         for match in re.finditer(pattern, output, re.IGNORECASE):
             commits.append(match.group(1))
         return commits
-    
+
     def get_repo_map(self) -> AdapterResponse:
-        """Obtém mapa do repositório.
-        
-        Executa aider --show-repo-map para ver o contexto.
+        """Gets the repository map.
+
+        Runs aider --show-repo-map to view the context.
         """
         return self.execute_command(
             "aider",
             ["--show-repo-map"],
             cwd=self.project_dir
         )
-    
+
     def get_config(self) -> dict[str, Any]:
-        """Retorna configuração atual."""
+        """Returns the current configuration."""
         return {
             "name": self.name,
             "version": self.get_version(),

@@ -1,5 +1,5 @@
 """
-Classe base para fontes de dados de treinamento.
+Base class for training data sources.
 """
 
 from abc import ABC, abstractmethod
@@ -12,24 +12,24 @@ import hashlib
 @dataclass
 class TextSample:
     """
-    Uma amostra de texto para treinamento.
-    
-    Inclui o texto, metadados e opcionalmente as projeções
-    semânticas já calculadas (sem/unc).
+    A text sample for training.
+
+    Includes the text, metadata, and optionally the already-computed
+    semantic projections (sem/unc).
     """
     text: str
-    source: str  # Identificador da fonte
+    source: str  # Source identifier
     id: str = field(default="")
     metadata: dict = field(default_factory=dict)
-    # Campos opcionais preenchidos após projeção
+    # Optional fields populated after projection
     sem: Optional[list[float]] = None
     unc: Optional[list[float]] = None
-    # Timestamp de coleta
+    # Collection timestamp
     collected_at: datetime = field(default_factory=datetime.now)
-    
+
     def __post_init__(self):
         if not self.id:
-            # Gera ID a partir do hash do texto
+            # Generate ID from the text hash
             self.id = hashlib.sha256(self.text.encode()).hexdigest()[:16]
     
     def to_dict(self) -> dict:
@@ -58,31 +58,31 @@ class TextSample:
 
 @dataclass
 class SourceConfig:
-    """Configuração para uma fonte de dados."""
-    # Número máximo de amostras a coletar
+    """Configuration for a data source."""
+    # Maximum number of samples to collect
     max_samples: int = 1000
-    # Filtro de idioma (ISO 639-1)
+    # Language filter (ISO 639-1)
     language: str = "en"
-    # Tamanho mínimo/máximo do texto (caracteres)
+    # Minimum/maximum text length (characters)
     min_length: int = 20
     max_length: int = 2000
-    # Delay entre requisições (segundos)
+    # Delay between requests (seconds)
     request_delay: float = 0.5
-    # Timeout para requisições
+    # Timeout for requests
     timeout: int = 30
     # Retry config
     max_retries: int = 3
-    # API keys (se necessário)
+    # API keys (if needed)
     api_keys: dict = field(default_factory=dict)
-    # Filtros adicionais específicos da fonte
+    # Additional source-specific filters
     filters: dict = field(default_factory=dict)
 
 
 class DataSource(ABC):
     """
-    Interface base para fontes de dados de treinamento.
-    
-    Todas as fontes devem implementar este contrato.
+    Base interface for training data sources.
+
+    All sources must implement this contract.
     """
     
     def __init__(self, config: Optional[SourceConfig] = None):
@@ -92,15 +92,15 @@ class DataSource(ABC):
     @abstractmethod
     def fetch(self) -> Iterator[TextSample]:
         """
-        Busca amostras de texto da fonte.
-        
+        Fetches text samples from the source.
+
         Yields:
-            TextSample: Amostras de texto
+            TextSample: Text samples
         """
         pass
-    
+
     def fetch_all(self) -> list[TextSample]:
-        """Busca todas as amostras até max_samples."""
+        """Fetches all samples up to max_samples."""
         samples = []
         for i, sample in enumerate(self.fetch()):
             if i >= self.config.max_samples:
@@ -110,20 +110,20 @@ class DataSource(ABC):
     
     def filter_sample(self, sample: TextSample) -> bool:
         """
-        Filtra uma amostra baseado nos critérios de configuração.
-        
+        Filters a sample based on the configuration criteria.
+
         Returns:
-            True se a amostra passa no filtro
+            True if the sample passes the filter
         """
         text = sample.text.strip()
-        
-        # Comprimento
+
+        # Length
         if len(text) < self.config.min_length:
             return False
         if len(text) > self.config.max_length:
             return False
-        
-        # Idioma (se disponível nos metadados)
+
+        # Language (if available in metadata)
         if "language" in sample.metadata:
             if sample.metadata["language"] != self.config.language:
                 return False
@@ -131,7 +131,7 @@ class DataSource(ABC):
         return True
     
     def deduplicate(self, samples: list[TextSample]) -> list[TextSample]:
-        """Remove duplicatas baseado no ID."""
+        """Removes duplicates based on ID."""
         seen = set()
         unique = []
         for s in samples:
@@ -141,7 +141,7 @@ class DataSource(ABC):
         return unique
     
     def get_stats(self) -> dict:
-        """Retorna estatísticas da fonte."""
+        """Returns source statistics."""
         return {
             "name": self.name,
             "config": {

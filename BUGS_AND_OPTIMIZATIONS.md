@@ -1,84 +1,84 @@
-# Relatório de Bugs e Otimizações - Projeto 1337
+# Bugs and Optimizations Report - 1337 Project
 
-**Data da análise:** 2026-04-01  
-**Versão analisada:** v0.4  
-**Testes executados:** 146 Python ✓ | Rust: não compilou (falta lib.rs)
+**Analysis date:** 2026-04-01
+**Version analyzed:** v0.4
+**Tests run:** 146 Python ✓ | Rust: did not compile (missing lib.rs)
 
 ---
 
-## 🐛 BUGS ENCONTRADOS
+## 🐛 BUGS FOUND
 
-### 1. **Código Redundante em `validate.py` (linha 53-56)**
-**Severidade:** Baixa  
-**Arquivo:** `python/leet/validate.py`
+### 1. **Redundant Code in `validate.py` (line 53-56)**
+**Severity:** Low
+**File:** `python/leet/validate.py`
 
 ```python
-# Código inútil que não faz nada
+# Useless code that does nothing
 if isinstance(msg.payload, Payload):
     payload = msg.payload
 else:
     payload = msg.payload
 ```
 
-**Problema:** As duas branches fazem exatamente a mesma atribuição. O tipo `Payload` é um alias para `Union['Cogon', 'Dag']`.
+**Problem:** Both branches perform exactly the same assignment. The `Payload` type is an alias for `Union['Cogon', 'Dag']`.
 
-**Correção:** Remover o bloco condicional e usar `payload = msg.payload` diretamente.
+**Fix:** Remove the conditional block and use `payload = msg.payload` directly.
 
 ---
 
-### 2. **Verificação de Optional Incorreta em R7 (`validate.py`)**
-**Severidade:** Média  
-**Arquivo:** `python/leet/validate.py` (linha 137)
+### 2. **Incorrect Optional Check in R7 (`validate.py`)**
+**Severity:** Medium
+**File:** `python/leet/validate.py` (line 137)
 
 ```python
 def _r7_zone_emergent_c5(msg: Msg1337) -> Optional[str]:
-    if msg.c5 and msg.c5.zone_emergent:  # c5 não é Optional no dataclass!
+    if msg.c5 and msg.c5.zone_emergent:  # c5 is not Optional in the dataclass!
 ```
 
-**Problema:** No dataclass `Msg1337`, `c5` é do tipo `CanonicalSpace` (não Optional), então a verificação `if msg.c5` sempre será True. Se o campo puder ser None, o type hint está incorreto.
+**Problem:** In the `Msg1337` dataclass, `c5` is of type `CanonicalSpace` (not Optional), so the `if msg.c5` check will always be True. If the field can be None, the type hint is incorrect.
 
-**Correção:** Ou tornar `c5: Optional[CanonicalSpace]` no dataclass, ou remover a verificação redundante.
+**Fix:** Either make `c5: Optional[CanonicalSpace]` in the dataclass, or remove the redundant check.
 
 ---
 
-### 3. **Inconsistência de Interface Async/Sync no Cache (`cache.py`)**
-**Severidade:** Alta  
-**Arquivo:** `python/leet/cache.py`
+### 3. **Async/Sync Interface Inconsistency in Cache (`cache.py`)**
+**Severity:** High
+**File:** `python/leet/cache.py`
 
 ```python
-# CacheBackend define métodos síncronos
+# CacheBackend defines synchronous methods
 class CacheBackend(ABC):
     @abstractmethod
     def get(self, key: str) -> Optional[Any]: ...
 
-# RedisCache implementa como async
+# RedisCache implements them as async
 class RedisCache(CacheBackend):
-    async def get(self, key: str) -> Optional[Any]: ...  # Incompatível!
+    async def get(self, key: str) -> Optional[Any]: ...  # Incompatible!
 ```
 
-**Problema:** `RedisCache` implementa métodos como `async` mas a classe base define como síncronos. Isso quebra o Liskov Substitution Principle e causará erros em runtime.
+**Problem:** `RedisCache` implements methods as `async` but the base class defines them as synchronous. This breaks the Liskov Substitution Principle and will cause runtime errors.
 
-**Correção:** Separar interfaces síncronas e assíncronas, ou tornar todos os backends compatíveis com ambos os modos.
+**Fix:** Separate synchronous and asynchronous interfaces, or make all backends compatible with both modes.
 
 ---
 
-### 4. **Uso de Índice Hardcoded em `bridge.py`**
-**Severidade:** Baixa  
-**Arquivo:** `python/leet/bridge.py` (linha 43)
+### 4. **Hardcoded Index Used in `bridge.py`**
+**Severity:** Low
+**File:** `python/leet/bridge.py` (line 43)
 
 ```python
-sem[13] = 0.15  # A13_VALÊNCIA_ONTOLÓGICA (negativo)
+sem[13] = 0.15  # A13_VALÊNCIA_ONTOLÓGICA (negative)
 ```
 
-**Problema:** Usa índice numérico mágico ao invés da constante `A13_VALENCIA_ONTOLOGICA` já importada.
+**Problem:** Uses a magic numeric index instead of the already-imported `A13_VALENCIA_ONTOLOGICA` constant.
 
-**Correção:** Substituir por `sem[A13_VALENCIA_ONTOLOGICA] = 0.15`
+**Fix:** Replace with `sem[A13_VALENCIA_ONTOLOGICA] = 0.15`
 
 ---
 
-### 5. **Tratamento de Erro Incompleto em `Msg1337.from_dict`**
-**Severidade:** Média  
-**Arquivo:** `python/leet/types.py` (linha 364-371)
+### 5. **Incomplete Error Handling in `Msg1337.from_dict`**
+**Severity:** Medium
+**File:** `python/leet/types.py` (line 364-371)
 
 ```python
 @classmethod
@@ -87,62 +87,62 @@ def from_dict(cls, d: dict) -> Msg1337:
     if "root" in payload_dict:
         payload = Dag.from_dict(payload_dict)
     else:
-        payload = Cogon.from_dict(payload_dict)  # Pode falhar silenciosamente
+        payload = Cogon.from_dict(payload_dict)  # Can fail silently
 ```
 
-**Problema:** Se o payload não tiver "root" e também não for um Cogon válido, o erro será propagado sem contexto claro.
+**Problem:** If the payload does not have "root" and is also not a valid Cogon, the error will propagate without clear context.
 
-**Correção:** Adicionar validação explícita e mensagem de erro descritiva.
+**Fix:** Add explicit validation and a descriptive error message.
 
 ---
 
-### 6. **Possível Problema de Timezone em Timestamps**
-**Severidade:** Baixa  
-**Arquivos:** `python/leet/types.py`, `net1337.py`
+### 6. **Possible Timezone Issue in Timestamps**
+**Severity:** Low
+**Files:** `python/leet/types.py`, `net1337.py`
 
 ```python
 stamp=int(datetime.now().timestamp() * 1e9)  # nanoseconds
 ```
 
-**Problema:** `datetime.now()` retorna hora local, não UTC. Isso pode causar inconsistências em sistemas distribuídos.
+**Problem:** `datetime.now()` returns local time, not UTC. This can cause inconsistencies in distributed systems.
 
-**Correção:** Usar `datetime.now(timezone.utc).timestamp()` ou `time.time_ns()` (Python 3.7+).
+**Fix:** Use `datetime.now(timezone.utc).timestamp()` or `time.time_ns()` (Python 3.7+).
 
 ---
 
-### 7. **Importação Condicional Dentro de Função (`batch.py`)**
-**Severidade:** Baixa  
-**Arquivo:** `python/leet/batch.py`
+### 7. **Conditional Import Inside a Function (`batch.py`)**
+**Severity:** Low
+**File:** `python/leet/batch.py`
 
 ```python
 async def _process_one(self, index: int, item: T) -> BatchResult[T, R]:
-    import time  # Import dentro do método!
+    import time  # Import inside the method!
 ```
 
-**Problema:** Importar dentro de funções prejudica performance (especialmente em loops) e dificulta rastreamento de dependências.
+**Problem:** Importing inside functions hurts performance (especially in loops) and makes dependency tracking harder.
 
-**Correção:** Mover imports para o topo do arquivo.
+**Fix:** Move imports to the top of the file.
 
 ---
 
-### 8. **Valor de Retorno Inconsistente em `anomaly_score`**
-**Severidade:** Média  
-**Arquivo:** `python/leet/operators.py` (linha 67-84)
+### 8. **Inconsistent Return Value in `anomaly_score`**
+**Severity:** Medium
+**File:** `python/leet/operators.py` (line 67-84)
 
 ```python
 def anomaly_score(cogon: Cogon, history: list[Cogon]) -> float:
     if not history:
-        return 1.0  # Retorna 1.0 para histórico vazio
-    # ... calcula distância normalizada
+        return 1.0  # Returns 1.0 for empty history
+    # ... computes normalized distance
 ```
 
-**Problema:** Retornar 1.0 (anomalia máxima) para histórico vazio pode ser contraintuitivo. Documentar comportamento ou usar valor neutro (0.5).
+**Problem:** Returning 1.0 (maximum anomaly) for empty history can be counterintuitive. Document the behavior or use a neutral value (0.5).
 
 ---
 
-### 9. **Problema de Referência em `Dag.parents_of`**
-**Severidade:** Baixa  
-**Arquivo:** `python/leet/types.py` (linha 198-200)
+### 9. **Reference Issue in `Dag.parents_of`**
+**Severity:** Low
+**File:** `python/leet/types.py` (line 198-200)
 
 ```python
 def parents_of(self, node_id: str) -> list[str]:
@@ -150,50 +150,50 @@ def parents_of(self, node_id: str) -> list[str]:
     return [e.from_id for e in self.edges if e.to_id == node_id]
 ```
 
-**Problema:** O docstring diz "nodes with edges TO node_id" mas o conceito de "parent" em DAGs geralmente é o contrário (edges FROM parent TO child).
+**Problem:** The docstring says "nodes with edges TO node_id" but the concept of "parent" in DAGs is generally the opposite (edges FROM parent TO child).
 
-**Correção:** Verificar se a lógica está consistente com o uso em `topological_order`.
+**Fix:** Verify the logic is consistent with its usage in `topological_order`.
 
 ---
 
-### 10. **Validação de `alpha` em `blend` Ausente**
-**Severidade:** Média  
-**Arquivo:** `python/leet/operators.py` (linha 8-18)
+### 10. **Missing `alpha` Validation in `blend`**
+**Severity:** Medium
+**File:** `python/leet/operators.py` (line 8-18)
 
 ```python
 def blend(c1: Cogon, c2: Cogon, alpha: float) -> Cogon:
-    sem = [alpha * s1 + (1 - alpha) * s2 ...]  # Sem validação de alpha!
+    sem = [alpha * s1 + (1 - alpha) * s2 ...]  # No alpha validation!
 ```
 
-**Problema:** `alpha` pode ser qualquer float. Valores fora de [0, 1] produzem resultados fora do range válido.
+**Problem:** `alpha` can be any float. Values outside [0, 1] produce results outside the valid range.
 
-**Correção:** Adicionar `alpha = max(0.0, min(1.0, alpha))` ou lançar ValueError.
+**Fix:** Add `alpha = max(0.0, min(1.0, alpha))` or raise ValueError.
 
 ---
 
-## ⚡ OTIMIZAÇÕES SUGERIDAS
+## ⚡ SUGGESTED OPTIMIZATIONS
 
-### 1. **Usar NumPy para Operações Vetoriais**
-**Arquivos:** `python/leet/operators.py`, `python/leet/types.py`
+### 1. **Use NumPy for Vector Operations**
+**Files:** `python/leet/operators.py`, `python/leet/types.py`
 
-**Atual:**
+**Current:**
 ```python
 sem = [alpha * s1 + (1 - alpha) * s2 for s1, s2 in zip(c1.sem, c2.sem)]
 ```
 
-**Otimizado:**
+**Optimized:**
 ```python
 import numpy as np
-# Pré-alocar arrays uma vez
-sem = alpha * c1.sem_array + (1 - alpha) * c2.sem_array  # 10-50x mais rápido
+# Pre-allocate arrays once
+sem = alpha * c1.sem_array + (1 - alpha) * c2.sem_array  # 10-50x faster
 ```
 
-**Impacto:** Operações BLAS otimizadas, menos GC pressure, SIMD automático.
+**Impact:** Optimized BLAS operations, less GC pressure, automatic SIMD.
 
 ---
 
-### 2. **Cache de Projeções com LRU**
-**Arquivo:** `python/leet/bridge.py`
+### 2. **LRU Projection Cache**
+**File:** `python/leet/bridge.py`
 
 ```python
 from functools import lru_cache
@@ -203,12 +203,12 @@ def _cached_projection(text_hash: str) -> tuple[tuple[float, ...], tuple[float, 
     ...
 ```
 
-**Impacto:** Evita re-projetar textos idênticos ou similares.
+**Impact:** Avoids re-projecting identical or similar texts.
 
 ---
 
-### 3. **Validação Lazy com `@cached_property`**
-**Arquivo:** `python/leet/types.py`
+### 3. **Lazy Validation with `@cached_property`**
+**File:** `python/leet/types.py`
 
 ```python
 from functools import cached_property
@@ -221,46 +221,46 @@ class Cogon:
         return [i for i, u in enumerate(self.unc) if u > 0.9]
 ```
 
-**Impacto:** Evita recalcular a cada chamada de `low_confidence_dims()`.
+**Impact:** Avoids recomputing on every call to `low_confidence_dims()`.
 
 ---
 
-### 4. **Prevenir Cópias Desnecessárias de Vetores**
-**Arquivo:** `python/leet/types.py` (vários métodos)
+### 4. **Prevent Unnecessary Vector Copies**
+**File:** `python/leet/types.py` (several methods)
 
 ```python
 def with_raw(self, raw: Raw) -> Cogon:
     return Cogon(
         id=self.id,
-        sem=self.sem.copy(),  # Sempre copia!
+        sem=self.sem.copy(),  # Always copies!
         unc=self.unc.copy(),
         ...
     )
 ```
 
-**Otimização:** Usar `list(self.sem)` ou `self.sem[:]` é mais rápido. Melhor ainda: usar tuplas (imutáveis) para sem/unc.
+**Optimization:** Using `list(self.sem)` or `self.sem[:]` is faster. Even better: use tuples (immutable) for sem/unc.
 
 ---
 
-### 5. **Serialização mais Eficiente com `orjson` ou `msgspec`**
-**Arquivos:** Todos os arquivos com `json.dumps`
+### 5. **More Efficient Serialization with `orjson` or `msgspec`**
+**Files:** All files using `json.dumps`
 
 ```python
-# Atual
+# Current
 import json
 return json.dumps(self.to_dict(), indent=2)
 
-# Otimizado
+# Optimized
 import orjson
 return orjson.dumps(self.to_dict(), option=orjson.OPT_INDENT_2)
 ```
 
-**Impacto:** 2-10x mais rápido, menos memória.
+**Impact:** 2-10x faster, less memory.
 
 ---
 
-### 6. **Uso de `__slots__` em Dataclasses**
-**Arquivos:** `python/leet/types.py`
+### 6. **Use `__slots__` in Dataclasses**
+**Files:** `python/leet/types.py`
 
 ```python
 @dataclass(slots=True)
@@ -268,27 +268,27 @@ class Cogon:
     ...
 ```
 
-**Impacto:** Reduz memória em ~50%, acesso mais rápido aos atributos.
+**Impact:** Reduces memory by ~50%, faster attribute access.
 
 ---
 
-### 7. **Paralelização com `ProcessPoolExecutor` para Batch**
-**Arquivo:** `python/leet/batch.py`
+### 7. **Parallelization with `ProcessPoolExecutor` for Batch**
+**File:** `python/leet/batch.py`
 
 ```python
 from concurrent.futures import ProcessPoolExecutor
 
-# Para operações CPU-bound (cálculo de distâncias)
+# For CPU-bound operations (distance computation)
 with ProcessPoolExecutor() as executor:
     results = list(executor.map(compute_dist, pairs))
 ```
 
-**Impacto:** Aproveita múltiplos cores para processamento de grandes batches.
+**Impact:** Takes advantage of multiple cores for processing large batches.
 
 ---
 
-### 8. **Memoização de `topological_order`**
-**Arquivo:** `python/leet/types.py` (classe `Dag`)
+### 8. **Memoization of `topological_order`**
+**File:** `python/leet/types.py` (`Dag` class)
 
 ```python
 @dataclass
@@ -301,26 +301,26 @@ class Dag:
         return self._topological_cache
 ```
 
-**Impacto:** Evita recalcular ordem topológica para DAGs imutáveis.
+**Impact:** Avoids recomputing topological order for immutable DAGs.
 
 ---
 
-### 9. **Uso de `array.array` ao invés de `list[float]`**
-**Arquivo:** `python/leet/types.py`
+### 9. **Use `array.array` Instead of `list[float]`**
+**File:** `python/leet/types.py`
 
 ```python
 from array import array
 
-# Mais eficiente em memória, tipado
+# More memory-efficient, typed
 sem: array = field(default_factory=lambda: array('f', [0.0] * 32))
 ```
 
-**Impacto:** 4x menos memória que list, acesso mais rápido.
+**Impact:** 4x less memory than list, faster access.
 
 ---
 
-### 10. **Batch de Validações com `asyncio.gather`**
-**Arquivo:** `python/leet/validate.py`
+### 10. **Batch Validations with `asyncio.gather`**
+**File:** `python/leet/validate.py`
 
 ```python
 async def validate_async(msg: Msg1337) -> Optional[str]:
@@ -332,27 +332,27 @@ async def validate_async(msg: Msg1337) -> Optional[str]:
     return None
 ```
 
-**Impacto:** Validações independentes rodam em paralelo (se alguma for async).
+**Impact:** Independent validations run in parallel (if any are async).
 
 ---
 
-## 📊 Resumo
+## 📊 Summary
 
-| Categoria | Quantidade | Prioridade |
+| Category | Count | Priority |
 |-----------|------------|------------|
-| Bugs Críticos | 1 (Redis async) | 🔴 Alta |
-| Bugs Médios | 3 | 🟡 Média |
-| Bugs Baixos | 6 | 🟢 Baixa |
-| Otimizações Alto Impacto | 3 (NumPy, slots, cache) | 🔴 Alta |
-| Otimizações Médio Impacto | 4 | 🟡 Média |
-| Otimizações Baixo Impacto | 3 | 🟢 Baixa |
+| Critical Bugs | 1 (Redis async) | 🔴 High |
+| Medium Bugs | 3 | 🟡 Medium |
+| Low Bugs | 6 | 🟢 Low |
+| High-Impact Optimizations | 3 (NumPy, slots, cache) | 🔴 High |
+| Medium-Impact Optimizations | 4 | 🟡 Medium |
+| Low-Impact Optimizations | 3 | 🟢 Low |
 
 ---
 
-## 🛠️ Recomendações Imediatas
+## 🛠️ Immediate Recommendations
 
-1. **Corrigir a inconsistência do RedisCache** - pode quebrar em produção
-2. **Adicionar validação de `alpha` em `blend`** - evita resultados inválidos
-3. **Usar `__slots__`** nas classes de alto volume (Cogon, Msg1337)
-4. **Considerar NumPy** se performance vetorial for crítica
-5. **Adicionar `orjson`** para serialização de alta performance
+1. **Fix the RedisCache inconsistency** - could break in production
+2. **Add `alpha` validation in `blend`** - prevents invalid results
+3. **Use `__slots__`** in high-volume classes (Cogon, Msg1337)
+4. **Consider NumPy** if vector performance is critical
+5. **Add `orjson`** for high-performance serialization

@@ -1,7 +1,7 @@
 """
 Multi-agent example — leet-py SDK.
 
-Two specialized agents (Pesquisador + Analista) work together
+Two specialized agents (Researcher + Analyst) work together
 on the same 1337 semantic bus. All communication goes through
 compressed COGON vectors — no raw text between agents.
 
@@ -23,8 +23,8 @@ async def pesquisador(cogon: Cogon, ctx: AgentContext) -> Cogon:
     """Collects and structures information on the received COGON topic."""
     # In production this would call an LLM with semantic context
     summary = (
-        "Pesquisa concluída. Coletados dados sobre o tema: evidências empíricas "
-        "de alta confiabilidade, temporalidade precisa, causalidade identificada."
+        "Research complete. Data collected on the topic: high-reliability "
+        "empirical evidence, precise temporality, identified causality."
     )
     return await ctx.assert_(summary)
 
@@ -33,8 +33,8 @@ async def pesquisador(cogon: Cogon, ctx: AgentContext) -> Cogon:
 async def analista(cogon: Cogon, ctx: AgentContext) -> Cogon:
     """Analyses patterns and extracts actionable conclusions."""
     analysis = (
-        "Análise concluída. Padrão identificado: correlação positiva entre as variáveis, "
-        "anomalia detectada no eixo C5 — recomenda-se ação imediata."
+        "Analysis complete. Pattern identified: positive correlation between variables, "
+        "anomaly detected on axis C5 — immediate action recommended."
     )
     return await ctx.assert_(analysis)
 
@@ -45,8 +45,8 @@ async def sintetizador(cogon: Cogon, ctx: AgentContext) -> Cogon:
     # Access conversation history from context
     n_hist = len(ctx.history)
     synthesis = (
-        f"Síntese final: {n_hist} interações processadas. "
-        "Conclusão: impacto alto, urgência moderada, ação recomendada."
+        f"Final synthesis: {n_hist} interactions processed. "
+        "Conclusion: high impact, moderate urgency, action recommended."
     )
     return await ctx.assert_(synthesis)
 
@@ -64,21 +64,21 @@ async def main() -> None:
 
     # Phase 1: Research
     print("Phase 1 — Research")
-    r1 = await net.run("impacto da IA generativa na educação superior", to="pesquisador")
-    print(f"  Pesquisador: {r1.text[:80]}...")
+    r1 = await net.run("impact of generative AI on higher education", to="pesquisador")
+    print(f"  Researcher: {r1.text[:80]}...")
     print()
 
     # Phase 2: Analysis
     print("Phase 2 — Analysis")
-    r2 = await net.run("analise os achados sobre IA na educação", to="analista")
-    print(f"  Analista: {r2.text[:80]}...")
+    r2 = await net.run("analyze the findings on AI in education", to="analista")
+    print(f"  Analyst: {r2.text[:80]}...")
     print()
 
     # Phase 3: Synthesis via direct COGON injection
     print("Phase 3 — Synthesis (COGON injection)")
-    research_cogon = await client.encode("pesquisa IA educação")
+    research_cogon = await client.encode("AI education research")
     r3 = await net.inject(research_cogon, to="sintetizador")
-    print(f"  Sintetizador: {r3.text[:80]}...")
+    print(f"  Synthesizer: {r3.text[:80]}...")
     print()
 
     # Stats

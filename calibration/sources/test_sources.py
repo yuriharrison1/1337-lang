@@ -1,5 +1,5 @@
 """
-Testes para o sistema de fontes de treinamento.
+Tests for the training data source system.
 """
 
 import json
@@ -18,29 +18,29 @@ from sources import (
 
 
 class TestTextSample:
-    """Testes para TextSample."""
-    
+    """Tests for TextSample."""
+
     def test_creation(self):
-        """Criação básica."""
+        """Basic creation."""
         sample = TextSample(
             text="Hello world",
             source="test",
             metadata={"key": "value"}
         )
-        
+
         assert sample.text == "Hello world"
         assert sample.source == "test"
-        assert sample.id != ""  # Auto-gerado
-    
+        assert sample.id != ""  # Auto-generated
+
     def test_id_generation(self):
-        """ID gerado a partir do hash."""
+        """ID generated from the hash."""
         sample1 = TextSample(text="Same text", source="test")
         sample2 = TextSample(text="Same text", source="test")
-        
-        assert sample1.id == sample2.id  # Mesmo texto = mesmo ID
-    
+
+        assert sample1.id == sample2.id  # Same text = same ID
+
     def test_to_dict(self):
-        """Serialização."""
+        """Serialization."""
         sample = TextSample(
             text="Test",
             source="test",
@@ -54,7 +54,7 @@ class TestTextSample:
         assert len(data["sem"]) == 32
     
     def test_from_dict(self):
-        """Deserialização."""
+        """Deserialization."""
         data = {
             "id": "abc123",
             "text": "Test",
@@ -71,18 +71,18 @@ class TestTextSample:
 
 
 class TestSourceConfig:
-    """Testes para SourceConfig."""
-    
+    """Tests for SourceConfig."""
+
     def test_default_config(self):
-        """Configuração padrão."""
+        """Default configuration."""
         config = SourceConfig()
-        
+
         assert config.max_samples == 1000
         assert config.min_length == 20
         assert config.max_length == 2000
-    
+
     def test_custom_config(self):
-        """Configuração customizada."""
+        """Custom configuration."""
         config = SourceConfig(
             max_samples=100,
             language="pt",
@@ -95,10 +95,10 @@ class TestSourceConfig:
 
 
 class TestLocalFileSource:
-    """Testes para LocalFileSource."""
-    
+    """Tests for LocalFileSource."""
+
     def test_txt_file(self, tmp_path):
-        """Leitura de arquivo TXT."""
+        """Reading a TXT file."""
         file_path = tmp_path / "test.txt"
         file_path.write_text(
             "This is the first line with sufficient length for testing\n"
@@ -113,7 +113,7 @@ class TestLocalFileSource:
         assert all(s.source == "local_test" for s in samples)
     
     def test_jsonl_file(self, tmp_path):
-        """Leitura de arquivo JSONL."""
+        """Reading a JSONL file."""
         file_path = tmp_path / "test.jsonl"
         with open(file_path, 'w') as f:
             f.write(json.dumps({"text": "This is sample 1 with enough length", "category": "A"}) + '\n')
@@ -126,7 +126,7 @@ class TestLocalFileSource:
         assert samples[0].metadata["category"] == "A"
     
     def test_csv_file(self, tmp_path):
-        """Leitura de arquivo CSV."""
+        """Reading a CSV file."""
         file_path = tmp_path / "test.csv"
         file_path.write_text("text,category\nHello world this is a long text,A\nWorld example with more characters,B\n")
         
@@ -136,7 +136,7 @@ class TestLocalFileSource:
         assert len(samples) == 2
     
     def test_filter_by_length(self, tmp_path):
-        """Filtro por comprimento."""
+        """Filter by length."""
         file_path = tmp_path / "test.txt"
         file_path.write_text(
             "Short\n"
@@ -151,19 +151,19 @@ class TestLocalFileSource:
         assert "longer" in samples[0].text
     
     def test_file_not_found(self):
-        """Arquivo não existente."""
+        """Nonexistent file."""
         try:
             source = LocalFileSource("/nonexistent/file.txt")
-            assert False, "Deveria ter lançado exceção"
+            assert False, "Should have raised an exception"
         except FileNotFoundError:
             pass
 
 
 class TestSyntheticSource:
-    """Testes para SyntheticSource."""
-    
+    """Tests for SyntheticSource."""
+
     def test_mock_generation(self):
-        """Geração mock."""
+        """Mock generation."""
         config = SourceConfig(max_samples=10)
         source = SyntheticSource(provider="mock", config=config)
         
@@ -174,17 +174,17 @@ class TestSyntheticSource:
         assert all(s.source == "synthetic_mock" for s in samples)
     
     def test_diversity_levels(self):
-        """Diferentes níveis de diversidade."""
+        """Different diversity levels."""
         config = SourceConfig(max_samples=50)
-        
+
         source_high = SyntheticSource(provider="mock", diversity="high", config=config)
         samples = source_high.fetch_all()
-        
-        # Com diversidade alta, deve haver variedade
+
+        # With high diversity, there should be variety
         assert len(samples) > 0
-    
+
     def test_language_setting(self):
-        """Configuração de idioma."""
+        """Language configuration."""
         config = SourceConfig(max_samples=5)
         source = SyntheticSource(provider="mock", language="en", config=config)
         
@@ -193,10 +193,10 @@ class TestSyntheticSource:
 
 
 class TestDomainSources:
-    """Testes para fontes de domínio."""
-    
+    """Tests for domain sources."""
+
     def test_tech_domain(self):
-        """Fonte de domínio técnico."""
+        """Technical domain source."""
         config = SourceConfig(max_samples=20)
         source = TechDomainSource(config=config)
         
@@ -206,22 +206,22 @@ class TestDomainSources:
         assert all(s.metadata.get("domain") == "technology" for s in samples)
     
     def test_tech_categories(self):
-        """Categorias de texto técnico."""
+        """Technical text categories."""
         config = SourceConfig(max_samples=50, min_length=10)
         source = TechDomainSource(
             categories=["logs", "alerts"],
             config=config
         )
-        
+
         samples = source.fetch_all()
         categories = set(s.metadata.get("category") for s in samples)
-        
-        # Deve ter principalmente logs e alerts (mas pode ter outros devido a heurística)
+
+        # Should mostly have logs and alerts (but may have others due to the heuristic)
         assert any(cat in ["log", "alert"] for cat in categories)
         assert len(samples) > 0
-    
+
     def test_legal_domain(self):
-        """Fonte de domínio jurídico."""
+        """Legal domain source."""
         config = SourceConfig(max_samples=10, min_length=10)
         source = LegalDomainSource(config=config)
         
@@ -232,10 +232,10 @@ class TestDomainSources:
 
 
 class TestSourceAggregator:
-    """Testes para SourceAggregator."""
-    
+    """Tests for SourceAggregator."""
+
     def test_basic_aggregation(self):
-        """Agregação básica."""
+        """Basic aggregation."""
         source1 = SyntheticSource(provider="mock", config=SourceConfig(max_samples=10))
         source2 = SyntheticSource(provider="mock", config=SourceConfig(max_samples=10))
         
@@ -249,8 +249,8 @@ class TestSourceAggregator:
         assert len(samples) <= 15
     
     def test_deduplication(self):
-        """Deduplicação entre fontes."""
-        # Mesma fonte duas vezes (mesmos dados)
+        """Deduplication across sources."""
+        # Same source twice (same data)
         source = SyntheticSource(provider="mock", config=SourceConfig(max_samples=10))
         
         aggregator = SourceAggregator(
@@ -260,13 +260,13 @@ class TestSourceAggregator:
         )
         
         samples = aggregator.fetch_all()
-        
-        # IDs devem ser únicos
+
+        # IDs must be unique
         ids = [s.id for s in samples]
         assert len(ids) == len(set(ids))
-    
+
     def test_no_deduplication(self):
-        """Sem deduplicação."""
+        """No deduplication."""
         source = SyntheticSource(provider="mock", config=SourceConfig(max_samples=5))
         
         aggregator = SourceAggregator(
@@ -276,11 +276,11 @@ class TestSourceAggregator:
         )
         
         samples = aggregator.fetch_all()
-        # Pode ter duplicatas
+        # May have duplicates
         assert len(samples) > 0
-    
+
     def test_stats(self):
-        """Estatísticas do agregador."""
+        """Aggregator statistics."""
         source = SyntheticSource(provider="mock", config=SourceConfig(max_samples=10))
         
         aggregator = SourceAggregator(
@@ -294,7 +294,7 @@ class TestSourceAggregator:
         assert "sources" in stats
     
     def test_export_jsonl(self, tmp_path):
-        """Exportação para JSONL."""
+        """Export to JSONL."""
         source = SyntheticSource(provider="mock", config=SourceConfig(max_samples=5, request_delay=0.01))
         
         aggregator = SourceAggregator(
@@ -306,14 +306,14 @@ class TestSourceAggregator:
         aggregator.export_combined(str(output_path), format="jsonl")
         
         assert output_path.exists()
-        
-        # Verifica conteúdo (pode ser menos que 5 devido a delays ou filtros)
+
+        # Verify content (may be fewer than 5 due to delays or filters)
         with open(output_path) as f:
             lines = f.readlines()
         assert len(lines) > 0
-    
+
     def test_analyze_sources(self):
-        """Análise de fontes."""
+        """Source analysis."""
         source = TechDomainSource(config=SourceConfig(max_samples=20))
         
         aggregator = SourceAggregator(
@@ -329,10 +329,10 @@ class TestSourceAggregator:
 
 
 class TestDefaultAggregator:
-    """Testes para create_default_aggregator."""
-    
+    """Tests for create_default_aggregator."""
+
     def test_default_creation(self):
-        """Criação padrão."""
+        """Default creation."""
         aggregator = create_default_aggregator(target_samples=50)
         
         samples = aggregator.fetch_all()
@@ -341,7 +341,7 @@ class TestDefaultAggregator:
         assert len(samples) > 0
     
     def test_without_domains(self):
-        """Sem domínios especializados."""
+        """Without specialized domains."""
         aggregator = create_default_aggregator(
             target_samples=20,
             include_domains=False,
@@ -352,8 +352,8 @@ class TestDefaultAggregator:
         assert len(samples) > 0
     
     def test_with_apis(self):
-        """Com APIs (se disponível)."""
-        # Nota: este teste pode falhar se não houver conexão
+        """With APIs (if available)."""
+        # Note: this test may fail if there is no connection
         try:
             aggregator = create_default_aggregator(
                 target_samples=10,
@@ -362,12 +362,12 @@ class TestDefaultAggregator:
             samples = aggregator.fetch_all()
             assert len(samples) > 0
         except Exception:
-            # Ignora se APIs não disponíveis
+            # Ignore if APIs are unavailable
             pass
 
 
 def run_tests():
-    """Executa todos os testes."""
+    """Runs all tests."""
     import subprocess
     
     result = subprocess.run(

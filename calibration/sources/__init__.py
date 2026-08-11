@@ -1,14 +1,14 @@
 """
 Training Data Sources for 1337 Calibration.
 
-Este módulo fornece diversas fontes de dados de treinamento para
-calibração da matriz W, permitindo expandir além dos 100 seed_texts.
+This module provides several training data sources for
+calibrating the W matrix, allowing expansion beyond the 100 seed_texts.
 
-Fontes suportadas:
-- Local: arquivos CSV, JSONL, TXT
+Supported sources:
+- Local: CSV, JSONL, TXT files
 - APIs: Wikipedia, arXiv, Gutendex (Project Gutenberg)
-- Synthetic: Geração via LLM com prompts estruturados
-- Domain: Datasets especializados por domínio (tech, medical, legal)
+- Synthetic: LLM generation with structured prompts
+- Domain: Specialized datasets by domain (tech, medical, legal)
 """
 
 from .base import DataSource, TextSample, SourceConfig

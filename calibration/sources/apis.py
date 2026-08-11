@@ -1,5 +1,5 @@
 """
-Fontes de dados via APIs públicas.
+Data sources via public APIs.
 """
 
 import time
@@ -14,13 +14,13 @@ from .base import DataSource, TextSample, SourceConfig
 
 class WikipediaSource(DataSource):
     """
-    Fonte de dados da Wikipedia API.
-    
-    Busca artigos aleatórios ou por categoria.
-    
-    Exemplo:
+    Data source from the Wikipedia API.
+
+    Fetches random articles or by category.
+
+    Example:
         config = SourceConfig(max_samples=50, language="pt")
-        source = WikipediaSource(category="Ciência", config=config)
+        source = WikipediaSource(category="Science", config=config)
         samples = source.fetch_all()
     """
     
@@ -33,12 +33,12 @@ class WikipediaSource(DataSource):
         self.name = f"wikipedia_{config.language if config else 'en'}"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Busca artigos da Wikipedia."""
+        """Fetches Wikipedia articles."""
         lang = self.config.language
-        
+
         for _ in range(self.config.max_samples):
             try:
-                # Busca página aleatória
+                # Fetch a random page
                 url = self.RANDOM_URL.format(lang=lang)
                 
                 req = urllib.request.Request(
@@ -52,14 +52,14 @@ class WikipediaSource(DataSource):
                 with urllib.request.urlopen(req, timeout=self.config.timeout) as resp:
                     data = json.loads(resp.read().decode('utf-8'))
                 
-                # Extrai texto
+                # Extract text
                 title = data.get('title', '')
                 extract = data.get('extract', '')
-                
+
                 if not extract or len(extract) < self.config.min_length:
                     continue
-                
-                # Páginas de disambiguation têm extratos muito curtos
+
+                # Disambiguation pages have very short extracts
                 if "may refer to" in extract or "pode se referir" in extract:
                     continue
                 
@@ -77,7 +77,7 @@ class WikipediaSource(DataSource):
                 if self.filter_sample(sample):
                     yield sample
                 
-                # Delay para respeitar rate limits
+                # Delay to respect rate limits
                 time.sleep(self.config.request_delay)
                 
             except urllib.error.HTTPError as e:
@@ -90,19 +90,19 @@ class WikipediaSource(DataSource):
 
 class ArxivSource(DataSource):
     """
-    Fonte de dados do arXiv (papers científicos).
-    
-    Busca abstracts de papers por categoria.
-    
-    Exemplo:
+    Data source from arXiv (scientific papers).
+
+    Fetches paper abstracts by category.
+
+    Example:
         config = SourceConfig(max_samples=30)
         source = ArxivSource(category="cs.AI", config=config)
         samples = source.fetch_all()
     """
-    
+
     API_URL = "http://export.arxiv.org/api/query"
-    
-    # Categorias populares
+
+    # Popular categories
     CATEGORIES = {
         "cs.AI": "Artificial Intelligence",
         "cs.CL": "Computation and Language",
@@ -125,18 +125,18 @@ class ArxivSource(DataSource):
         self.name = f"arxiv_{category.replace('.', '_')}"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Busca abstracts do arXiv."""
+        """Fetches arXiv abstracts."""
         import xml.etree.ElementTree as ET
-        
-        # arXiv retorna no máximo 2000 resultados por query
-        # Usamos start para paginar
+
+        # arXiv returns at most 2000 results per query
+        # We use start to paginate
         batch_size = 100
         start = 0
         collected = 0
-        
+
         while collected < self.config.max_samples:
             try:
-                # Constrói query
+                # Build the query
                 params = {
                     "search_query": f"cat:{self.category}",
                     "start": start,
@@ -158,8 +158,8 @@ class ArxivSource(DataSource):
                 
                 # Parse XML
                 root = ET.fromstring(xml_data)
-                
-                # Namespace arXiv
+
+                # arXiv namespace
                 ns = {
                     'atom': 'http://www.w3.org/2005/Atom',
                     'arxiv': 'http://arxiv.org/schemas/atom'
@@ -210,11 +210,11 @@ class ArxivSource(DataSource):
 
 class GutendexSource(DataSource):
     """
-    Fonte de dados do Gutendex (Project Gutenberg).
-    
-    Busca textos literários do domínio público.
-    
-    Exemplo:
+    Data source from Gutendex (Project Gutenberg).
+
+    Fetches public-domain literary texts.
+
+    Example:
         config = SourceConfig(max_samples=20, language="en")
         source = GutendexSource(topic="science", config=config)
         samples = source.fetch_all()
@@ -228,13 +228,13 @@ class GutendexSource(DataSource):
         self.name = "gutendex"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Busca livros do Project Gutenberg."""
+        """Fetches books from Project Gutenberg."""
         page = 1
         collected = 0
-        
+
         while collected < self.config.max_samples:
             try:
-                # Constrói URL
+                # Build the URL
                 params = {"page": page}
                 if self.topic:
                     params["topic"] = self.topic
@@ -258,18 +258,18 @@ class GutendexSource(DataSource):
                     break
                 
                 for book in books:
-                    # Pega o texto em texto plain se disponível
+                    # Grab the plain-text format if available
                     formats = book.get('formats', {})
                     text_url = formats.get('text/plain; charset=utf-8') or \
                               formats.get('text/plain')
-                    
-                    # Se não tem texto plain, usa descrição
+
+                    # If no plain text, use the description
                     if not text_url:
                         title = book.get('title', '')
                         authors = [a['name'] for a in book.get('authors', [])]
                         text = f"{title} by {', '.join(authors)}. {book.get('subjects', [''])[0]}"
                     else:
-                        # Baixa o texto (limitado ao começo)
+                        # Download the text (limited to the beginning)
                         text = self._fetch_text_sample(text_url)
                     
                     if not text:
@@ -300,28 +300,28 @@ class GutendexSource(DataSource):
                 break
     
     def _fetch_text_sample(self, url: str) -> str | None:
-        """Busca uma amostra do texto do livro."""
+        """Fetches a text sample from the book."""
         try:
             req = urllib.request.Request(
                 url,
                 headers={'User-Agent': '1337-calibration/0.1'}
             )
-            
+
             with urllib.request.urlopen(req, timeout=10) as resp:
-                # Lê apenas os primeiros 50KB
+                # Read only the first 50KB
                 data = resp.read(50000).decode('utf-8', errors='ignore')
-            
-            # Remove header do Project Gutenberg
+
+            # Strip the Project Gutenberg header
             lines = data.split('\n')
-            
-            # Encontra o início real do conteúdo
+
+            # Find the real start of the content
             start_idx = 0
             for i, line in enumerate(lines):
                 if '*** START OF' in line or '***START OF' in line:
                     start_idx = i + 1
                     break
-            
-            # Pega até 5000 caracteres de conteúdo
+
+            # Grab up to 5000 characters of content
             content = '\n'.join(lines[start_idx:start_idx+100])
             return content.strip()[:5000]
             

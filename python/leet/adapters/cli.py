@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-"""CLI unificado para IDE Adapters.
+"""Unified CLI for IDE Adapters.
 
-Permite usar qualquer adaptador via linha de comando:
+Lets you use any adapter from the command line:
 
     # Claude Code
-    leet-ide claude "Explique este código" --file main.py
-    
+    leet-ide claude "Explain this code" --file main.py
+
     # Codex
-    leet-ide codex "Refatore esta função" --file utils.py
-    
+    leet-ide codex "Refactor this function" --file utils.py
+
     # Kimi
-    leet-ide kimi "Analise o projeto" --project .
-    
+    leet-ide kimi "Analyze the project" --project .
+
     # Aider
-    leet-ide aider "Adicione tratamento de erro" --file api.py
+    leet-ide aider "Add error handling" --file api.py
 
 Features:
-    - Auto-detecção de adaptador disponível
-    - Integração 1337 (COGON projection)
-    - Streaming de resposta
-    - Export de sessão
+    - Auto-detection of available adapter
+    - 1337 integration (COGON projection)
+    - Response streaming
+    - Session export
 """
 
 from __future__ import annotations
@@ -37,153 +37,153 @@ from .base import AdapterContext, ToolNotFoundError
 
 
 def detect_project_dir() -> Optional[str]:
-    """Detecta diretório do projeto atual."""
+    """Detects the current project directory."""
     current = Path.cwd()
-    
-    # Procura por marcadores comuns
+
+    # Look for common markers
     markers = ['.git', 'pyproject.toml', 'package.json', 'Cargo.toml', 'go.mod']
-    
+
     for path in [current] + list(current.parents):
         for marker in markers:
             if (path / marker).exists():
                 return str(path)
-    
+
     return str(current)
 
 
 def create_parser() -> argparse.ArgumentParser:
-    """Cria parser de argumentos."""
+    """Creates the argument parser."""
     parser = argparse.ArgumentParser(
         prog="leet-ide",
-        description="1337 IDE Adapters — CLI unificado para coding assistants",
+        description="1337 IDE Adapters — unified CLI for coding assistants",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Exemplos:
-  # Usar Claude Code
-  leet-ide claude "Explique main.py"
-  
-  # Usar Codex com contexto
-  leet-ide codex "Refatore" --file utils.py --selection "função problemática"
-  
-  # Kimi com streaming
-  leet-ide kimi "Analise projeto" --stream
-  
-  # Aider com auto-commit
+Examples:
+  # Use Claude Code
+  leet-ide claude "Explain main.py"
+
+  # Use Codex with context
+  leet-ide codex "Refactor" --file utils.py --selection "problematic function"
+
+  # Kimi with streaming
+  leet-ide kimi "Analyze project" --stream
+
+  # Aider with auto-commit
   leet-ide aider "Fix bug" --auto-commit --file bug.py
-  
-  # Auto-detectar adaptador
-  leet-ide auto "Mensagem" --file code.py
-  
-  # Listar adaptadores disponíveis
+
+  # Auto-detect adapter
+  leet-ide auto "Message" --file code.py
+
+  # List available adapters
   leet-ide --list
         """
     )
-    
+
     parser.add_argument(
         'adapter',
-        help='Adaptador a usar (claude, codex, kimi, aider, auto)'
+        help='Adapter to use (claude, codex, kimi, aider, auto)'
     )
-    
+
     parser.add_argument(
         'message',
         nargs='?',
-        help='Mensagem para o assistente'
+        help='Message for the assistant'
     )
-    
+
     parser.add_argument(
         '--file', '-f',
-        help='Arquivo de contexto'
+        help='Context file'
     )
-    
+
     parser.add_argument(
         '--project', '-p',
-        help='Diretório do projeto (auto-detectado se omitido)'
+        help='Project directory (auto-detected if omitted)'
     )
-    
+
     parser.add_argument(
         '--selection', '-s',
-        help='Texto selecionado no editor'
+        help='Text selected in the editor'
     )
-    
+
     parser.add_argument(
         '--language', '-l',
-        help='Linguagem de programação'
+        help='Programming language'
     )
-    
+
     parser.add_argument(
         '--model', '-m',
-        help='Modelo específico'
+        help='Specific model'
     )
-    
+
     parser.add_argument(
         '--stream',
         action='store_true',
-        help='Habilitar streaming de resposta'
+        help='Enable response streaming'
     )
-    
+
     parser.add_argument(
         '--no-cogon',
         action='store_true',
-        help='Desabilitar projeção 1337 (COGON)'
+        help='Disable 1337 (COGON) projection'
     )
-    
+
     parser.add_argument(
         '--export', '-e',
-        help='Exportar sessão para arquivo JSON'
+        help='Export session to a JSON file'
     )
-    
+
     parser.add_argument(
         '--auto-commit',
         action='store_true',
-        help='(Aider) Commit automático'
+        help='(Aider) Automatic commit'
     )
-    
+
     parser.add_argument(
         '--approval-mode',
         choices=['full', 'suggest', 'none'],
         default='suggest',
-        help='(Codex) Modo de aprovação'
+        help='(Codex) Approval mode'
     )
-    
+
     parser.add_argument(
         '--version', '-v',
         action='version',
         version='%(prog)s 0.5.0'
     )
-    
+
     parser.add_argument(
         '--list',
         action='store_true',
-        help='Listar adaptadores disponíveis'
+        help='List available adapters'
     )
-    
+
     parser.add_argument(
         '--check',
         action='store_true',
-        help='Verificar disponibilidade dos adaptadores'
+        help='Check adapter availability'
     )
-    
+
     return parser
 
 
 def check_adapters():
-    """Verifica disponibilidade de todos os adaptadores."""
-    print("Verificando adaptadores...\n")
-    
+    """Checks the availability of all adapters."""
+    print("Checking adapters...\n")
+
     for name in list_adapters():
         try:
             adapter = create_adapter(name)
             available = adapter.is_available()
             version = adapter.get_version() or "N/A"
-            
+
             status = "✅" if available else "❌"
             print(f"{status} {name:10s} {version}")
-            
+
             if available:
                 config = adapter.get_config()
                 print(f"   └─ Model: {config.get('model', 'default')}")
         except Exception as e:
-            print(f"❌ {name:10s} Erro: {e}")
+            print(f"❌ {name:10s} Error: {e}")
 
 
 async def run_adapter(
@@ -191,55 +191,55 @@ async def run_adapter(
     message: str,
     args: argparse.Namespace
 ) -> int:
-    """Executa adaptador com mensagem.
-    
+    """Runs an adapter with a message.
+
     Returns:
         Exit code
     """
     project_dir = args.project or detect_project_dir()
-    
-    # Configurações específicas por adaptador
+
+    # Adapter-specific settings
     adapter_kwargs = {
         'project_dir': project_dir,
         'auto_project': not args.no_cogon,
     }
-    
+
     if args.model:
         adapter_kwargs['model'] = args.model
-    
+
     if adapter_name == 'aider':
         adapter_kwargs['auto_commit'] = args.auto_commit
     elif adapter_name == 'codex':
         adapter_kwargs['approval_mode'] = args.approval_mode
-    
+
     try:
         adapter = create_adapter(adapter_name, **adapter_kwargs)
     except ValueError as e:
-        print(f"Erro: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         return 1
-    
+
     if not adapter.is_available():
         print(
-            f"❌ {adapter_name} não está instalado ou configurado.",
+            f"❌ {adapter_name} is not installed or configured.",
             file=sys.stderr
         )
-        print(f"   Veja: https://docs.1337.dev/adapters/{adapter_name}", file=sys.stderr)
+        print(f"   See: https://docs.1337.dev/adapters/{adapter_name}", file=sys.stderr)
         return 1
-    
-    # Cria contexto
+
+    # Create context
     context = AdapterContext(
         file_path=args.file,
         project_dir=project_dir,
         selection=args.selection,
         language=args.language,
     )
-    
+
     print(f"🚀 {adapter_name}: {message[:60]}...")
-    print(f"   Projeto: {project_dir}")
+    print(f"   Project: {project_dir}")
     if args.file:
-        print(f"   Arquivo: {args.file}")
+        print(f"   File: {args.file}")
     print()
-    
+
     try:
         if args.stream:
             # Streaming
@@ -250,31 +250,31 @@ async def run_adapter(
         else:
             # Normal
             response = await adapter.send_message(message, context)
-            
+
             print("─" * 60)
             print(response.text)
             print("─" * 60)
-            
+
             if response.files_modified:
-                print(f"\n📁 Arquivos modificados:")
+                print(f"\n📁 Modified files:")
                 for f in response.files_modified:
                     print(f"   • {f}")
-            
+
             if response.cogon:
-                # Mostra eixos dominantes
+                # Show dominant axes
                 top_indices = sorted(
                     range(32),
                     key=lambda i: response.cogon.sem[i],
                     reverse=True
                 )[:5]
-                print(f"\n🧠 Eixos semânticos dominantes:")
+                print(f"\n🧠 Dominant semantic axes:")
                 from leet.axes import CANONICAL_AXES
                 for idx in top_indices:
                     axis = CANONICAL_AXES[idx]
                     val = response.cogon.sem[idx]
                     print(f"   {axis.code}: {axis.name:20s} = {val:.2f}")
-        
-        # Exporta sessão se solicitado
+
+        # Export session if requested
         if args.export:
             session_data = {
                 'adapter': adapter_name,
@@ -284,40 +284,40 @@ async def run_adapter(
             }
             with open(args.export, 'w') as f:
                 json.dump(session_data, f, indent=2, default=str)
-            print(f"\n💾 Sessão exportada: {args.export}")
-        
+            print(f"\n💾 Session exported: {args.export}")
+
         return 0
-        
+
     except ToolNotFoundError as e:
-        print(f"Erro: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         return 1
     except Exception as e:
-        print(f"Erro inesperado: {e}", file=sys.stderr)
+        print(f"Unexpected error: {e}", file=sys.stderr)
         return 1
 
 
 async def main_async() -> int:
-    """Entry point async."""
+    """Async entry point."""
     parser = create_parser()
     args = parser.parse_args()
-    
-    # Flags especiais
+
+    # Special flags
     if args.list:
-        print("Adaptadores disponíveis:")
+        print("Available adapters:")
         for name in list_adapters():
             print(f"  • {name}")
         return 0
-    
+
     if args.check:
         check_adapters()
         return 0
-    
+
     if not args.message:
         parser.print_help()
         return 1
-    
+
     adapter_name = args.adapter.lower()
-    
+
     # Auto-detect
     if adapter_name == 'auto':
         for name in list_adapters():
@@ -325,14 +325,14 @@ async def main_async() -> int:
                 adapter = create_adapter(name)
                 if adapter.is_available():
                     adapter_name = name
-                    print(f"Auto-detectado: {name}\n")
+                    print(f"Auto-detected: {name}\n")
                     break
             except:
                 continue
         else:
-            print("Nenhum adaptador encontrado.", file=sys.stderr)
+            print("No adapter found.", file=sys.stderr)
             return 1
-    
+
     return await run_adapter(adapter_name, args.message, args)
 
 

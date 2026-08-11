@@ -1,69 +1,69 @@
 # leet-cli
 
-Toolkit de linha de comando para o protocolo 1337. Subcomandos para encode, decode, distância semântica, blend, inspeção e chat multi-agente.
+Command-line toolkit for the 1337 protocol. Subcommands for encode, decode, semantic distance, blend, inspection, and multi-agent chat.
 
-## Instalação
+## Installation
 
 ```bash
 cargo build --release -p leet-cli
-# Binário em: target/release/leet
+# Binary at: target/release/leet
 ```
 
-## Subcomandos
+## Subcommands
 
 ### `encode`
 
-Projeta texto em um COGON e exibe os eixos ativados com barras visuais.
+Projects text into a COGON and displays the activated axes with visual bars.
 
 ```bash
 leet encode "deploy urgente falhou em produção"
 ```
 
-Saída: lista de eixos com valor > 0, com barra de ativação proporcional.
+Output: list of axes with value > 0, with a proportional activation bar.
 
 ---
 
 ### `decode`
 
-Reconstrói texto a partir de um COGON JSON.
+Reconstructs text from a COGON JSON.
 
 ```bash
-# Passa JSON como argumento
+# Pass JSON as an argument
 leet decode '{"id":"...","sem":[...],"stamp":0}'
 
-# Lê de stdin
+# Read from stdin
 cat cogon.json | leet decode -
-leet decode  # lê stdin se não houver argumento
+leet decode  # reads stdin if no argument is given
 ```
 
 ---
 
 ### `dist`
 
-Distância cosseno semântica entre dois textos. Retorna valor em `[0, 2]`.
+Semantic cosine distance between two texts. Returns a value in `[0, 2]`.
 
 ```bash
 leet dist "urgente" "tranquilo"
 leet dist "deploy falhou" "sistema em produção"
 ```
 
-Interpretação:
-- `< 0.05` → informação semanticamente equivalente, skip re-envio
-- `0.0–0.3` → muito próximos
-- `0.3–0.7` → relacionados
-- `> 0.7` → diferentes
+Interpretation:
+- `< 0.05` → semantically equivalent information, skip re-send
+- `0.0–0.3` → very close
+- `0.3–0.7` → related
+- `> 0.7` → different
 
 ---
 
 ### `blend`
 
-Interpola dois contextos semânticos.
+Interpolates two semantic contexts.
 
 ```bash
 leet blend "sistema estável" "alerta crítico" --alpha 0.7
 # 70% "sistema estável", 30% "alerta crítico"
 
-leet blend "texto A" "texto B"           # alpha padrão: 0.5
+leet blend "texto A" "texto B"           # default alpha: 0.5
 leet blend "texto A" "texto B" --alpha 0.3
 ```
 
@@ -71,7 +71,7 @@ leet blend "texto A" "texto B" --alpha 0.3
 
 ### `axes`
 
-Lista os 32 eixos canônicos com código, nome, bloco e descrição.
+Lists the 32 canonical axes with code, name, block, and description.
 
 ```bash
 leet axes
@@ -81,7 +81,7 @@ leet axes
 
 ### `zero`
 
-Exibe o COGON_ZERO (estado inicial canônico).
+Displays COGON_ZERO (the canonical initial state).
 
 ```bash
 leet zero
@@ -91,7 +91,7 @@ leet zero
 
 ### `validate`
 
-Valida um MSG_1337 JSON contra as regras R1–R23.
+Validates a MSG_1337 JSON against rules R1–R23.
 
 ```bash
 leet validate '{"id":"...","sender":"...",...}'
@@ -99,13 +99,13 @@ cat msg.json | leet validate -
 leet validate  # stdin
 ```
 
-Retorna exit code 0 se válido, 1 se inválido (com descrição do erro).
+Returns exit code 0 if valid, 1 if invalid (with an error description).
 
 ---
 
 ### `inspect`
 
-Interpreta um COGON JSON — exibe os top-10 eixos ativados com valores.
+Interprets a COGON JSON — displays the top-10 activated axes with values.
 
 ```bash
 leet inspect '{"id":"...","sem":[...]}'
@@ -117,10 +117,10 @@ leet inspect  # stdin
 
 ### `bench`
 
-Benchmark de performance de encode.
+Encode performance benchmark.
 
 ```bash
-leet bench          # 1000 encodes (padrão)
+leet bench          # 1000 encodes (default)
 leet bench -n 5000  # 5000 encodes
 ```
 
@@ -128,18 +128,18 @@ leet bench -n 5000  # 5000 encodes
 
 ### `health`
 
-Verifica se o leet-service está acessível.
+Checks whether leet-service is reachable.
 
 ```bash
 leet health                            # localhost:50051
-leet health --url 192.168.1.10:50051   # host remoto
+leet health --url 192.168.1.10:50051   # remote host
 ```
 
 ---
 
 ### `version`
 
-Exibe versão do CLI e do protocolo.
+Displays the CLI and protocol version.
 
 ```bash
 leet version
@@ -149,47 +149,47 @@ leet version
 
 ### `chat`
 
-Chat multi-agente interativo. Requer `LEET_API_KEY` ou `--connect`.
+Interactive multi-agent chat. Requires `LEET_API_KEY` or `--connect`.
 
 ```bash
-# Modo API direta (chama Anthropic)
+# Direct API mode (calls Anthropic)
 export LEET_API_KEY=sk-ant-...
 leet chat
 
-# Com opções
+# With options
 leet chat --lang en --show-cogon --agents 4
 
-# Conecta a um leet-server em execução
+# Connects to a running leet-server
 leet chat --connect 127.0.0.1:1337
 leet chat --connect /run/leet/leet.sock
 ```
 
 Flags:
 
-| Flag | Padrão | Descrição |
+| Flag | Default | Description |
 |------|--------|-----------|
-| `--lang` | `pt` | Idioma de saída (`pt` ou `en`) |
-| `--show-cogon` | false | Exibe resumo COGON inline com cada mensagem |
-| `--agents` | `3` | Máximo de agentes por rodada (1–6) |
-| `--connect` | — | Endereço TCP ou socket Unix do leet-server |
+| `--lang` | `pt` | Output language (`pt` or `en`) |
+| `--show-cogon` | false | Displays an inline COGON summary with each message |
+| `--agents` | `3` | Maximum agents per round (1–6) |
+| `--connect` | — | TCP address or Unix socket of the leet-server |
 
 ---
 
-## Leitura de Stdin
+## Reading from Stdin
 
-Os subcomandos `decode`, `validate` e `inspect` aceitam:
-- JSON como argumento direto
-- `-` explícito para stdin
-- Nenhum argumento → lê stdin automaticamente
+The `decode`, `validate`, and `inspect` subcommands accept:
+- JSON as a direct argument
+- explicit `-` for stdin
+- No argument → automatically reads stdin
 
 ```bash
 echo '{"id":"..."}' | leet inspect
 leet inspect - < cogon.json
 ```
 
-## Variáveis de Ambiente
+## Environment Variables
 
-| Variável | Uso |
+| Variable | Use |
 |----------|-----|
-| `LEET_API_KEY` | Chave para modo `chat` direto à API |
-| `LEET_W_PATH` | Caminho da W matrix de calibração |
+| `LEET_API_KEY` | Key for the direct-API `chat` mode |
+| `LEET_W_PATH` | Path to the calibration W matrix |

@@ -23,21 +23,21 @@ def run_dual_with_delta(backend_name: str = "deepseek", rounds: int = 2):
     """Executa simulação dual com compressão delta."""
     
     print("=" * 80)
-    print("   📚🎭 DUAL-LIVROS + DELTA COMPRESSION")
-    print("   Platão × Pinoquio com Otimização 1337")
+    print("   📚🎭 DUAL-BOOKS + DELTA COMPRESSION")
+    print("   Platão × Pinoquio with 1337 Optimization")
     print("=" * 80)
     print()
     print(f"Backend: {backend_name}")
-    print(f"Agentes: {len(DUAL_SCENARIO['agents'])}")
-    print(f"Livros: Platão + Pinoquio")
+    print(f"Agents: {len(DUAL_SCENARIO['agents'])}")
+    print(f"Books: Platão + Pinoquio")
     print()
-    
+
     # Configurar compressores
     compressor = DeltaCompressor(threshold=0.25, max_delta_chain=4)
-    
-    print("⚙️  Configuração Delta:")
-    print(f"   - Threshold: {compressor.threshold} (máx distância para DELTA)")
-    print(f"   - Max chain: {compressor.max_delta_chain} (deltas antes de FULL)")
+
+    print("⚙️  Delta Configuration:")
+    print(f"   - Threshold: {compressor.threshold} (max distance for DELTA)")
+    print(f"   - Max chain: {compressor.max_delta_chain} (deltas before FULL)")
     print()
     
     # Setup rede
@@ -55,7 +55,7 @@ def run_dual_with_delta(backend_name: str = "deepseek", rounds: int = 2):
         books = ", ".join(agent_def['books'])
         print(f"✅ {agent_def['name']:15} ({books})")
     
-    print(f"\n🦀 Rust: {'ativo (' + rust.mode + ')' if rust.available() else 'indisponível'}")
+    print(f"\n🦀 Rust: {'active (' + rust.mode + ')' if rust.available() else 'unavailable'}")
     
     # Handshake
     print("\n📡 Handshake C5...")
@@ -67,11 +67,11 @@ def run_dual_with_delta(backend_name: str = "deepseek", rounds: int = 2):
     # Discussões
     for disc_idx, disc in enumerate(DUAL_SCENARIO['discussions']):
         print("\n" + "═" * 80)
-        print(f"   📖 TEMA {disc_idx + 1}/{len(DUAL_SCENARIO['discussions'])}")
+        print(f"   📖 TOPIC {disc_idx + 1}/{len(DUAL_SCENARIO['discussions'])}")
         print(f"   {disc['topic']}")
         print("═" * 80)
-        
-        print(f"\n💬 Estímulo: \"{disc['stimulus'][:100]}...\"")
+
+        print(f"\n💬 Stimulus: \"{disc['stimulus'][:100]}...\"")
         
         # Determinar agentes participantes
         participating = [
@@ -79,14 +79,14 @@ def run_dual_with_delta(backend_name: str = "deepseek", rounds: int = 2):
             if disc['book'] in a['books'] or disc['book'] == 'both'
         ]
         
-        print(f"   Participantes: {', '.join(a['name'] for a in participating)}")
+        print(f"   Participants: {', '.join(a['name'] for a in participating)}")
         
         # Mensagem inicial (FULL forçado - sem referência)
         msg = net.human.text_to_msg(disc['stimulus'], "BROADCAST")
         net._log_msg(msg, "Moderador", "BROADCAST")
         
         # Respostas iniciais com compressão delta
-        print("\n   🎤 Respostas iniciais:")
+        print("\n   🎤 Initial responses:")
         for agent_def in participating:
             agent = agent_map.get(agent_def['name'])
             if not agent:
@@ -167,35 +167,35 @@ def run_dual_with_delta(backend_name: str = "deepseek", rounds: int = 2):
     
     # Relatório final
     print("\n" + "=" * 80)
-    print("   📊 RELATÓRIO FINAL - DUAL + DELTA")
+    print("   📊 FINAL REPORT - DUAL + DELTA")
     print("=" * 80)
-    
+
     # Métricas de compressão
-    print("\n📦 COMPRESSÃO DELTA:")
+    print("\n📦 DELTA COMPRESSION:")
     report = compressor.get_report()
     savings = report['savings']
-    
-    print(f"   Total mensagens:     {report['summary']['total_messages']}")
+
+    print(f"   Total messages:      {report['summary']['total_messages']}")
     print(f"   DELTA:               {report['summary']['delta_messages']} ({report['summary']['delta_percentage']}%)")
     print(f"   FULL:                {report['summary']['full_messages']}")
-    print(f"   Economia de banda:   {savings['percent_saved']}%")
-    print(f"   Bytes economizados:  {savings['bytes_saved']:,}")
-    print(f"   Taxa compressão:     {savings['efficiency']}:1")
-    
+    print(f"   Bandwidth savings:   {savings['percent_saved']}%")
+    print(f"   Bytes saved:         {savings['bytes_saved']:,}")
+    print(f"   Compression rate:    {savings['efficiency']}:1")
+
     # Métricas de livros
-    print("\n📚 PARTICIPAÇÃO POR LIVRO:")
+    print("\n📚 PARTICIPATION BY BOOK:")
     distance = book_monitor.calculate_cross_book_distance()
     comparison = book_monitor.metrics.generate_comparison()
-    
+
     print(f"   Platão:    {comparison['participation']['plato']['messages']:3} msgs ({comparison['participation']['plato']['percentage']:.1f}%)")
     print(f"   Pinoquio:  {comparison['participation']['pinocchio']['messages']:3} msgs ({comparison['participation']['pinocchio']['percentage']:.1f}%)")
-    print(f"   Distância semântica entre universos: {distance:.4f}")
-    
+    print(f"   Semantic distance between universes: {distance:.4f}")
+
     # Eixos que mais mudaram
-    print("\n📈 EIXOS MAIS MODIFICADOS (DELTA):")
+    print("\n📈 MOST MODIFIED AXES (DELTA):")
     for axis_info in report['top_changing_axes'][:5]:
         axis_name = smart_net._get_axis_name(axis_info['axis'])
-        print(f"   [{axis_info['axis']:2}] {axis_name:20} {axis_info['changes']:3} mudanças")
+        print(f"   [{axis_info['axis']:2}] {axis_name:20} {axis_info['changes']:3} changes")
     
     # Exportar relatório combinado
     final_report = {
@@ -216,24 +216,24 @@ def run_dual_with_delta(backend_name: str = "deepseek", rounds: int = 2):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(final_report, f, indent=2, ensure_ascii=False)
     
-    print(f"\n💾 Relatório: {filename}")
-    
+    print(f"\n💾 Report: {filename}")
+
     print("\n" + "=" * 80)
-    print("✅ Simulação completa!")
+    print("✅ Simulation complete!")
     print("=" * 80)
 
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="Dual-Livros + Delta")
+    parser = argparse.ArgumentParser(description="Dual-Books + Delta")
     parser.add_argument("--backend", choices=["deepseek", "anthropic", "mock"],
                        default="mock")
     parser.add_argument("--rounds", type=int, default=2)
     args = parser.parse_args()
-    
+
     if args.backend == "deepseek" and not os.environ.get("DEEPSEEK_API_KEY"):
-        print("⚠️ DEEPSEEK_API_KEY não definida. Usando mock.")
+        print("⚠️ DEEPSEEK_API_KEY not set. Using mock.")
         args.backend = "mock"
     
     run_dual_with_delta(args.backend, args.rounds)

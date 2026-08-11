@@ -1,38 +1,38 @@
-# Deploy em Produção
+# Production Deployment
 
-## Pré-requisitos
+## Prerequisites
 
-- Sistema Linux com systemd
-- Rust compilado (`cargo build --workspace --release`)
-- Python 3.11+ para os serviços Python
-- (Opcional) SQLite para persistência
+- Linux system with systemd
+- Compiled Rust (`cargo build --workspace --release`)
+- Python 3.11+ for the Python services
+- (Optional) SQLite for persistence
 
-## Binários
+## Binaries
 
 ```bash
-# Compilar em modo release
+# Compile in release mode
 cargo build --workspace --release
 
-# Binários produzidos:
+# Binaries produced:
 # target/release/leet          — CLI / MCP backend
-# target/release/leet-server   — serviço gRPC
-# target/release/leet-agent    — cliente de agente standalone
+# target/release/leet-server   — gRPC service
+# target/release/leet-agent    — standalone agent client
 ```
 
-## Configuração via Variáveis de Ambiente
+## Configuration via Environment Variables
 
-| Variável | Padrão | Descrição |
+| Variable | Default | Description |
 |----------|--------|-----------|
-| `LEET_PORT` | `50051` | Porta gRPC do leet-server |
-| `LEET_STORE` | `memory` | Backend de storage: `memory` ou `sqlite` |
-| `LEET_SQLITE_PATH` | `.leet_store.db` | Caminho do banco SQLite |
-| `LEET_LOG` | `info` | Nível de log (`debug`, `info`, `warn`, `error`) |
-| `LEET_W_PATH` | — | Caminho da W matrix calibrada (`W.bin`) |
-| `LEET_API_KEY` | — | API key para modo `leet chat` |
+| `LEET_PORT` | `50051` | gRPC port for leet-server |
+| `LEET_STORE` | `memory` | Storage backend: `memory` or `sqlite` |
+| `LEET_SQLITE_PATH` | `.leet_store.db` | SQLite database path |
+| `LEET_LOG` | `info` | Log level (`debug`, `info`, `warn`, `error`) |
+| `LEET_W_PATH` | — | Path to the calibrated W matrix (`W.bin`) |
+| `LEET_API_KEY` | — | API key for `leet chat` mode |
 
 ## Systemd — leet-server
 
-Arquivo de unit: `/etc/systemd/system/leet-server.service`
+Unit file: `/etc/systemd/system/leet-server.service`
 
 ```ini
 [Unit]
@@ -57,12 +57,12 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-# Instalar
+# Install
 sudo cp target/release/leet-server /opt/leet/
 sudo useradd -r -s /sbin/nologin leet
 sudo mkdir -p /var/lib/leet && sudo chown leet:leet /var/lib/leet
 
-# Ativar
+# Enable
 sudo systemctl daemon-reload
 sudo systemctl enable leet-server
 sudo systemctl start leet-server
@@ -71,17 +71,17 @@ sudo systemctl status leet-server
 
 ## Systemd — MCP Server (Claude Code)
 
-Arquivo de unit: `/etc/systemd/system/leet-mcp.service`
+Unit file: `/etc/systemd/system/leet-mcp.service`
 
 ```ini
 [Unit]
-Description=1337 MCP server para Claude Code
+Description=1337 MCP server for Claude Code
 After=network.target
 
 [Service]
 Type=simple
-User=<seu-usuario>
-WorkingDirectory=/home/<seu-usuario>/1337
+User=<your-user>
+WorkingDirectory=/home/<your-user>/1337
 ExecStart=/usr/bin/python3 mcp/leet_mcp.py
 Restart=on-failure
 RestartSec=5
@@ -90,7 +90,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-## Verificação de Saúde
+## Health Check
 
 ```bash
 # Via CLI
@@ -99,57 +99,57 @@ WantedBy=multi-user.target
 
 # Via systemd
 sudo systemctl status leet-server
-sudo journalctl -u leet-server -f   # logs em tempo real
+sudo journalctl -u leet-server -f   # real-time logs
 ```
 
 ## SQLite vs Memory
 
 | | Memory | SQLite |
 |-|--------|--------|
-| Persistência | Reinicialização apaga dados | Persiste entre reinicializações |
-| Performance | Mais rápido | Levemente mais lento |
-| Uso | Dev, testes | Produção |
-| Configuração | `LEET_STORE=memory` | `LEET_STORE=sqlite` |
+| Persistence | Restart wipes data | Persists across restarts |
+| Performance | Faster | Slightly slower |
+| Use case | Dev, testing | Production |
+| Configuration | `LEET_STORE=memory` | `LEET_STORE=sqlite` |
 
-## W Matrix em Produção
+## W Matrix in Production
 
-Para projeção semântica de alta qualidade, forneça a W matrix calibrada:
+For high-quality semantic projection, provide the calibrated W matrix:
 
 ```bash
-# Copiar W.bin para o servidor
+# Copy W.bin to the server
 scp calibration/data/W.bin servidor:/opt/leet/W.bin
 
-# Configurar no systemd
+# Configure in systemd
 Environment=LEET_W_PATH=/opt/leet/W.bin
 ```
 
-Sem `W.bin`, o leet-bridge usa o `MockProjector` com heurísticas de palavras-chave. Consulte [Calibração](calibration.md) para gerar uma W matrix customizada.
+Without `W.bin`, leet-bridge uses the `MockProjector` with keyword heuristics. See [Calibration](calibration.md) to generate a custom W matrix.
 
-## Múltiplos Agentes
+## Multiple Agents
 
-Cada agente se identifica com um `agent_id` único. O store namespacing é feito por `agent_id`:
+Each agent identifies itself with a unique `agent_id`. Store namespacing is done by `agent_id`:
 
 ```bash
-# Agente 1
+# Agent 1
 LEET_API_KEY=... ./target/release/leet-agent --id "agente-prod-1" --server localhost:50051
 
-# Agente 2
+# Agent 2
 LEET_API_KEY=... ./target/release/leet-agent --id "agente-prod-2" --server localhost:50051
 ```
 
 ## Logs
 
 ```bash
-# Nível de detalhe
-LEET_LOG=debug leet-server    # inclui cada operação de projeção
-LEET_LOG=warn  leet-server    # apenas warnings e erros
+# Level of detail
+LEET_LOG=debug leet-server    # includes every projection operation
+LEET_LOG=warn  leet-server    # warnings and errors only
 
-# Com journald
+# With journald
 sudo journalctl -u leet-server --since "1 hour ago"
 ```
 
-## Segurança
+## Security
 
-- O leet-service não tem autenticação nativa — use firewall ou tunelamento SSH para restringir acesso
-- `LEET_API_KEY` não deve ser commitado — use variáveis de ambiente do systemd ou um secrets manager
-- Permissões do banco SQLite: `chmod 600 /var/lib/leet/store.db`
+- leet-service has no native authentication — use a firewall or SSH tunneling to restrict access
+- `LEET_API_KEY` should not be committed — use systemd environment variables or a secrets manager
+- SQLite database permissions: `chmod 600 /var/lib/leet/store.db`

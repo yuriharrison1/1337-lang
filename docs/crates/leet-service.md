@@ -1,49 +1,49 @@
 # leet-service
 
-Serviço gRPC/TCP Rust que expõe operações COGON sobre a rede. Centraliza projeção e armazenamento para agentes distribuídos.
+Rust gRPC/TCP service that exposes COGON operations over the network. Centralizes projection and storage for distributed agents.
 
-## Arquitetura
+## Architecture
 
 ```
-Agentes → gRPC (porta 50051) → LeetServiceImpl
-                                   ├── Engine (projeção via W matrix)
+Agents → gRPC (port 50051) → LeetServiceImpl
+                                   ├── Engine (projection via W matrix)
                                    ├── Store  (memory | sqlite)
-                                   └── BatchQueue (encode em lote)
+                                   └── BatchQueue (batch encode)
 ```
 
-## Binários
+## Binaries
 
 ```bash
-# Servidor gRPC
+# gRPC server
 cargo run --bin leet-server
 
-# Cliente de agente (modo standalone)
+# Agent client (standalone mode)
 cargo run --bin leet-agent
 ```
 
-## Configuração
+## Configuration
 
-Todas as opções via variáveis de ambiente:
+All options via environment variables:
 
-| Variável | Padrão | Descrição |
+| Variable | Default | Description |
 |----------|--------|-----------|
-| `LEET_PORT` | `50051` | Porta gRPC |
-| `LEET_STORE` | `memory` | Backend de storage (`memory` ou `sqlite`) |
-| `LEET_SQLITE_PATH` | `.leet_store.db` | Caminho do banco SQLite |
-| `LEET_LOG` | `info` | Nível de log |
-| `LEET_W_PATH` | — | Caminho da W matrix (ver leet-bridge) |
+| `LEET_PORT` | `50051` | gRPC port |
+| `LEET_STORE` | `memory` | Storage backend (`memory` or `sqlite`) |
+| `LEET_SQLITE_PATH` | `.leet_store.db` | SQLite database path |
+| `LEET_LOG` | `info` | Log level |
+| `LEET_W_PATH` | — | Path to the W matrix (see leet-bridge) |
 
 ```bash
 LEET_STORE=sqlite LEET_SQLITE_PATH=/data/leet.db ./leet-server
 ```
 
-## API gRPC
+## gRPC API
 
-Proto: `leet.proto` (incluso via `tonic::include_proto!("leet")`).
+Proto: `leet.proto` (included via `tonic::include_proto!("leet")`).
 
 ### `Encode`
 
-Projeta texto em COGON e persiste no store.
+Projects text into a COGON and persists it to the store.
 
 ```protobuf
 rpc Encode(EncodeRequest) returns (EncodeResponse);
@@ -55,15 +55,15 @@ message EncodeRequest {
 
 message EncodeResponse {
     string  cogon_id      = 1;
-    repeated float sem    = 2;  // 32 valores
+    repeated float sem    = 2;  // 32 values
     int64   stamp         = 3;  // Unix ms
-    int64   tokens_saved  = 4;  // estimativa de tokens economizados
+    int64   tokens_saved  = 4;  // estimated tokens saved
 }
 ```
 
 ### `EncodeBatch`
 
-Streaming bidirecional — envia vários textos, recebe COGONs à medida que ficam prontos.
+Bidirectional streaming — send multiple texts, receive COGONs as they become ready.
 
 ```protobuf
 rpc EncodeBatch(stream EncodeRequest) returns (stream EncodeResponse);
@@ -71,7 +71,7 @@ rpc EncodeBatch(stream EncodeRequest) returns (stream EncodeResponse);
 
 ### `Decode`
 
-Reconstrói texto a partir de um vetor sem.
+Reconstructs text from a sem vector.
 
 ```protobuf
 rpc Decode(DecodeRequest) returns (DecodeResponse);
@@ -84,7 +84,7 @@ message DecodeRequest {
 
 ### `Delta`
 
-Calcula diferença entre dois vetores sem. Retorna patch e magnitude normalizada por `√32 → [0, 1]`.
+Computes the difference between two sem vectors. Returns the patch and magnitude normalized by `√32 → [0, 1]`.
 
 ```protobuf
 rpc Delta(DeltaRequest) returns (DeltaResponse);
@@ -97,7 +97,7 @@ message DeltaResponse {
 
 ### `Recall`
 
-Busca semântica no store do agente — retorna os k COGONs mais próximos.
+Semantic search in the agent's store — returns the k nearest COGONs.
 
 ```protobuf
 rpc Recall(RecallRequest) returns (RecallResponse);
@@ -111,7 +111,7 @@ message RecallRequest {
 
 ### `Health`
 
-Status do serviço.
+Service status.
 
 ```protobuf
 rpc Health(HealthRequest) returns (HealthResponse);
@@ -119,7 +119,7 @@ rpc Health(HealthRequest) returns (HealthResponse);
 message HealthResponse {
     string status  = 1;  // "ok"
     string backend = 2;  // "memory" | "sqlite"
-    int64  uptime  = 3;  // segundos
+    int64  uptime  = 3;  // seconds
 }
 ```
 
@@ -127,11 +127,11 @@ message HealthResponse {
 
 ### Memory Store
 
-Store em memória — padrão, sem persistência entre reinicializações. Ideal para desenvolvimento e testes.
+In-memory store — the default, with no persistence across restarts. Ideal for development and testing.
 
 ### SQLite Store
 
-Persistência em disco. Cada agente tem sua própria tabela de COGONs indexados por `(agent_id, cogon_id, stamp)`.
+On-disk persistence. Each agent has its own table of COGONs indexed by `(agent_id, cogon_id, stamp)`.
 
 ```bash
 LEET_STORE=sqlite leet-server
@@ -139,29 +139,29 @@ LEET_STORE=sqlite leet-server
 
 ## BatchQueue
 
-Queue interna para processar múltiplos encodes de forma eficiente. Configurada automaticamente pelo `LeetServiceImpl`.
+Internal queue for processing multiple encodes efficiently. Configured automatically by `LeetServiceImpl`.
 
-## Módulos
+## Modules
 
-| Módulo | Responsabilidade |
+| Module | Responsibility |
 |--------|------------------|
-| `server` | Implementação do trait `LeetService` (tonic) |
-| `tcp_server` | Wrapper TCP raw (alternativa ao gRPC) |
-| `projection` | Engine de projeção — wrapping do leet-bridge |
-| `store` | Trait `Store` + backends memory e sqlite |
-| `batch` | `BatchQueue` para encode em lote |
-| `config` | Leitura de env vars |
-| `agent_client` | Cliente gRPC para conexão de agentes ao serviço |
+| `server` | Implementation of the `LeetService` trait (tonic) |
+| `tcp_server` | Raw TCP wrapper (alternative to gRPC) |
+| `projection` | Projection engine — wraps leet-bridge |
+| `store` | `Store` trait + memory and sqlite backends |
+| `batch` | `BatchQueue` for batch encoding |
+| `config` | Reads environment variables |
+| `agent_client` | gRPC client for connecting agents to the service |
 
-## Verificar Status
+## Checking Status
 
 ```bash
 leet health                           # localhost:50051
-leet health --url 192.168.1.10:50051  # host remoto
+leet health --url 192.168.1.10:50051  # remote host
 ```
 
-## Testes
+## Tests
 
 ```bash
-cargo test -p leet-service   # 22 testes
+cargo test -p leet-service   # 22 tests
 ```

@@ -1,5 +1,5 @@
 """
-Fonte de dados para arquivos locais.
+Data source for local files.
 """
 
 import json
@@ -12,16 +12,16 @@ from .base import DataSource, TextSample, SourceConfig
 
 class LocalFileSource(DataSource):
     """
-    Fonte de dados para arquivos locais.
-    
-    Suporta formatos:
-    - .txt: um texto por linha
-    - .jsonl: JSON lines com campo 'text' ou estrutura similar
-    - .csv: CSV com coluna 'text'
-    - .json: Array de objetos ou objeto único
-    
-    Exemplo de uso:
-        source = LocalFileSource("data/meus_textos.jsonl")
+    Data source for local files.
+
+    Supported formats:
+    - .txt: one text per line
+    - .jsonl: JSON lines with a 'text' field or similar structure
+    - .csv: CSV with a 'text' column
+    - .json: Array of objects or a single object
+
+    Usage example:
+        source = LocalFileSource("data/my_texts.jsonl")
         samples = source.fetch_all()
     """
     
@@ -31,14 +31,14 @@ class LocalFileSource(DataSource):
         self.text_field = text_field
         
         if not self.file_path.exists():
-            raise FileNotFoundError(f"Arquivo não encontrado: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
         
         self.name = f"local_{self.file_path.stem}"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Lê amostras do arquivo."""
+        """Reads samples from the file."""
         suffix = self.file_path.suffix.lower()
-        
+
         if suffix == '.jsonl':
             yield from self._fetch_jsonl()
         elif suffix == '.json':
@@ -48,10 +48,10 @@ class LocalFileSource(DataSource):
         elif suffix == '.txt':
             yield from self._fetch_txt()
         else:
-            raise ValueError(f"Formato não suportado: {suffix}")
-    
+            raise ValueError(f"Unsupported format: {suffix}")
+
     def _fetch_jsonl(self) -> Iterator[TextSample]:
-        """Lê arquivo JSON lines."""
+        """Reads a JSON lines file."""
         with open(self.file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
@@ -67,7 +67,7 @@ class LocalFileSource(DataSource):
                     continue
     
     def _fetch_json(self) -> Iterator[TextSample]:
-        """Lê arquivo JSON (array ou objeto)."""
+        """Reads a JSON file (array or object)."""
         with open(self.file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
@@ -82,7 +82,7 @@ class LocalFileSource(DataSource):
                 yield sample
     
     def _fetch_csv(self) -> Iterator[TextSample]:
-        """Lê arquivo CSV."""
+        """Reads a CSV file."""
         with open(self.file_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -97,7 +97,7 @@ class LocalFileSource(DataSource):
                         yield sample
     
     def _fetch_txt(self) -> Iterator[TextSample]:
-        """Lê arquivo texto (uma linha por amostra)."""
+        """Reads a text file (one line per sample)."""
         with open(self.file_path, 'r', encoding='utf-8') as f:
             for line in f:
                 text = line.strip()
@@ -107,8 +107,8 @@ class LocalFileSource(DataSource):
                         yield sample
     
     def _parse_sample(self, data: dict) -> TextSample | None:
-        """Parseia um dicionário em TextSample."""
-        # Tenta extrair texto
+        """Parses a dictionary into a TextSample."""
+        # Try to extract text
         text = None
         
         if self.text_field in data:
@@ -123,11 +123,11 @@ class LocalFileSource(DataSource):
         if not text or not isinstance(text, str):
             return None
         
-        # Extrai metadados relevantes
-        metadata = {k: v for k, v in data.items() 
+        # Extract relevant metadata
+        metadata = {k: v for k, v in data.items()
                    if k not in [self.text_field, 'text', 'content', 'body', 'sem', 'unc']}
-        
-        # Se já tem sem/unc, inclui
+
+        # If sem/unc are already present, include them
         sem = data.get('sem')
         unc = data.get('unc')
         
@@ -140,7 +140,7 @@ class LocalFileSource(DataSource):
         )
     
     def get_stats(self) -> dict:
-        """Retorna estatísticas do arquivo."""
+        """Returns file statistics."""
         stats = super().get_stats()
         stats.update({
             "file_path": str(self.file_path),

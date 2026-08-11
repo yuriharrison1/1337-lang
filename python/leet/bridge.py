@@ -7,7 +7,7 @@ import os
 
 from leet.types import Cogon, Dag, FIXED_DIMS
 from leet.axes import (
-    CANONICAL_AXES, 
+    CANONICAL_AXES,
     A8_ESTADO, A9_PROCESSO, A13_VALENCIA_ONTOLOGICA,
     B5_REVERSIBILIDADE,
     C1_URGENCIA, C3_ACAO, C5_ANOMALIA, C9_NATUREZA,
@@ -15,27 +15,27 @@ from leet.axes import (
 
 
 class SemanticProjector(ABC):
-    """Interface para qualquer backend de projeção semântica."""
+    """Interface for any semantic projection backend."""
 
     @abstractmethod
     async def project(self, text: str) -> tuple[list[float], list[float]]:
-        """Projeta texto nos 32 eixos. Retorna (sem, unc)."""
+        """Projects text onto the 32 axes. Returns (sem, unc)."""
         ...
 
     @abstractmethod
     async def reconstruct(self, cogon: Cogon) -> str:
-        """Reconstrói texto a partir de COGON."""
+        """Reconstructs text from a COGON."""
         ...
 
 
 class MockProjector(SemanticProjector):
-    """Projetor determinístico pra testes. Sem API, sem rede."""
-    
+    """Deterministic projector for tests. No API, no network."""
+
     def __init__(self, cache_size: int = 1000):
         self._cache: dict[str, tuple[list[float], list[float]]] = {}
         self._cache_order: list[str] = []  # LRU order
         self._cache_size = cache_size
-    
+
     def _get_cached(self, text: str) -> Optional[tuple[list[float], list[float]]]:
         """Get from LRU cache."""
         if text in self._cache:
@@ -44,7 +44,7 @@ class MockProjector(SemanticProjector):
             self._cache_order.append(text)
             return self._cache[text]
         return None
-    
+
     def _set_cached(self, text: str, result: tuple[list[float], list[float]]) -> None:
         """Set in LRU cache."""
         if text in self._cache:
@@ -53,7 +53,7 @@ class MockProjector(SemanticProjector):
             # Evict least recently used
             lru = self._cache_order.pop(0)
             del self._cache[lru]
-        
+
         self._cache[text] = result
         self._cache_order.append(text)
 
@@ -62,12 +62,12 @@ class MockProjector(SemanticProjector):
         cached = self._get_cached(text)
         if cached is not None:
             return cached
-        
+
         text_lower = text.lower()
         sem = [0.5] * 32
         unc = [0.2] * 32
 
-        # Heurísticas baseadas em keywords
+        # Keyword-based heuristics
         if "urgente" in text_lower or "urgência" in text_lower:
             sem[C1_URGENCIA] = 0.95
             sem[C3_ACAO] = 0.9
@@ -77,13 +77,13 @@ class MockProjector(SemanticProjector):
         if "caiu" in text_lower or "falhou" in text_lower or "erro" in text_lower or "down" in text_lower:
             sem[A8_ESTADO] = 0.9
             sem[C5_ANOMALIA] = 0.9
-            sem[A13_VALENCIA_ONTOLOGICA] = 0.15  # valência negativa
+            sem[A13_VALENCIA_ONTOLOGICA] = 0.15  # negative valence
             unc[A8_ESTADO] = 0.1
             unc[C5_ANOMALIA] = 0.1
 
         if "deploy" in text_lower or "processo" in text_lower or "pipeline" in text_lower:
             sem[A9_PROCESSO] = 0.85
-            sem[C9_NATUREZA] = 0.8   # verbo/ação
+            sem[C9_NATUREZA] = 0.8   # verb/action
             unc[A9_PROCESSO] = 0.1
 
         if "reverter" in text_lower or "desfazer" in text_lower or "rollback" in text_lower:
@@ -96,7 +96,7 @@ class MockProjector(SemanticProjector):
         return result
 
     async def reconstruct(self, cogon: Cogon) -> str:
-        # Encontra os 3 eixos mais ativados
+        # Find the 3 most activated axes
         top_axes = sorted(range(32), key=lambda i: cogon.sem[i], reverse=True)[:3]
         parts = []
         for idx in top_axes:
@@ -106,15 +106,15 @@ class MockProjector(SemanticProjector):
 
 
 class AnthropicProjector(SemanticProjector):
-    """Projetor usando a API Anthropic Claude."""
+    """Projector using the Anthropic Claude API."""
 
     def __init__(self, api_key: str | None = None, model: str = "claude-sonnet-4-20250514"):
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self.model = model
         if not self.api_key:
             raise ValueError("ANTHROPIC_API_KEY required")
-        
-        # Import condicional
+
+        # Conditional import
         try:
             import anthropic
             self.client = anthropic.Anthropic(api_key=self.api_key)
@@ -122,52 +122,52 @@ class AnthropicProjector(SemanticProjector):
             raise ImportError("anthropic package required. Install with: pip install anthropic")
 
     def _projection_prompt(self, text: str) -> str:
-        """Gera prompt para projeção nos 32 eixos."""
+        """Generates the prompt for projection onto the 32 axes."""
         lines = [
-            "Você é um projetor semântico especializado.",
-            "Projete o texto nos 32 eixos canônicos da linguagem 1337.",
+            "You are a specialized semantic projector.",
+            "Project the text onto the 32 canonical axes of the 1337 language.",
             "",
-            "EIXOS CANÔNICOS:",
+            "CANONICAL AXES:",
         ]
         for ax in CANONICAL_AXES:
             lines.append(f"[{ax.index:2d}] {ax.code} {ax.name}: {ax.description[:60]}...")
-        
+
         lines.extend([
             "",
-            f"TEXTO: \"{text}\"",
+            f"TEXT: \"{text}\"",
             "",
-            "Responda APENAS com JSON no formato:",
+            "Respond ONLY with JSON in the format:",
             '{"sem": [0.0, ..., 0.0], "unc": [0.0, ..., 0.0]}',
         ])
         return "\n".join(lines)
 
     def _reconstruction_prompt(self, cogon: Cogon) -> str:
-        """Gera prompt para reconstrução de texto."""
-        lines = ["Reconstrua texto natural a partir desta projeção 1337:"]
+        """Generates the prompt for text reconstruction."""
+        lines = ["Reconstruct natural text from this 1337 projection:"]
         for ax in CANONICAL_AXES:
             s = cogon.sem[ax.index]
             u = cogon.unc[ax.index]
             lines.append(f"  {ax.name}: sem={s:.2f} unc={u:.2f}")
-        lines.append("\nTexto reconstruído:")
+        lines.append("\nReconstructed text:")
         return "\n".join(lines)
 
     async def project(self, text: str) -> tuple[list[float], list[float]]:
         import json
-        
+
         response = self.client.messages.create(
             model=self.model,
             max_tokens=1024,
-            system="Você é um projetor semântico que retorna apenas JSON.",
+            system="You are a semantic projector that returns only JSON.",
             messages=[{"role": "user", "content": self._projection_prompt(text)}]
         )
-        
+
         content = response.content[0].text
-        # Extrai JSON
+        # Extract JSON
         try:
-            # Tenta parse direto
+            # Try direct parse
             data = json.loads(content)
         except json.JSONDecodeError:
-            # Tenta extrair de markdown
+            # Try extracting from markdown
             if "```json" in content:
                 json_str = content.split("```json")[1].split("```")[0]
                 data = json.loads(json_str)
@@ -176,22 +176,22 @@ class AnthropicProjector(SemanticProjector):
                 data = json.loads(json_str)
             else:
                 raise ValueError(f"Could not parse JSON from: {content}")
-        
+
         return data["sem"], data["unc"]
 
     async def reconstruct(self, cogon: Cogon) -> str:
         response = self.client.messages.create(
             model=self.model,
             max_tokens=256,
-            system="Você é um reconstrutor semântico. Responda em português.",
+            system="You are a semantic reconstructor. Respond in Portuguese.",
             messages=[{"role": "user", "content": self._reconstruction_prompt(cogon)}]
         )
         return response.content[0].text.strip()
 
 
-# Funções de conveniência
+# Convenience functions
 async def encode(text: str, projector: Optional[SemanticProjector] = None) -> Cogon:
-    """Texto → COGON."""
+    """Text → COGON."""
     if projector is None:
         projector = MockProjector()
     sem, unc = await projector.project(text)
@@ -199,7 +199,7 @@ async def encode(text: str, projector: Optional[SemanticProjector] = None) -> Co
 
 
 async def decode(cogon: Cogon, projector: Optional[SemanticProjector] = None) -> str:
-    """COGON → texto."""
+    """COGON → text."""
     if projector is None:
         projector = MockProjector()
     return await projector.reconstruct(cogon)

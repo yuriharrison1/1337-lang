@@ -1,8 +1,8 @@
 """
-Fontes de dados especializadas por domínio.
+Domain-specialized data sources.
 
-Fornecem textos típicos de domínios específicos (tech, medical, legal)
-para treinamento especializado da matriz W.
+Provide texts typical of specific domains (tech, medical, legal)
+for specialized training of the W matrix.
 """
 
 from typing import Iterator
@@ -13,22 +13,22 @@ from .base import DataSource, TextSample, SourceConfig
 
 class TechDomainSource(DataSource):
     """
-    Fonte de dados especializada em tecnologia/software.
-    
-    Gera ou retorna textos típicos de:
-    - Logs de sistema
-    - Mensagens de commit
-    - Descrições de bugs
-    - Documentação técnica
-    - Alertas de monitoramento
-    
-    Exemplo:
+    Data source specialized in technology/software.
+
+    Generates or returns texts typical of:
+    - System logs
+    - Commit messages
+    - Bug descriptions
+    - Technical documentation
+    - Monitoring alerts
+
+    Example:
         config = SourceConfig(max_samples=200)
         source = TechDomainSource(config=config)
         samples = source.fetch_all()
     """
-    
-    # Templates de textos técnicos
+
+    # Technical text templates
     LOG_MESSAGES = [
         "ERROR: Connection timeout after 30s to database cluster db-primary-03",
         "WARN: Memory usage at 87%, approaching threshold of 90%",
@@ -87,9 +87,9 @@ class TechDomainSource(DataSource):
         self.name = "domain_tech"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Gera amostras de textos técnicos."""
+        """Generates technical text samples."""
         all_texts = []
-        
+
         if "logs" in self.categories:
             all_texts.extend(self.LOG_MESSAGES)
         if "commits" in self.categories:
@@ -98,13 +98,13 @@ class TechDomainSource(DataSource):
             all_texts.extend(self.BUG_DESCRIPTIONS)
         if "alerts" in self.categories:
             all_texts.extend(self.MONITORING_ALERTS)
-        
-        # Embaralha para variedade
+
+        # Shuffle for variety
         random.shuffle(all_texts)
-        
-        # Limita ao max_samples
+
+        # Cap at max_samples
         for i, text in enumerate(all_texts[:self.config.max_samples]):
-            # Determina a categoria
+            # Determine the category
             category = self._detect_category(text)
             
             sample = TextSample(
@@ -121,7 +121,7 @@ class TechDomainSource(DataSource):
                 yield sample
     
     def _detect_category(self, text: str) -> str:
-        """Detecta a categoria do texto técnico."""
+        """Detects the category of the technical text."""
         text_lower = text.lower()
         
         if any(level in text for level in ["error", "warn", "info", "debug", "fatal"]):
@@ -137,15 +137,15 @@ class TechDomainSource(DataSource):
 
 class MedicalDomainSource(DataSource):
     """
-    Fonte de dados especializada em medicina/saúde.
-    
-    Fornece textos típicos de:
-    - Sintomas e diagnósticos
-    - Prescrições
-    - Relatórios clínicos
-    - Terminologia médica
-    
-    Nota: Todos os dados são sintéticos/anonymized para treinamento.
+    Data source specialized in medicine/healthcare.
+
+    Provides texts typical of:
+    - Symptoms and diagnoses
+    - Prescriptions
+    - Clinical reports
+    - Medical terminology
+
+    Note: All data is synthetic/anonymized for training.
     """
     
     SYMPTOMS = [
@@ -178,7 +178,7 @@ class MedicalDomainSource(DataSource):
         self.name = "domain_medical"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Gera amostras de textos médicos."""
+        """Generates medical text samples."""
         all_texts = []
         
         if "symptoms" in self.categories:
@@ -205,7 +205,7 @@ class MedicalDomainSource(DataSource):
                 yield sample
     
     def _detect_medical_category(self, text: str) -> str:
-        """Detecta a categoria médica."""
+        """Detects the medical category."""
         text_lower = text.lower()
         
         if any(w in text_lower for w in ["dor", "febre", "dispneia", "cefaleia", "náusea", "vômito"]):
@@ -219,13 +219,13 @@ class MedicalDomainSource(DataSource):
 
 class LegalDomainSource(DataSource):
     """
-    Fonte de dados especializada em direito/jurídico.
-    
-    Fornece textos típicos de:
-    - Cláusulas contratuais
-    - Petições
-    - Legislação
-    - Pareceres jurídicos
+    Data source specialized in law/legal matters.
+
+    Provides texts typical of:
+    - Contract clauses
+    - Legal petitions
+    - Legislation
+    - Legal opinions
     """
     
     CONTRACT_CLAUSES = [
@@ -269,7 +269,7 @@ class LegalDomainSource(DataSource):
         self.name = "domain_legal"
     
     def fetch(self) -> Iterator[TextSample]:
-        """Gera amostras de textos jurídicos."""
+        """Generates legal text samples."""
         all_texts = []
         
         if "contracts" in self.categories:
@@ -296,7 +296,7 @@ class LegalDomainSource(DataSource):
                 yield sample
     
     def _detect_legal_category(self, text: str) -> str:
-        """Detecta a categoria jurídica."""
+        """Detects the legal category."""
         text_lower = text.lower()
         
         if "cláusula" in text_lower or "art." in text_lower or "contratado" in text_lower:

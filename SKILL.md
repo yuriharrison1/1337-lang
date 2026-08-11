@@ -110,40 +110,44 @@ Msg1337 {
 
 ## 32 Canonical Axes
 
+> Corrected against `leet-core/src/axes.rs` (`CANONICAL_AXES`), the current ground truth as of v0.5.1. The previous table here used a deprecated Group A/B/C (Ontological/Epistemic/Pragmatic) scheme with stale Portuguese names; both the names and the grouping have been replaced below with the current S/D/G/P block scheme.
+
 | Idx | Code | Name | Group |
 |-----|------|------|-------|
-| 0 | A0 | VIA | Ontological |
-| 1 | A1 | CORRESPONDÊNCIA | Ontological |
-| 2 | A2 | VIBRAÇÃO | Ontological |
-| 3 | A3 | POLARIDADE | Ontological |
-| 4 | A4 | RITMO | Ontological |
-| 5 | A5 | CAUSA E EFEITO | Ontological |
-| 6 | A6 | GÊNERO | Ontological |
-| 7 | A7 | SISTEMA | Ontological |
-| 8 | A8 | ESTADO | Ontological |
-| 9 | A9 | PROCESSO | Ontological |
-| 10 | A10 | RELAÇÃO | Ontological |
-| 11 | A11 | SINAL | Ontological |
-| 12 | A12 | ESTABILIDADE | Ontological |
-| 13 | A13 | VALÊNCIA ONTOLÓGICA | Ontological |
-| 14 | B1 | VERIFICABILIDADE | Epistemic |
-| 15 | B2 | TEMPORALIDADE | Epistemic |
-| 16 | B3 | COMPLETUDE | Epistemic |
-| 17 | B4 | CAUSALIDADE | Epistemic |
-| 18 | B5 | REVERSIBILIDADE | Epistemic |
-| 19 | B6 | CARGA | Epistemic |
-| 20 | B7 | ORIGEM | Epistemic |
-| 21 | B8 | VALÊNCIA EPISTÊMICA | Epistemic |
-| 22 | C1 | URGÊNCIA | Pragmatic |
-| 23 | C2 | IMPACTO | Pragmatic |
-| 24 | C3 | AÇÃO | Pragmatic |
-| 25 | C4 | VALOR | Pragmatic |
-| 26 | C5 | ANOMALIA | Pragmatic |
-| 27 | C6 | AFETO | Pragmatic |
-| 28 | C7 | DEPENDÊNCIA | Pragmatic |
-| 29 | C8 | VETOR TEMPORAL | Pragmatic |
-| 30 | C9 | NATUREZA | Pragmatic |
-| 31 | C10 | VALÊNCIA DE AÇÃO | Pragmatic |
+| 0 | S1 | INTENTION | Semantic |
+| 1 | S2 | AMBIGUITY | Semantic |
+| 2 | S3 | LOCAL_CONTEXT | Semantic |
+| 3 | S4 | GLOBAL_CONTEXT | Semantic |
+| 4 | S5 | ENTROPY | Semantic |
+| 5 | S6 | DENSITY | Semantic |
+| 6 | S7 | COHERENCE | Semantic |
+| 7 | S8 | ALIGNMENT | Semantic |
+| 8 | D1 | CONNECTION_WEIGHT | Dynamic |
+| 9 | D2 | LEARNING_RATE | Dynamic |
+| 10 | D3 | DECAY | Dynamic |
+| 11 | D4 | STABILITY | Dynamic |
+| 12 | D5 | HYSTERESIS | Dynamic |
+| 13 | D6 | PROPAGATION | Dynamic |
+| 14 | D7 | CAUSALITY | Dynamic |
+| 15 | D8 | INERTIA | Dynamic |
+| 16 | G1 | MASS | Gravity |
+| 17 | G2 | TEMPORAL_ANCHOR | Gravity |
+| 18 | G3★ | AFFINITY | Gravity |
+| 19 | G4★ | TEMPORALITY | Gravity |
+| 20 | G5 | LOCAL_FIELD | Gravity |
+| 21 | G6 | GLOBAL_FIELD | Gravity |
+| 22 | G7 | K_INTERACTION | Gravity |
+| 23 | G8★ | GRADIENT | Gravity |
+| 24 | P1 | QUANTIZATION | Precision |
+| 25 | P2 | GRANULARITY | Precision |
+| 26 | P3 | COMPRESSION | Precision |
+| 27 | P4 | NOISE | Precision |
+| 28 | P5 | RESOLUTION | Precision |
+| 29 | P6 | CONFIDENCE | Precision |
+| 30 | P7 | ACTION | Precision |
+| 31 | P8 | LATENCY | Precision |
+
+★ Bipolar axis — neutral baseline is 0.5 (G3: 0=repulsion/1=attraction; G4: 0=past/1=future; G8: 0=decelerating/1=accelerating).
 
 Emergent zone starts at index 32 (append-only, R11).
 

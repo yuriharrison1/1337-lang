@@ -31,7 +31,7 @@ FIXED_DIMS = 32
 MAX_INHERITANCE_DEPTH = 4
 LOW_CONFIDENCE_THRESHOLD = 0.9
 
-# Tenta importar backend Rust. Se não disponível, usa pure-python.
+# Tries to import the Rust backend. If unavailable, falls back to pure-python.
 try:
     import leet_core as _rust_backend
     BACKEND = "rust"
@@ -39,9 +39,9 @@ except ImportError:
     _rust_backend = None
     BACKEND = "python"
 
-# IDE Adapters (lazy import para evitar dependências pesadas)
+# IDE Adapters (lazy import to avoid heavy dependencies)
 def _get_adapters():
-    """Lazy import de adapters."""
+    """Lazy import of adapters."""
     from leet import adapters
     return adapters
 

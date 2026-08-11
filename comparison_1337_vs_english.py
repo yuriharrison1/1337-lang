@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-1337 vs English — Comparação Real com DeepSeek
+1337 vs English — Real Comparison with DeepSeek
 
-15 agentes: O Banquete + Matemático + Pinóquio + Dr. Who
-DeepSeek API para respostas reais (--deepseek)
-Métricas: velocidade, latência p50/p95/p99, custo por agente, custo total
+15 agents: The Symposium + Mathematician + Pinóquio + Dr. Who
+DeepSeek API for real responses (--deepseek)
+Metrics: speed, p50/p95/p99 latency, cost per agent, total cost
 
-Uso:
+Usage:
     python comparison_1337_vs_english.py --rounds 25
     python comparison_1337_vs_english.py --rounds 25 --deepseek
     python comparison_1337_vs_english.py --rounds 10 --deepseek --workers 8 --topic "Justiça"
@@ -22,7 +22,7 @@ from itertools import combinations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ── path setup ────────────────────────────────────────────────────────────────
-# Usa o diretório do script como âncora — funciona independente de onde é chamado
+# Uses the script's directory as an anchor — works regardless of where it's called from
 _REPO_ROOT = Path(__file__).resolve().parent
 _PYTHON_SDK = _REPO_ROOT / "python"
 
@@ -46,10 +46,10 @@ from leet.axes import (
 # ══════════════════════════════════════════════════════════════════════════════
 
 class DeepSeekClient:
-    """Cliente HTTP direto para DeepSeek API (compatível com OpenAI)."""
+    """Direct HTTP client for the DeepSeek API (OpenAI-compatible)."""
     BASE_URL   = "https://api.deepseek.com/v1/chat/completions"
     MODEL      = "deepseek-chat"
-    # Preços deepseek-chat (USD por token)
+    # deepseek-chat pricing (USD per token)
     PRICE_IN   = 0.27  / 1_000_000   # cache miss input
     PRICE_OUT  = 1.10  / 1_000_000   # output
 
@@ -58,11 +58,11 @@ class DeepSeekClient:
         self._req = urllib.request
         self.api_key = os.environ.get("DEEPSEEK_API_KEY", "")
         if not self.api_key:
-            raise RuntimeError("DEEPSEEK_API_KEY não encontrada no ambiente")
+            raise RuntimeError("DEEPSEEK_API_KEY not found in environment")
 
     def chat(self, system: str, user: str, max_tokens: int = 180) -> dict:
         """
-        Chama DeepSeek. Retorna:
+        Calls DeepSeek. Returns:
           content, tokens_in, tokens_out, latency_ms, cost_usd
         """
         payload = json.dumps({
@@ -134,7 +134,7 @@ def recompute_unc(sem):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MOCK PROJECTOR — keywords → eixos semânticos
+# MOCK PROJECTOR — keywords → semantic axes
 # ══════════════════════════════════════════════════════════════════════════════
 
 KEYWORD_AXES = [
@@ -192,7 +192,7 @@ def project_text(text: str, base_sem: List[float]) -> Cogon:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# AGENTES — 15 personagens
+# AGENTS — 15 characters
 # ══════════════════════════════════════════════════════════════════════════════
 
 AGENTS_CONFIG = [
@@ -487,7 +487,7 @@ AGENT_BY_ID: Dict[str, dict] = {a["id"]: a for a in AGENTS_CONFIG}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MÉTRICAS
+# METRICS
 # ══════════════════════════════════════════════════════════════════════════════
 
 @dataclass
@@ -579,7 +579,7 @@ class ComparisonMetrics:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SIMULAÇÃO
+# SIMULATION
 # ══════════════════════════════════════════════════════════════════════════════
 
 class Comparison:
@@ -608,13 +608,13 @@ class Comparison:
             self._seq += 1
             return self._seq
 
-    # ── processar uma mensagem de um agente ───────────────────────────────────
+    # ── process a single agent's message ──────────────────────────────────────
     def _process(self, agent: dict, round_num: int) -> MsgRecord:
         aid  = agent["id"]
         tmpl = agent["responses"][round_num % len(agent["responses"])]
         content_mock = tmpl.format(topic=self.topic)
 
-        # ── English (DeepSeek real ou mock) ──────────────────────────────────
+        # ── English (real DeepSeek or mock) ──────────────────────────────────
         if self.use_deepseek and self._ds:
             user_prompt = (f"Round {round_num+1}. O tema central da conversa é '{self.topic}'. "
                            f"Responda em no máximo 3 frases curtas, em português.")
@@ -636,7 +636,7 @@ class Comparison:
 
         # ── 1337 (project → wire encode) ─────────────────────────────────────
         t1 = time.perf_counter()
-        # Projeta o conteúdo real (DeepSeek ou mock) para COGON
+        # Projects the real content (DeepSeek or mock) into COGON
         project_content = en_content if self.use_deepseek else content_mock
         curr = project_text(project_content, agent["base_sem"])
         prev = self._prev[aid]
@@ -654,7 +654,7 @@ class Comparison:
                 wire       = encode_wire_delta(prev.id, changes, self._pfx, seq, self._align)
                 used_delta = True
             else:
-                # ACK mínimo
+                # Minimal ACK
                 wire = self._pfx + struct.pack('<I', seq) + bytes([5]) + self._align + bytes([0])
 
         lat_1337_us = (time.perf_counter() - t1) * 1_000_000
@@ -679,10 +679,10 @@ class Comparison:
     def run(self, verbose: bool = True) -> ComparisonMetrics:
         mode = "DeepSeek REAL" if self.use_deepseek else "Mock (hardcoded)"
         print(f"\n{'='*72}")
-        print(f"EXPERIMENTO: 1337 vs ENGLISH — {self.topic}")
+        print(f"EXPERIMENT: 1337 vs ENGLISH — {self.topic}")
         print(f"{'='*72}")
-        print(f"Agentes: {len(AGENTS_CONFIG)} | Rounds: {self.rounds} | "
-              f"Modo: {mode} | Workers: {self.workers if self.use_deepseek else 1}")
+        print(f"Agents: {len(AGENTS_CONFIG)} | Rounds: {self.rounds} | "
+              f"Mode: {mode} | Workers: {self.workers if self.use_deepseek else 1}")
 
         t0 = time.perf_counter()
 
@@ -691,7 +691,7 @@ class Comparison:
                 print(f"\n--- Round {rnd+1}/{self.rounds} ---")
 
             if self.use_deepseek:
-                # Chamadas paralelas ao DeepSeek
+                # Parallel calls to DeepSeek
                 records_this_round = [None] * len(AGENTS_CONFIG)
                 with ThreadPoolExecutor(max_workers=self.workers) as ex:
                     futures = {ex.submit(self._process, ag, rnd): i
@@ -704,7 +704,7 @@ class Comparison:
             for rec, ag in zip(records_this_round, AGENTS_CONFIG):
                 self.metrics.records.append(rec)
                 if verbose:
-                    tag = (f"DELTA({rec.axes_changed} eixos)" if rec.used_delta
+                    tag = (f"DELTA({rec.axes_changed} axes)" if rec.used_delta
                            else "COGON")
                     lat = (f" [{rec.latency_en_ms:.0f}ms]" if rec.latency_en_ms > 0
                            else f" [{rec.latency_1337_us:.0f}µs]")
@@ -715,14 +715,14 @@ class Comparison:
             conv = self._convergence()
             self.metrics.conv_hist.append(conv)
             if verbose:
-                print(f"  Convergência dist média: {conv:.4f}")
+                print(f"  Average convergence dist: {conv:.4f}")
 
         self.metrics.duration_ms = (time.perf_counter() - t0) * 1000
         return self.metrics
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# RELATÓRIO
+# REPORT
 # ══════════════════════════════════════════════════════════════════════════════
 
 def pct(n, h): return f"+{n:.1f}%" if n >= 0 else f"{n:.1f}%"
@@ -737,12 +737,12 @@ def print_report(m: ComparisonMetrics, topic: str):
     pr = m.per_round()
 
     print(f"\n{'='*72}")
-    print(f"RELATÓRIO: 1337 vs ENGLISH  —  {topic}")
+    print(f"REPORT: 1337 vs ENGLISH  —  {topic}")
     print(f"{'='*72}")
 
-    # ── tabela principal ──────────────────────────────────────────────────────
+    # ── main table ────────────────────────────────────────────────────────────
     print("\n┌─────────────────────────┬──────────────────┬──────────────────┬─────────────┐")
-    print("│ Métrica                 │ 1337 (wire bin)  │ English          │ Ganho 1337  │")
+    print("│ Metric                  │ 1337 (wire bin)  │ English          │ 1337 Gain   │")
     print("├─────────────────────────┼──────────────────┼──────────────────┼─────────────┤")
 
     def row(label, v1, ve, unit="", invert=False):
@@ -752,68 +752,68 @@ def print_report(m: ComparisonMetrics, topic: str):
         return (f"│ {label:23} │ {v1:>12,.0f} {unit:3} │ "
                 f"{ve:>12,.0f} {unit:3} │ {sym}{gain:>6.1f}%    │")
 
-    print(row("Bytes totais", m.bytes_1337, m.bytes_en, "B"))
-    print(row("Mensagens", len(m.records), len(m.records), ""))
+    print(row("Total bytes", m.bytes_1337, m.bytes_en, "B"))
+    print(row("Messages", len(m.records), len(m.records), ""))
     print(row("Tokens input", 0, m.tokens_in, "tok"))
     print(row("Tokens output", 0, m.tokens_out, "tok"))
     print(row("Tokens total", 0, m.tokens_in + m.tokens_out, "tok"))
-    print(f"│ {'Custo total (USD)':23} │ {'$0.0000':>16} │ ${m.cost_total:>14.4f} │ {'100.0%':>11}  │")
-    print(f"│ {'Taxa compressão':23} │ {m.compression:>14.2f}x    │ {'1.00x':>16} │ {'':11}  │")
-    print(f"│ {'Msgs COGON completo':23} │ {m.cogon_msgs:>16,} │ {'—':>16} │ {'':11}  │")
-    print(f"│ {'Msgs SparseDelta':23} │ {m.delta_msgs:>16,} │ {'—':>16} │ {'':11}  │")
+    print(f"│ {'Total cost (USD)':23} │ {'$0.0000':>16} │ ${m.cost_total:>14.4f} │ {'100.0%':>11}  │")
+    print(f"│ {'Compression ratio':23} │ {m.compression:>14.2f}x    │ {'1.00x':>16} │ {'':11}  │")
+    print(f"│ {'Full COGON msgs':23} │ {m.cogon_msgs:>16,} │ {'—':>16} │ {'':11}  │")
+    print(f"│ {'SparseDelta msgs':23} │ {m.delta_msgs:>16,} │ {'—':>16} │ {'':11}  │")
     print(f"│ {'Delta coverage':23} │ {m.delta_ratio*100:>15.1f}% │ {'N/A':>16} │ {'':11}  │")
-    print(f"│ {'Bytes salvos (delta)':23} │ {m.bytes_saved_delta:>14,} B │ {'—':>16} │ {'':11}  │")
-    print(f"│ {'Duração total (ms)':23} │ {m.duration_ms:>14.1f}    │ {'—':>16} │ {'':11}  │")
+    print(f"│ {'Bytes saved (delta)':23} │ {m.bytes_saved_delta:>14,} B │ {'—':>16} │ {'':11}  │")
+    print(f"│ {'Total duration (ms)':23} │ {m.duration_ms:>14.1f}    │ {'—':>16} │ {'':11}  │")
     print("└─────────────────────────┴──────────────────┴──────────────────┴─────────────┘")
 
-    # ── velocidade / latência ──────────────────────────────────────────────────
-    print(f"\nVELOCIDADE E LATÊNCIA")
+    # ── speed / latency ──────────────────────────────────────────────────────
+    print(f"\nSPEED AND LATENCY")
     print("─" * 72)
     total_sec = m.duration_ms / 1000
     n = len(m.records)
-    print(f"  Throughput geral:      {n/total_sec:.1f} msgs/s  |  "
+    print(f"  Overall throughput:    {n/total_sec:.1f} msgs/s  |  "
           f"{m.bytes_1337/total_sec/1024:.1f} KB/s (1337)  |  "
           f"{m.bytes_en/total_sec/1024:.1f} KB/s (EN)")
 
     lat1 = m.latency_1337_us_list()
-    print(f"\n  Latência 1337 (µs)  [encode + delta]:")
+    print(f"\n  1337 latency (µs)  [encode + delta]:")
     print(f"    P50={percentile(lat1,50):.1f}  P95={percentile(lat1,95):.1f}  "
           f"P99={percentile(lat1,99):.1f}  max={max(lat1):.1f}  avg={sum(lat1)/len(lat1):.1f}")
 
     late = m.latency_en_ms_list()
     if late:
-        print(f"\n  Latência DeepSeek (ms)  [API real]:")
+        print(f"\n  DeepSeek latency (ms)  [real API]:")
         print(f"    P50={percentile(late,50):.0f}  P95={percentile(late,95):.0f}  "
               f"P99={percentile(late,99):.0f}  max={max(late):.0f}  avg={sum(late)/len(late):.0f}")
     else:
-        print(f"\n  Latência English:      0 ms (mock hardcoded)")
+        print(f"\n  English latency:       0 ms (hardcoded mock)")
 
-    # ── detalhes delta ────────────────────────────────────────────────────────
-    print(f"\nDETALHES DELTA")
+    # ── delta details ─────────────────────────────────────────────────────────
+    print(f"\nDELTA DETAILS")
     print("─" * 72)
     cogon_b  = WIRE_HEADER + WIRE_COGON_PAYLOAD
     delta_b  = WIRE_HEADER + SPARSE_HEADER + m.avg_axes * SPARSE_ENTRY if m.delta_msgs else 0
-    print(f"  Eixos alterados/delta: avg={m.avg_axes:.1f} de {FIXED_DIMS}")
-    print(f"  Tamanho COGON full:    {cogon_b} B")
+    print(f"  Axes changed/delta:    avg={m.avg_axes:.1f} of {FIXED_DIMS}")
+    print(f"  Full COGON size:       {cogon_b} B")
     if m.delta_msgs:
-        print(f"  Tamanho SparseDelta:   ~{delta_b:.0f} B  "
+        print(f"  SparseDelta size:      ~{delta_b:.0f} B  "
               f"(−{cogon_b-delta_b:.0f} B = −{(1-delta_b/cogon_b)*100:.1f}%)")
-        print(f"  Total economizado:     {m.bytes_saved_delta:,} B ao longo de {m.rounds} rounds")
+        print(f"  Total saved:           {m.bytes_saved_delta:,} B over {m.rounds} rounds")
 
-    # ── convergência ──────────────────────────────────────────────────────────
+    # ── convergence ───────────────────────────────────────────────────────────
     if m.conv_hist:
-        print(f"\nCONVERGÊNCIA SEMÂNTICA (dist média entre {len(AGENTS_CONFIG)} agentes)")
+        print(f"\nSEMANTIC CONVERGENCE (avg dist among {len(AGENTS_CONFIG)} agents)")
         print("─" * 72)
         h = m.conv_hist
         hi, lo = max(h), min(h)
         span = hi - lo if hi != lo else 1e-9
         chars = "▁▂▃▄▅▆▇█"
         line = ''.join(chars[min(7, int((v-lo)/span*7))] for v in h)
-        trend = "convergindo" if h[-1] < h[0] else "divergindo"
+        trend = "converging" if h[-1] < h[0] else "diverging"
         print(f"  {h[0]:.4f} → {h[-1]:.4f}  [{trend}  Δ={h[0]-h[-1]:+.4f}  "
               f"{(h[0]-h[-1])/h[0]*100:+.1f}%]")
         print(f"  Sparkline: {line}")
-        # por round (amostras)
+        # per round (samples)
         sample = list(range(0, min(5, m.rounds))) + list(range(max(0, m.rounds-3), m.rounds))
         seen = set()
         for ri, rv in enumerate(h):
@@ -824,11 +824,11 @@ def print_report(m: ComparisonMetrics, topic: str):
                 bar = "▓"*dc + "░"*(mc-dc)
                 print(f"  R{ri+1:3}: dist={rv:.4f}  [{bar}]")
 
-    # ── custo por agente ──────────────────────────────────────────────────────
-    print(f"\nCUSTO E BYTES POR AGENTE")
+    # ── cost per agent ────────────────────────────────────────────────────────
+    print(f"\nCOST AND BYTES PER AGENT")
     print("─" * 72)
     print("┌─────────────────────┬───────┬──────────┬──────────┬────────┬──────────┬──────────┐")
-    print("│ Agente              │ Msgs  │ B(1337)  │ B(EN)    │ Ratio  │ Tokens   │ Custo$   │")
+    print("│ Agent               │ Msgs  │ B(1337)  │ B(EN)    │ Ratio  │ Tokens   │ Cost$    │")
     print("├─────────────────────┼───────┼──────────┼──────────┼────────┼──────────┼──────────┤")
     for ag in AGENTS_CONFIG:
         aid = ag["id"]; e = pa.get(aid, {})
@@ -840,37 +840,37 @@ def print_report(m: ComparisonMetrics, topic: str):
               f"{tok:8,} │ ${cost:7.4f}  │")
     print("└─────────────────────┴───────┴──────────┴──────────┴────────┴──────────┴──────────┘")
 
-    # ── custo total do processo ───────────────────────────────────────────────
-    print(f"\nCUSTO TOTAL DO PROCESSO")
+    # ── total process cost ────────────────────────────────────────────────────
+    print(f"\nTOTAL PROCESS COST")
     print("─" * 72)
     tok_total = m.tokens_in + m.tokens_out
     print(f"  Tokens input:          {m.tokens_in:>10,}")
     print(f"  Tokens output:         {m.tokens_out:>10,}")
     print(f"  Tokens TOTAL:          {tok_total:>10,}")
-    print(f"  Custo English (USD):  ${m.cost_total:>10.4f}")
-    print(f"  Custo 1337   (USD):   ${0.0:>10.4f}  ← zero tokens de transporte")
-    print(f"  Economia:             ${m.cost_total:>10.4f}  (100%)")
-    print(f"  Modo:                  {'DeepSeek API real' if m.deepseek_used else 'Mock estimado'}")
+    print(f"  English cost (USD):   ${m.cost_total:>10.4f}")
+    print(f"  1337    cost (USD):   ${0.0:>10.4f}  ← zero transport tokens")
+    print(f"  Savings:              ${m.cost_total:>10.4f}  (100%)")
+    print(f"  Mode:                  {'real DeepSeek API' if m.deepseek_used else 'estimated mock'}")
     if not m.deepseek_used:
-        print(f"  (use --deepseek para custos reais da API)")
+        print(f"  (use --deepseek for real API costs)")
 
-    # ── conclusão ─────────────────────────────────────────────────────────────
+    # ── conclusion ────────────────────────────────────────────────────────────
     print(f"\n{'='*72}")
-    print(f"CONCLUSÃO")
+    print(f"CONCLUSION")
     print(f"{'='*72}")
-    print(f"  Agentes:              {len(AGENTS_CONFIG)} personagens")
-    print(f"  Mensagens totais:     {len(m.records)}")
-    print(f"  Compressão geral:     {m.compression:.2f}x  ({(1-1/m.compression)*100:.1f}% menor que English)")
-    print(f"  Delta coverage:       {m.delta_ratio*100:.1f}%  ({m.delta_msgs} de {len(m.records)} msgs)")
+    print(f"  Agents:               {len(AGENTS_CONFIG)} characters")
+    print(f"  Total messages:       {len(m.records)}")
+    print(f"  Overall compression:  {m.compression:.2f}x  ({(1-1/m.compression)*100:.1f}% smaller than English)")
+    print(f"  Delta coverage:       {m.delta_ratio*100:.1f}%  ({m.delta_msgs} of {len(m.records)} msgs)")
     if m.delta_msgs:
-        print(f"  Eficiência delta:     {m.avg_axes:.1f} eixos/msg  → "
+        print(f"  Delta efficiency:     {m.avg_axes:.1f} axes/msg  → "
               f"{WIRE_HEADER+SPARSE_HEADER+m.avg_axes*SPARSE_ENTRY:.0f}B vs {WIRE_HEADER+WIRE_COGON_PAYLOAD}B")
-    print(f"  Bytes totais 1337:    {m.bytes_1337:,} B")
-    print(f"  Bytes totais EN:      {m.bytes_en:,} B")
+    print(f"  Total bytes 1337:     {m.bytes_1337:,} B")
+    print(f"  Total bytes EN:       {m.bytes_en:,} B")
     if m.conv_hist:
-        print(f"  Convergência:         {(m.conv_hist[0]-m.conv_hist[-1])/m.conv_hist[0]*100:+.1f}% ao longo de {m.rounds} rounds")
-    print(f"  Custo LLM English:   ${m.cost_total:.4f}  |  Custo 1337: $0.0000")
-    print(f"  Duração:              {m.duration_ms:.1f} ms  ({len(m.records)/m.duration_ms*1000:.0f} msgs/s)\n")
+        print(f"  Convergence:          {(m.conv_hist[0]-m.conv_hist[-1])/m.conv_hist[0]*100:+.1f}% over {m.rounds} rounds")
+    print(f"  English LLM cost:    ${m.cost_total:.4f}  |  1337 cost: $0.0000")
+    print(f"  Duration:              {m.duration_ms:.1f} ms  ({len(m.records)/m.duration_ms*1000:.0f} msgs/s)\n")
 
 
 def save_report(m: ComparisonMetrics, topic: str, report_dir: str):
@@ -905,7 +905,7 @@ def save_report(m: ComparisonMetrics, topic: str, report_dir: str):
     fname = f"{report_dir}/comparison_{int(time.time())}.json"
     with open(fname, 'w') as f:
         json.dump(report, f, indent=2)
-    print(f"Relatório salvo em: {fname}")
+    print(f"Report saved to: {fname}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -914,10 +914,10 @@ def save_report(m: ComparisonMetrics, topic: str, report_dir: str):
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description='1337 vs English — com DeepSeek, 15 agentes, métricas completas',
+        description='1337 vs English — with DeepSeek, 15 agents, full metrics',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
-Exemplos:
+Examples:
   python comparison_1337_vs_english.py --rounds 25
   python comparison_1337_vs_english.py --rounds 25 --deepseek
   python comparison_1337_vs_english.py --rounds 10 --deepseek --workers 8
@@ -925,12 +925,12 @@ Exemplos:
         '''
     )
     p.add_argument('-r','--rounds',    type=int,   default=25,         help='Rounds (default: 25)')
-    p.add_argument('-t','--topic',     type=str,   default="Eros (Amor)", help='Tópico')
+    p.add_argument('-t','--topic',     type=str,   default="Eros (Amor)", help='Topic')
     p.add_argument('--threshold',      type=float, default=0.01,       help='Delta threshold (default: 0.01)')
-    p.add_argument('--deepseek',       action='store_true',            help='Usar DeepSeek API real')
-    p.add_argument('--workers',        type=int,   default=5,          help='Workers paralelos DeepSeek (default: 5)')
-    p.add_argument('-q','--quiet',     action='store_true',            help='Sem detalhes por round')
-    p.add_argument('--no-save',        action='store_true',            help='Não salvar JSON')
+    p.add_argument('--deepseek',       action='store_true',            help='Use the real DeepSeek API')
+    p.add_argument('--workers',        type=int,   default=5,          help='Parallel DeepSeek workers (default: 5)')
+    p.add_argument('-q','--quiet',     action='store_true',            help='No per-round details')
+    p.add_argument('--no-save',        action='store_true',            help='Do not save JSON')
     p.add_argument('--report-dir',     type=str,   default='./comparison_reports')
     return p.parse_args()
 
@@ -947,7 +947,7 @@ def main():
     print_report(metrics, args.topic)
     if not args.no_save:
         save_report(metrics, args.topic, args.report_dir)
-    print("Experimento concluído.")
+    print("Experiment completed.")
 
 
 if __name__ == "__main__":

@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-1337 Rede Interativa — 2-4 agentes IA conversando em linguagem 1337.
+1337 Interactive Network — 2-4 AI agents conversing in the 1337 language.
 
-Uso:
-    python net1337.py --scenario incident          # Mock (sem API)
+Usage:
+    python net1337.py --scenario incident          # Mock (no API)
     DEEPSEEK_API_KEY=sk-... python net1337.py      # DeepSeek
     ANTHROPIC_API_KEY=sk-... python net1337.py     # Claude
 
-Comandos interativos:
-    /inject <texto>              Broadcast pra todos os agentes
-    /talk <agente> <texto>       Fala direto com um agente
-    /agents chat [N]             Agentes conversam N rounds entre si
-    /status                      Estado de todos os agentes
-    /heatmap <agente|all>        Heatmap ASCII dos 32 eixos
-    /delta <agente>              O que mudou desde o último turno
-    /dist <agente1> <agente2>    Distância semântica entre agentes
-    /blend <agente1> <agente2>   Fusão hipotética dos estados
-    /scenario <nome>             Carrega cenário (incident, brainstorm, anomaly, devops)
-    /export [arquivo.json]       Exporta log
-    /help                        Lista de comandos
-    /quit                        Sai
+Interactive commands:
+    /inject <text>                Broadcast to all agents
+    /talk <agent> <text>          Talk directly to an agent
+    /agents chat [N]              Agents converse for N rounds among themselves
+    /status                       State of all agents
+    /heatmap <agent|all>          ASCII heatmap of the 32 axes
+    /delta <agent>                What changed since the last turn
+    /dist <agent1> <agent2>       Semantic distance between agents
+    /blend <agent1> <agent2>      Hypothetical blend of states
+    /scenario <name>              Load scenario (incident, brainstorm, anomaly, devops)
+    /export [file.json]           Export log
+    /help                         List of commands
+    /quit                         Exit
 """
 
 import argparse
@@ -521,7 +521,7 @@ class HumanParticipant:
     """O humano na rede 1337."""
 
     id: str
-    name: str = "Humano"
+    name: str = "Human"
     rust: Optional[RustBridge] = None
     llm: Optional[LLMBackend] = None
     history: list['Cogon'] = field(default_factory=list)
@@ -538,14 +538,14 @@ class HumanParticipant:
         if self.rust and self.rust.available():
             cogon_json = self.rust.create_cogon(sem, unc)
             if cogon_json:
-                print(f"  🦀 COGON criado via Rust ({self.rust.mode})")
+                print(f"  🦀 COGON created via Rust ({self.rust.mode})")
                 cogon = Cogon.from_dict(json.loads(cogon_json))
             else:
                 cogon = Cogon.new(sem=sem, unc=unc)
-                print(f"  🐍 COGON criado via Python (fallback)")
+                print(f"  🐍 COGON created via Python (fallback)")
         else:
             cogon = Cogon.new(sem=sem, unc=unc)
-            print(f"  🐍 COGON criado via Python (fallback)")
+            print(f"  🐍 COGON created via Python (fallback)")
 
         self.history.append(cogon)
 
@@ -598,10 +598,10 @@ class Agent1337:
             received_text = self.backend.reconstruct(received_cogon)
 
         # Gerar resposta
-        sender_name = "Humano"
+        sender_name = "Human"
         for aid, agent in all_agents.items():
             if aid == msg.sender:
-                sender_name = getattr(agent, 'name', 'Humano')
+                sender_name = getattr(agent, 'name', 'Human')
                 break
 
         context = self.response_texts[-3:] if self.response_texts else []
@@ -671,7 +671,7 @@ class Network1337:
 
     def add_agent(self, name: str, persona: str) -> Agent1337:
         if len(self.agents) >= 8:
-            print("⚠ Máximo 8 agentes.")
+            print("⚠ Maximum 8 agents.")
             return None
         agent = Agent1337(
             id=str(uuid.uuid4()),
@@ -688,17 +688,17 @@ class Network1337:
             if agent.name.lower() == name.lower():
                 del self.agents[aid]
                 del self.all_participants[aid]
-                print(f"  Removido: {agent.name}")
+                print(f"  Removed: {agent.name}")
                 return
-        print(f"  Agente '{name}' não encontrado.")
+        print(f"  Agent '{name}' not found.")
 
     def handshake(self):
         """C5: todos anunciam COGON_ZERO."""
         if self.rust.available():
             zero_json = self.rust.cogon_zero()
-            print(f"  Humano: I AM 🦀 (via Rust)")
+            print(f"  Human: I AM 🦀 (via Rust)")
         else:
-            print(f"  Humano: I AM 🐍")
+            print(f"  Human: I AM 🐍")
 
         for agent in self.agents.values():
             msg = agent.announce()
@@ -708,8 +708,8 @@ class Network1337:
     def inject(self, text: str) -> list[dict]:
         """Humano injeta texto → todos os agentes reagem."""
         msg = self.human.text_to_msg(text, "BROADCAST")
-        self._log_msg(msg, "Humano", "BROADCAST")
-        self._render_msg(msg, "Humano", "BROADCAST")
+        self._log_msg(msg, "Human", "BROADCAST")
+        self._render_msg(msg, "Human", "BROADCAST")
 
         # Cada agente reage
         responses = []
@@ -725,21 +725,21 @@ class Network1337:
         """Humano fala diretamente com um agente."""
         agent = self._find_agent(agent_name)
         if not agent:
-            print(f"  Agente '{agent_name}' não encontrado.")
+            print(f"  Agent '{agent_name}' not found.")
             return None
         msg = self.human.text_to_msg(text, agent.id)
-        self._log_msg(msg, "Humano", agent.name)
+        self._log_msg(msg, "Human", agent.name)
 
         responses = agent.receive_and_respond(msg, self.all_participants)
         for resp in responses:
-            self._log_msg(resp, agent.name, "Humano")
-            self._render_msg(resp, agent.name, "Humano")
+            self._log_msg(resp, agent.name, "Human")
+            self._render_msg(resp, agent.name, "Human")
 
     def agents_chat(self, rounds: int = 1):
         """Agentes conversam entre si. Humano observa."""
         agent_list = list(self.agents.values())
         if len(agent_list) < 2:
-            print("  Precisa de pelo menos 2 agentes.")
+            print("  Need at least 2 agents.")
             return
 
         for r in range(rounds):
@@ -772,7 +772,7 @@ class Network1337:
         if not a1 or not a2:
             return
         if not a1.history or not a2.history:
-            print("  Agentes ainda não têm histórico.")
+            print("  Agents don't have history yet.")
             return
 
         c1, c2 = a1.history[-1], a2.history[-1]
@@ -784,8 +784,8 @@ class Network1337:
             d = py_dist(c1, c2)
             src = "Python"
 
-        label = "baixa" if d < 0.2 else "moderada" if d < 0.5 else "alta" if d < 0.8 else "extrema"
-        print(f"  Distância ({src}): {d:.4f} ({label})")
+        label = "low" if d < 0.2 else "moderate" if d < 0.5 else "high" if d < 0.8 else "extreme"
+        print(f"  Distance ({src}): {d:.4f} ({label})")
 
     def cmd_blend(self, name1: str, name2: str, alpha: float = 0.5):
         """BLEND hipotético dos estados de dois agentes."""
@@ -816,24 +816,24 @@ class Network1337:
             return
         agent = self._find_agent(name)
         if agent and agent.history:
-            print(f"  [{agent.name}] — Último COGON:")
+            print(f"  [{agent.name}] — Last COGON:")
             print(render_heatmap(agent.history[-1]))
         else:
-            print(f"  Sem histórico.")
+            print(f"  No history.")
 
     def cmd_delta(self, name: str):
         agent = self._find_agent(name)
         if agent and len(agent.history) >= 2:
-            print(f"  [{agent.name}] — Mudanças:")
+            print(f"  [{agent.name}] — Changes:")
             print(render_delta_diff(agent.history[-2], agent.history[-1]))
         else:
-            print(f"  Precisa de pelo menos 2 turnos.")
+            print(f"  Need at least 2 turns.")
 
     def cmd_status(self):
         for i, agent in enumerate(self.agents.values(), 1):
             a_score = py_anomaly_score(agent.history[-1], agent.history[:-1]) if len(agent.history) > 1 else 0.0
             print(f"  [{i}] {agent.name:15s}  history={len(agent.history):2d}  msgs={len(agent.msg_log):2d}  anomaly={a_score:.2f}")
-        print(f"  [H] {'Humano':15s}  history={len(self.human.history):2d}  rust={'✓' if self.rust.available() else '✗'}")
+        print(f"  [H] {'Human':15s}  history={len(self.human.history):2d}  rust={'✓' if self.rust.available() else '✗'}")
 
     def cmd_history(self, name: str, n: int = 5):
         agent = self._find_agent(name)
@@ -855,14 +855,14 @@ class Network1337:
                 return agents_list[idx]
         except ValueError:
             pass
-        print(f"  Agente '{name}' não encontrado. Use /agents pra listar.")
+        print(f"  Agent '{name}' not found. Use /agents to list.")
         return None
 
     def _resolve_name(self, participant_id: str) -> str:
         if participant_id == "BROADCAST":
             return "BROADCAST"
         if participant_id == self.human.id:
-            return "Humano"
+            return "Human"
         for agent in self.agents.values():
             if agent.id == participant_id:
                 return agent.name
@@ -886,7 +886,7 @@ class Network1337:
     def export(self, path: str):
         with open(path, "w") as f:
             json.dump(self.log, f, indent=2, default=str, ensure_ascii=False)
-        print(f"  📁 Exportado: {path} ({len(self.log)} msgs)")
+        print(f"  📁 Exported: {path} ({len(self.log)} msgs)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -948,7 +948,7 @@ def render_heatmap(cogon: 'Cogon', only_significant: bool = True) -> str:
         bar_len = int(val * 20)
         bar = "█" * bar_len + "░" * (20 - bar_len)
         lines.append(f"  {ax['code']:3} {ax['name']:20} │{bar}│ {val:.2f}")
-    return "\n".join(lines) if lines else "  (sem eixos significativos)"
+    return "\n".join(lines) if lines else "  (no significant axes)"
 
 
 def render_delta_diff(prev: 'Cogon', curr: 'Cogon') -> str:
@@ -960,7 +960,7 @@ def render_delta_diff(prev: 'Cogon', curr: 'Cogon') -> str:
         if abs(diff) > 0.1:
             arrow = "↑" if diff > 0 else "↓"
             lines.append(f"  {ax['code']:3} {ax['name']:20} {arrow} {diff:+.2f} ({prev.sem[idx]:.2f} → {curr.sem[idx]:.2f})")
-    return "\n".join(lines) if lines else "  (sem mudanças significativas)"
+    return "\n".join(lines) if lines else "  (no significant changes)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -969,38 +969,38 @@ def render_delta_diff(prev: 'Cogon', curr: 'Cogon') -> str:
 
 def print_help():
     print("""
-  CONVERSA:
-    /inject <texto>              Broadcast pra todos os agentes
-    /talk <agente> <texto>       Fala direto com um agente
-    /agents chat [N]             Agentes conversam N rounds entre si
-    (texto sem /)                Mesmo que /inject
+  CONVERSATION:
+    /inject <text>                Broadcast to all agents
+    /talk <agent> <text>          Talk directly to an agent
+    /agents chat [N]              Agents converse for N rounds among themselves
+    (text without /)              Same as /inject
 
-  OBSERVAÇÃO:
-    /status                      Estado de todos os agentes
-    /heatmap <agente|all>        Heatmap ASCII dos 32 eixos
-    /delta <agente>              O que mudou desde o último turno
-    /dist <agente1> <agente2>    Distância semântica entre agentes
-    /blend <agente1> <agente2>   Fusão hipotética dos estados
-    /history <agente>            Últimos COGONs do agente
-    /log [full]                  Log da conversa
+  OBSERVATION:
+    /status                       State of all agents
+    /heatmap <agent|all>          ASCII heatmap of the 32 axes
+    /delta <agent>                What changed since the last turn
+    /dist <agent1> <agent2>       Semantic distance between agents
+    /blend <agent1> <agent2>      Hypothetical blend of states
+    /history <agent>              Agent's latest COGONs
+    /log [full]                   Conversation log
 
-  CONTROLE:
-    /add <nome> <persona>        Adiciona agente (máx 4)
-    /remove <nome>               Remove agente
-    /scenario <nome>             Carrega cenário (incident, brainstorm, anomaly, devops)
-    /agents                      Lista agentes ativos
-    /export [arquivo.json]       Exporta log
-    /verbose                     Toggle detalhes
-    /rust                        Status do bridge Rust
-    /help                        Esta lista
-    /quit                        Sai
+  CONTROL:
+    /add <name> <persona>         Add agent (max 4)
+    /remove <name>                Remove agent
+    /scenario <name>              Load scenario (incident, brainstorm, anomaly, devops)
+    /agents                       List active agents
+    /export [file.json]           Export log
+    /verbose                      Toggle details
+    /rust                         Rust bridge status
+    /help                         This list
+    /quit                         Exit
 """)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="1337 Rede Interativa")
+    parser = argparse.ArgumentParser(description="1337 Interactive Network")
     parser.add_argument("--backend", choices=["deepseek", "anthropic", "mock"], default=None,
-                        help="LLM backend. Default: detecta pela API key presente.")
+                        help="LLM backend. Default: detected from the API key present.")
     parser.add_argument("--scenario", choices=list(SCENARIOS.keys()), default=None)
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
@@ -1035,15 +1035,15 @@ def main():
         for ag in sc["agents"]:
             net.add_agent(ag["name"], ag["persona"])
         print(f"\n{'═'*60}")
-        print(f"  1337 REDE — {sc['name']}")
-        print(f"  Backend: {backend_name.upper()} | Rust: {'✓ ' + rust.mode if rust.available() else '✗ fallback Python'}")
-        print(f"  Agentes: {', '.join(a.name for a in net.agents.values())}")
+        print(f"  1337 NETWORK — {sc['name']}")
+        print(f"  Backend: {backend_name.upper()} | Rust: {'✓ ' + rust.mode if rust.available() else '✗ Python fallback'}")
+        print(f"  Agents: {', '.join(a.name for a in net.agents.values())}")
         print(f"{'═'*60}\n")
     else:
         print(f"\n{'═'*60}")
-        print(f"  1337 REDE INTERATIVA")
-        print(f"  Backend: {backend_name.upper()} | Rust: {'✓ ' + rust.mode if rust.available() else '✗ fallback Python'}")
-        print(f"  Use /help pra ver comandos. /scenario <nome> pra carregar cenário.")
+        print(f"  1337 INTERACTIVE NETWORK")
+        print(f"  Backend: {backend_name.upper()} | Rust: {'✓ ' + rust.mode if rust.available() else '✗ Python fallback'}")
+        print(f"  Use /help to see commands. /scenario <name> to load a scenario.")
         print(f"{'═'*60}\n")
 
     # Handshake
@@ -1054,7 +1054,7 @@ def main():
 
         # Estímulo inicial do cenário
         if args.scenario and "stimulus" in SCENARIOS[args.scenario]:
-            print(f"💬 Estímulo inicial:")
+            print(f"💬 Initial stimulus:")
             net.inject(SCENARIOS[args.scenario]["stimulus"])
             print()
 
@@ -1063,7 +1063,7 @@ def main():
         try:
             line = input("1337> ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\n👋 Saindo.")
+            print("\n👋 Goodbye.")
             break
 
         if not line:
@@ -1090,37 +1090,37 @@ def main():
                 if text:
                     net.inject(text)
                 else:
-                    print("  Uso: /inject <texto>")
+                    print("  Usage: /inject <text>")
             elif cmd == "/talk" or cmd == "/ask":
                 if len(parts) >= 3:
                     net.talk(parts[1], parts[2])
                 else:
-                    print("  Uso: /talk <agente> <texto>")
+                    print("  Usage: /talk <agent> <text>")
             elif cmd == "/heatmap":
                 net.cmd_heatmap(parts[1] if len(parts) > 1 else "all")
             elif cmd == "/delta":
                 if len(parts) > 1:
                     net.cmd_delta(parts[1])
                 else:
-                    print("  Uso: /delta <agente>")
+                    print("  Usage: /delta <agent>")
             elif cmd == "/dist":
                 if len(parts) >= 3:
                     net.cmd_dist(parts[1], parts[2])
                 else:
-                    print("  Uso: /dist <agente1> <agente2>")
+                    print("  Usage: /dist <agent1> <agent2>")
             elif cmd == "/blend":
                 if len(parts) >= 3:
                     net.cmd_blend(parts[1], parts[2])
                 else:
-                    print("  Uso: /blend <agente1> <agente2>")
+                    print("  Usage: /blend <agent1> <agent2>")
             elif cmd == "/history":
                 net.cmd_history(parts[1] if len(parts) > 1 else "all")
             elif cmd == "/add":
                 if len(parts) >= 3:
                     net.add_agent(parts[1], parts[2])
-                    print(f"  ✓ {parts[1]} adicionado.")
+                    print(f"  ✓ {parts[1]} added.")
                 else:
-                    print("  Uso: /add <nome> <persona>")
+                    print("  Usage: /add <name> <persona>")
             elif cmd == "/remove":
                 if len(parts) > 1:
                     net.remove_agent(parts[1])
@@ -1130,10 +1130,10 @@ def main():
                     net.agents.clear()
                     for ag in sc["agents"]:
                         net.add_agent(ag["name"], ag["persona"])
-                    print(f"  ✓ Cenário '{sc['name']}' carregado com {len(sc['agents'])} agentes.")
+                    print(f"  ✓ Scenario '{sc['name']}' loaded with {len(sc['agents'])} agents.")
                     net.handshake()
                 else:
-                    print(f"  Cenários: {', '.join(SCENARIOS.keys())}")
+                    print(f"  Scenarios: {', '.join(SCENARIOS.keys())}")
             elif cmd == "/log":
                 entries = net.log
                 for e in entries[-20:]:
@@ -1148,17 +1148,17 @@ def main():
                 print(f"  Verbose: {'ON' if args.verbose else 'OFF'}")
             elif cmd == "/rust":
                 if rust.available():
-                    print(f"  Rust: ✓ {rust.mode} | versão: {rust.version()}")
+                    print(f"  Rust: ✓ {rust.mode} | version: {rust.version()}")
                 else:
-                    print(f"  Rust: ✗ não disponível")
+                    print(f"  Rust: ✗ not available")
             else:
-                print(f"  Comando desconhecido: {cmd}. /help pra listar.")
+                print(f"  Unknown command: {cmd}. /help to list.")
         else:
             # Texto sem / → injeta como broadcast
             if net.agents:
                 net.inject(line)
             else:
-                print("  Nenhum agente. Use /scenario ou /add primeiro.")
+                print("  No agents. Use /scenario or /add first.")
 
 
 if __name__ == "__main__":

@@ -283,11 +283,11 @@ def run_dual_simulation(backend_name: str = "deepseek", rounds_per_discussion: i
     """Executa simulação com dois livros."""
     
     print("=" * 80)
-    print("   📚 SIMULAÇÃO DUAL: Platão × Pinoquio")
+    print("   📚 DUAL SIMULATION: Platão × Pinoquio")
     print("=" * 80)
     print(f"\nBackend: {backend_name}")
-    print(f"Agentes: {len(DUAL_SCENARIO['agents'])}")
-    print(f"Livros: {DUAL_SCENARIO['books'][0]['title']} + {DUAL_SCENARIO['books'][1]['title']}")
+    print(f"Agents: {len(DUAL_SCENARIO['agents'])}")
+    print(f"Books: {DUAL_SCENARIO['books'][0]['title']} + {DUAL_SCENARIO['books'][1]['title']}")
     print()
     
     # Setup
@@ -306,12 +306,12 @@ def run_dual_simulation(backend_name: str = "deepseek", rounds_per_discussion: i
         books = ", ".join(agent_def['books'])
         print(f"✅ {agent_def['name']} ({books})")
     
-    print(f"\n🦀 Rust: {'ativo (' + rust.mode + ')' if rust.available() else 'indisponível'}")
-    
+    print(f"\n🦀 Rust: {'active (' + rust.mode + ')' if rust.available() else 'unavailable'}")
+
     # Handshake
     print("\n📡 Handshake C5...")
     net.handshake()
-    
+
     # Discutir cada tópico
     for disc in DUAL_SCENARIO['discussions']:
         print("\n" + "═" * 80)
@@ -319,7 +319,7 @@ def run_dual_simulation(backend_name: str = "deepseek", rounds_per_discussion: i
         print("═" * 80)
         
         # Estímulo
-        print(f"\n💬 Tema: {disc['book'].upper()}")
+        print(f"\n💬 Topic: {disc['book'].upper()}")
         print(f'   "{disc["stimulus"][:120]}..."')
         
         # Determinar quais agentes participam
@@ -394,7 +394,7 @@ def run_dual_simulation(backend_name: str = "deepseek", rounds_per_discussion: i
     
     # Relatório final
     print("\n" + "═" * 80)
-    print("   📊 RELATÓRIO COMPARATIVO")
+    print("   📊 COMPARATIVE REPORT")
     print("═" * 80)
     
     # Calcular distância entre livros
@@ -402,22 +402,22 @@ def run_dual_simulation(backend_name: str = "deepseek", rounds_per_discussion: i
     
     comparison = monitor.metrics.generate_comparison()
     
-    print(f"\n📚 Participação por Livro:")
+    print(f"\n📚 Participation by Book:")
     print(f"  Platão:     {comparison['participation']['plato']['messages']:3} msgs ({comparison['participation']['plato']['percentage']:.1f}%)")
     print(f"  Pinoquio:   {comparison['participation']['pinocchio']['messages']:3} msgs ({comparison['participation']['pinocchio']['percentage']:.1f}%)")
-    
-    print(f"\n🌉 Ponte Semântica:")
-    print(f"  Distância entre universos: {distance:.4f}")
-    print(f"  (0 = idênticos, 1 = ortogonais)")
-    
-    print(f"\n🔗 Referências Cruzadas (RAW OO):")
+
+    print(f"\n🌉 Semantic Bridge:")
+    print(f"  Distance between universes: {distance:.4f}")
+    print(f"  (0 = identical, 1 = orthogonal)")
+
+    print(f"\n🔗 Cross References (RAW OO):")
     for ref in monitor.metrics.cross_references[-5:]:
         print(f"  {ref['from_book']} → {ref['to_book']}: {ref['concept']}")
-    
-    print(f"\n🎭 Agentes que navegaram ambos os livros:")
+
+    print(f"\n🎭 Agents who navigated both books:")
     for name, data in monitor.metrics.agent_adaptations.items():
         if len(data.get("books_participated", set())) > 1:
-            print(f"  {name}: {data['switches']} transições")
+            print(f"  {name}: {data['switches']} transitions")
     
     # Exportar
     report = {
@@ -439,24 +439,24 @@ def run_dual_simulation(backend_name: str = "deepseek", rounds_per_discussion: i
     with open(report_file, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     
-    print(f"\n💾 Relatório: {report_file}")
+    print(f"\n💾 Report: {report_file}")
 
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="Dual-Livros: Platão × Pinoquio")
-    parser.add_argument("--backend", choices=["deepseek", "anthropic", "mock"], 
+    parser = argparse.ArgumentParser(description="Dual-Books: Platão × Pinoquio")
+    parser.add_argument("--backend", choices=["deepseek", "anthropic", "mock"],
                        default="deepseek")
     parser.add_argument("--rounds", type=int, default=2,
-                       help="Rounds por discussão")
+                       help="Rounds per discussion")
     args = parser.parse_args()
-    
+
     if args.backend == "deepseek" and not os.environ.get("DEEPSEEK_API_KEY"):
-        print("❌ DEEPSEEK_API_KEY não definida. Usando mock.")
+        print("❌ DEEPSEEK_API_KEY not set. Using mock.")
         args.backend = "mock"
-    
+
     try:
         run_dual_simulation(args.backend, args.rounds)
     except KeyboardInterrupt:
-        print("\n\n⛔ Interrompido")
+        print("\n\n⛔ Interrupted")

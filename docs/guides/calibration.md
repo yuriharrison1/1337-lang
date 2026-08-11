@@ -1,11 +1,11 @@
-# Calibração da W Matrix
+# W Matrix Calibration
 
-A W matrix `[32 × D]` mapeia embeddings de texto (dimensão D) para os 32 eixos canônicos do COGON. Uma W bem calibrada produz projeções semânticas precisas.
+The W matrix `[32 × D]` maps text embeddings (dimension D) to the 32 canonical COGON axes. A well-calibrated W produces accurate semantic projections.
 
-## Visão Geral
+## Overview
 
 ```
-text → embedding provider → vetor D-dim
+text → embedding provider → D-dim vector
                               │
                               ▼
                     W [32 × D] @ embedding
@@ -14,27 +14,27 @@ text → embedding provider → vetor D-dim
                     clamp(0, 1) → sem[32]
 ```
 
-## Estrutura do Diretório
+## Directory Structure
 
 ```
 calibration/
 ├── data/
-│   ├── anchors.json     — pares (texto, sem_alvo) de treinamento
-│   └── W.bin            — W matrix calibrada (saída)
-├── calibrate.py         — script principal de calibração
-└── validate_w.py        — validação da W produzida
+│   ├── anchors.json     — (text, target_sem) training pairs
+│   └── W.bin            — calibrated W matrix (output)
+├── calibrate.py         — main calibration script
+└── validate_w.py        — validation of the produced W
 ```
 
-## Pré-requisitos
+## Prerequisites
 
 ```bash
 pip install numpy anthropic sentence-transformers
-# ou: pip install numpy openai  (para embeddings OpenAI)
+# or: pip install numpy openai  (for OpenAI embeddings)
 ```
 
-## Âncoras de Calibração
+## Calibration Anchors
 
-O arquivo `anchors.json` define os pares de treinamento — textos com o vetor semântico alvo que eles devem produzir:
+The `anchors.json` file defines the training pairs — texts along with the target semantic vector they should produce:
 
 ```json
 [
@@ -55,23 +55,23 @@ O arquivo `anchors.json` define os pares de treinamento — textos com o vetor s
 ]
 ```
 
-### Eixos-chave para Âncoras de Diagnóstico
+### Key Axes for Diagnostic Anchors
 
-| Situação | Eixos ativados |
+| Situation | Axes activated |
 |----------|----------------|
-| Erro/falha | D1_STATE (8) ↑, P3_ANOMALY (26) ↑, D6_ONTOLOGICAL_VALENCE (13) ↓ |
-| Urgência | G8_URGENCY (23) ↑, P7_ACTION (30) ↑ |
-| Processo em andamento | D2_PROCESS (9) ↑, G1_TEMPORALITY (16) ↑ |
-| Sistema estável | D5_STABILITY (12) ↑, D8_VERIFIABILITY (15) ↑ |
-| Reversível | G4_REVERSIBILITY (19) ↑ |
-| Confirmação | G7_EPISTEMIC_VALENCE (22) ↑, P8_ACTION_VALENCE (31) ↑ |
+| Error/failure | D1_STATE (8) ↑, P3_ANOMALY (26) ↑, D6_ONTOLOGICAL_VALENCE (13) ↓ |
+| Urgency | G8_URGENCY (23) ↑, P7_ACTION (30) ↑ |
+| Process in progress | D2_PROCESS (9) ↑, G1_TEMPORALITY (16) ↑ |
+| Stable system | D5_STABILITY (12) ↑, D8_VERIFIABILITY (15) ↑ |
+| Reversible | G4_REVERSIBILITY (19) ↑ |
+| Confirmation | G7_EPISTEMIC_VALENCE (22) ↑, P8_ACTION_VALENCE (31) ↑ |
 
-## Processo de Calibração
+## Calibration Process
 
-### 1. Gerar Embeddings
+### 1. Generate Embeddings
 
 ```python
-# calibrate.py — exemplo com sentence-transformers
+# calibrate.py — example with sentence-transformers
 from sentence_transformers import SentenceTransformer
 import json, numpy as np
 
@@ -86,28 +86,28 @@ targets = np.array([a["sem"] for a in anchors])    # shape: (N, 32)
 embeddings = model.encode(texts, normalize_embeddings=True)  # shape: (N, 768)
 ```
 
-### 2. Resolver W por Mínimos Quadrados
+### 2. Solve for W via Least Squares
 
 ```python
-# Resolver W: targets = embeddings @ W.T
+# Solve for W: targets = embeddings @ W.T
 # W [32 x D], embeddings [N x D], targets [N x 32]
 W, _, _, _ = np.linalg.lstsq(embeddings, targets, rcond=None)
 W = W.T   # shape: (32, D)
 ```
 
-### 3. Calibrar Escala
+### 3. Calibrate Scale
 
 ```python
-# Garantir que as projeções caem em [0, 1]
+# Ensure projections fall within [0, 1]
 preds = np.clip(embeddings @ W.T, 0, 1)
 error = np.mean(np.abs(preds - targets))
-print(f"MAE médio: {error:.4f}")  # meta: < 0.08
+print(f"MAE médio: {error:.4f}")  # target: < 0.08
 ```
 
-### 4. Salvar W.bin
+### 4. Save W.bin
 
 ```python
-# Formato: [u32 rows][u32 cols][f32 * rows * cols] (little-endian)
+# Format: [u32 rows][u32 cols][f32 * rows * cols] (little-endian)
 rows, cols = W.shape
 with open("calibration/data/W.bin", "wb") as f:
     f.write(rows.to_bytes(4, "little"))
@@ -117,54 +117,54 @@ with open("calibration/data/W.bin", "wb") as f:
 print(f"W.bin salvo: {rows}x{cols} ({rows*cols*4/1024:.1f} KB)")
 ```
 
-## Validação
+## Validation
 
 ```bash
-# Validar a W produzida
+# Validate the produced W
 LEET_W_PATH=calibration/data/W.bin python3 calibration/validate_w.py
 
-# Ou via CLI (usa LEET_W_PATH automaticamente)
+# Or via CLI (uses LEET_W_PATH automatically)
 LEET_W_PATH=calibration/data/W.bin ./target/release/leet encode "deploy falhou"
 ```
 
-### Critérios de Qualidade
+### Quality Criteria
 
-| Métrica | Meta |
+| Metric | Target |
 |---------|------|
-| MAE nas âncoras | < 0.08 |
-| Projeções fora de [0, 1] | 0% (clamp automático) |
-| Distância "urgente" vs "tranquilo" | > 0.5 |
-| Distância "falhou" vs "funcionando" | > 0.4 |
+| MAE on anchors | < 0.08 |
+| Projections outside [0, 1] | 0% (automatic clamp) |
+| Distance "urgent" vs "calm" | > 0.5 |
+| Distance "failed" vs "working" | > 0.4 |
 
-## Providers de Embedding
+## Embedding Providers
 
-| Provider | Dimensão | Qualidade | Custo |
+| Provider | Dimension | Quality | Cost |
 |----------|----------|-----------|-------|
-| `all-mpnet-base-v2` (local) | 768 | Alta | Gratuito |
-| `text-embedding-3-small` (OpenAI) | 1536 | Alta | Pago |
-| `text-embedding-ada-002` (OpenAI) | 1536 | Alta | Pago |
-| `voyage-3` (Anthropic) | 1024 | Alta | Pago |
+| `all-mpnet-base-v2` (local) | 768 | High | Free |
+| `text-embedding-3-small` (OpenAI) | 1536 | High | Paid |
+| `text-embedding-ada-002` (OpenAI) | 1536 | High | Paid |
+| `voyage-3` (Anthropic) | 1024 | High | Paid |
 
-## Re-calibração
+## Re-calibration
 
-Situações que exigem re-calibração:
+Situations that require re-calibration:
 
-- Adição de novos eixos emergentes ao protocolo
-- Mudança de provider de embedding
-- Expansão do domínio semântico das âncoras
-- MAE acima de 0.10 no conjunto de validação
+- Adding new emergent axes to the protocol
+- Changing the embedding provider
+- Expanding the semantic domain of the anchors
+- MAE above 0.10 on the validation set
 
-## Deploy da W Matrix
+## Deploying the W Matrix
 
 ```bash
-# Copiar para o servidor
+# Copy to the server
 scp calibration/data/W.bin servidor:/opt/leet/W.bin
 
-# Configurar variável de ambiente
+# Set the environment variable
 export LEET_W_PATH=/opt/leet/W.bin
 
-# Ou em systemd (ver guia de deploy)
+# Or in systemd (see deployment guide)
 Environment=LEET_W_PATH=/opt/leet/W.bin
 ```
 
-A W matrix é carregada uma única vez por processo via `OnceLock` — sem overhead por requisição.
+The W matrix is loaded once per process via `OnceLock` — no per-request overhead.

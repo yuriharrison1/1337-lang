@@ -1,8 +1,8 @@
 """
-Fonte de dados sintéticos via LLM.
+Synthetic data source via LLM.
 
-Gera textos de treinamento usando prompts estruturados
-para cobrir os 32 eixos semânticos de forma balanceada.
+Generates training texts using structured prompts
+to cover the 32 semantic axes in a balanced way.
 """
 
 import os
@@ -15,22 +15,22 @@ from .base import DataSource, TextSample, SourceConfig
 
 class SyntheticSource(DataSource):
     """
-    Gera textos sintéticos via LLM para treinamento.
-    
-    Usa prompts estruturados para gerar textos que cobrem
-diferentes combinações dos 32 eixos semânticos.
-    
-    Exemplo:
+    Generates synthetic texts via LLM for training.
+
+    Uses structured prompts to generate texts that cover
+different combinations of the 32 semantic axes.
+
+    Example:
         config = SourceConfig(max_samples=100)
         source = SyntheticSource(
-            provider="openai",  # ou "anthropic", "mock"
+            provider="openai",  # or "anthropic", "mock"
             diversity="high",
             config=config
         )
         samples = source.fetch_all()
     """
-    
-    # Templates de prompts para diferentes "tipos" de texto
+
+    # Prompt templates for different text "types"
     PROMPT_TEMPLATES = [
         {
             "name": "technical_fact",
@@ -128,12 +128,12 @@ diferentes combinações dos 32 eixos semânticos.
         self.diversity = diversity
         self.language = language
         self.name = f"synthetic_{provider}"
-        
-        # Configura o gerador baseado no provider
+
+        # Configure the generator based on the provider
         self._generator = self._get_generator()
-    
+
     def _get_generator(self) -> Callable[[str], str]:
-        """Retorna a função geradora apropriada."""
+        """Returns the appropriate generator function."""
         if self.provider == "mock":
             return self._mock_generate
         elif self.provider == "openai":
@@ -141,13 +141,13 @@ diferentes combinações dos 32 eixos semânticos.
         elif self.provider == "anthropic":
             return self._anthropic_generate
         else:
-            raise ValueError(f"Provider desconhecido: {self.provider}")
-    
+            raise ValueError(f"Unknown provider: {self.provider}")
+
     def fetch(self) -> Iterator[TextSample]:
-        """Gera textos sintéticos."""
+        """Generates synthetic texts."""
         templates = self.PROMPT_TEMPLATES
-        
-        # Determina quantos textos gerar por template
+
+        # Determine how many texts to generate per template
         texts_per_template = max(1, self.config.max_samples // len(templates))
         
         for template in templates:
@@ -158,26 +158,26 @@ diferentes combinações dos 32 eixos semânticos.
             if not items:
                 continue
             
-            # Seleciona itens para este template
+            # Select items for this template
             if self.diversity == "high":
                 import random
                 selected = random.sample(items, min(texts_per_template, len(items)))
             else:
                 selected = items[:texts_per_template]
-            
+
             for item in selected:
                 try:
-                    # Constrói o prompt
+                    # Build the prompt
                     prompt = template["prompt"].format(topic=item)
                     if self.language != "pt":
                         prompt += f"\n\n(Responda em {self.language})"
-                    
-                    # Gera o texto
+
+                    # Generate the text
                     text = self._generator(prompt)
-                    
+
                     if not text or len(text) < 10:
                         continue
-                    
+
                     sample = TextSample(
                         text=text,
                         source=self.name,
@@ -185,26 +185,26 @@ diferentes combinações dos 32 eixos semânticos.
                             "template": template["name"],
                             "topic": item,
                             "provider": self.provider,
-                            # Não inclui language para evitar filtro
+                            # Does not include language, to avoid the filter
                         }
                     )
-                    
+
                     if self.filter_sample(sample):
                         yield sample
-                        
-                        # Delay entre gerações
+
+                        # Delay between generations
                         time.sleep(self.config.request_delay)
-                        
+
                 except Exception:
                     continue
-    
+
     def _mock_generate(self, prompt: str) -> str:
-        """Geração mock determinística baseada no hash do prompt."""
+        """Deterministic mock generation based on the prompt hash."""
         import hashlib
-        
+
         h = hashlib.sha256(prompt.encode()).hexdigest()
-        
-        # Templates de resposta baseados no tipo de prompt
+
+        # Response templates based on the prompt type
         if "fato técnico" in prompt or "technical fact" in prompt:
             facts = [
                 "O protocolo TCP garante entrega ordenada de pacotes através de handshake triplo.",
@@ -254,18 +254,18 @@ diferentes combinações dos 32 eixos semânticos.
         return facts[idx]
     
     def _openai_generate(self, prompt: str) -> str:
-        """Geração via OpenAI API."""
+        """Generation via the OpenAI API."""
         try:
             import openai
-            
+
             client = openai.OpenAI(
                 api_key=self.config.api_keys.get("openai") or os.environ.get("OPENAI_API_KEY")
             )
-            
+
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": f"Você gera textos curtos e variados para treinamento. Responda em {self.language}."},
+                    {"role": "system", "content": f"You generate short, varied texts for training. Respond in {self.language}."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.8,
@@ -279,7 +279,7 @@ diferentes combinações dos 32 eixos semânticos.
             return self._mock_generate(prompt)
     
     def _anthropic_generate(self, prompt: str) -> str:
-        """Geração via Anthropic API."""
+        """Generation via the Anthropic API."""
         try:
             import anthropic
             

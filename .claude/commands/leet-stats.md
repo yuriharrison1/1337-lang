@@ -1,98 +1,98 @@
-# /leet-stats — Relatório de economia de tokens com 1337
+# /leet-stats — Token savings report with 1337
 
 $ARGUMENTS
 
-Execute os passos abaixo na ordem e apresente o relatório final.
+Run the steps below in order and present the final report.
 
-## Passo 1 — Pirâmide do store
+## Step 1 — Store pyramid
 
-Use a ferramenta Bash para rodar:
+Use the Bash tool to run:
 
 ```bash
 leet consolidate inspect --json 2>/dev/null || ~/.cargo/bin/leet consolidate inspect --json 2>/dev/null
 ```
 
-Se o projeto não tiver um store ainda, o comando vai informar. Nesse caso, mostre a mensagem:
-"Store vazio — nenhum contexto foi salvo ainda. Use `leet_remember` para começar."
-E encerre.
+If the project doesn't have a store yet, the command will report that. In that case, show the message:
+"Empty store — no context has been saved yet. Use `leet_remember` to get started."
+And stop.
 
-## Passo 2 — Estado atual do recall
+## Step 2 — Current recall state
 
-Chame `leet_recall` com `limit=50` para obter todos os registros vivos e o rodapé de contagem.
+Call `leet_recall` with `limit=50` to get all live records and the count footer.
 
-## Passo 3 — Cálculo de economia
+## Step 3 — Savings calculation
 
-Use as estimativas conservadoras abaixo (baseadas em análise de sessões reais de Claude Code):
+Use the conservative estimates below (based on analysis of real Claude Code sessions):
 
-| Categoria | Estimativa |
+| Category | Estimate |
 |---|---|
-| Tokens de contexto original por decisão lembrada | ~400 tokens |
-| Tokens de um excerpt de recall (256 chars) | ~70 tokens |
-| Tokens de um excerpt consolidado (L1+) | ~90 tokens (contém múltiplos) |
-| Overhead fixo de `leet_recall` (cabeçalho + rodapé) | ~60 tokens |
+| Original context tokens per remembered decision | ~400 tokens |
+| Tokens for a recall excerpt (256 chars) | ~70 tokens |
+| Tokens for a consolidated excerpt (L1+) | ~90 tokens (contains multiple) |
+| Fixed overhead of `leet_recall` (header + footer) | ~60 tokens |
 
-**Cálculo:**
+**Calculation:**
 
-A partir do JSON do Passo 1:
-- `total_records` = soma de todos os registros na pirâmide
-- `consolidated` = soma dos campos `consolidated` de todos os níveis
-- `live` = soma dos campos `live` de todos os níveis
+From the Step 1 JSON:
+- `total_records` = sum of all records in the pyramid
+- `consolidated` = sum of the `consolidated` fields across all levels
+- `live` = sum of the `live` fields across all levels
 - `bytes_store` = `store.bytes`
 
-**Sem leet** (custo por sessão se colasse a história bruta):
+**Without leet** (cost per session if pasting the raw history):
 ```
-tokens_sem_leet = total_records × 400
-```
-
-**Com leet** (custo real de um `leet_recall` típico com limit=5):
-```
-tokens_com_leet = min(live, 5) × 75 + 60
+tokens_without_leet = total_records × 400
 ```
 
-**Economia por sessão**:
+**With leet** (real cost of a typical `leet_recall` with limit=5):
 ```
-economia = tokens_sem_leet - tokens_com_leet
-pct = (economia / tokens_sem_leet) × 100
-```
-
-**Compressão acumulada** (todo o histórico já absorvido):
-```
-tokens_absorvidos = consolidated × 400
+tokens_with_leet = min(live, 5) × 75 + 60
 ```
 
-## Passo 4 — Apresentação
+**Savings per session**:
+```
+savings = tokens_without_leet - tokens_with_leet
+pct = (savings / tokens_without_leet) × 100
+```
 
-Mostre o relatório neste formato (adapte para português se o usuário fala português):
+**Cumulative compression** (all history already absorbed):
+```
+tokens_absorbed = consolidated × 400
+```
+
+## Step 4 — Presentation
+
+Show the report in this format (adapt to Portuguese if the user speaks Portuguese):
 
 ```
 ╔══════════════════════════════════════════╗
-║       leet-stats · economia de tokens    ║
+║       leet-stats · token savings         ║
 ╚══════════════════════════════════════════╝
 
-Store: <caminho>  (<bytes_store> bytes)
+Store: <path>  (<bytes_store> bytes)
 
-Pirâmide de memória:
-  L0 (raw):  X registros vivos  (Y consolidados)
-  L1:        X registros vivos  (Y consolidados)
-  L2+:       X registros vivos  (Y consolidados)
-  Total:     N registros  (V vivos · C absorvidos)
-
-─────────────────────────────────────────────
-
-Estimativa de custo por sessão nova:
-
-  Sem leet  →  ~Z tokens   (colar a história bruta)
-  Com leet  →  ~W tokens   (leet_recall com 5 entradas)
-
-  Economia: ~(Z-W) tokens / sessão  (~pct%)
+Memory pyramid:
+  L0 (raw):  X live records  (Y consolidated)
+  L1:        X live records  (Y consolidated)
+  L2+:       X live records  (Y consolidated)
+  Total:     N records  (V live · C absorbed)
 
 ─────────────────────────────────────────────
 
-Contexto já absorvido pela pirâmide:
-  C decisões comprimidas  =  ~tokens_absorvidos tokens
-  que nunca mais precisam entrar no contexto.
+Estimated cost per new session:
 
-Último recall: <data do last_recall_at, ou "nunca">
+  Without leet  →  ~Z tokens   (pasting the raw history)
+  With leet     →  ~W tokens   (leet_recall with 5 entries)
+
+  Savings: ~(Z-W) tokens / session  (~pct%)
+
+─────────────────────────────────────────────
+
+Context already absorbed by the pyramid:
+  C compressed decisions  =  ~tokens_absorbed tokens
+  that never need to enter context again.
+
+Last recall: <last_recall_at date, or "never">
 ```
 
-Deixe claro que são estimativas conservadoras. Não exponha os números internos do COGON nem os detalhes de nível ao usuário comum — só se ele pedir mais detalhes.
+Make it clear these are conservative estimates. Don't expose internal COGON numbers or level details to the average user — only if they ask for more detail.

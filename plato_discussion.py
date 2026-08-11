@@ -308,16 +308,16 @@ def run_plato_simulation(backend_name: str = "deepseek", rounds: int = 5):
     """Executa simulação filosófica completa."""
     
     print("=" * 70)
-    print("   🏛️  O BANQUETE DE PLATÃO - Simulação 1337")
+    print("   🏛️  THE SYMPOSIUM OF PLATO - 1337 Simulation")
     print("=" * 70)
     print(f"\nBackend: {backend_name}")
-    print(f"Agentes: {', '.join(a['name'] for a in PLATO_SCENARIO['agents'])}")
-    print(f"Rounds de discussão: {rounds}")
-    print("\nMétricas ativas:")
-    print("  📊 Tokens de entrada/saída")
-    print("  📦 Compressão 1337 (texto → vetores)")
-    print("  🧬 Evolução semântica dos conceitos")
-    print("  🏷️  Uso de OO com RAW EVIDENCE")
+    print(f"Agents: {', '.join(a['name'] for a in PLATO_SCENARIO['agents'])}")
+    print(f"Discussion rounds: {rounds}")
+    print("\nActive metrics:")
+    print("  📊 Input/output tokens")
+    print("  📦 1337 compression (text → vectors)")
+    print("  🧬 Semantic evolution of concepts")
+    print("  🏷️  OO usage with RAW EVIDENCE")
     print()
     
     # Setup
@@ -331,16 +331,16 @@ def run_plato_simulation(backend_name: str = "deepseek", rounds: int = 5):
     # Adicionar agentes filosóficos
     for agent_def in PLATO_SCENARIO['agents']:
         agent = net.add_agent(agent_def['name'], agent_def['persona'])
-        print(f"✅ {agent_def['name']} entrou no banquete")
-    
-    print(f"\n🦀 Rust: {'ativo (' + rust.mode + ')' if rust.available() else 'indisponível'}")
-    
+        print(f"✅ {agent_def['name']} joined the symposium")
+
+    print(f"\n🦀 Rust: {'active (' + rust.mode + ')' if rust.available() else 'unavailable'}")
+
     # Handshake
-    print("\n📡 Handshake C5 (Reconhecimento mútuo)...")
+    print("\n📡 Handshake C5 (mutual acknowledgement)...")
     net.handshake()
-    
+
     # Estímulo inicial
-    print(f"\n💬 Estímulo inicial (Fedro/Sócrates):")
+    print(f"\n💬 Initial stimulus (Fedro/Sócrates):")
     print(f'   "{PLATO_SCENARIO["stimulus"][:150]}..."')
     
     stimulus_msg = net.human.text_to_msg(
@@ -374,7 +374,7 @@ def run_plato_simulation(backend_name: str = "deepseek", rounds: int = 5):
     
     # Agentes respondem ao estímulo
     print("\n" + "─" * 70)
-    print("   DISCURSOS DE ELOGIO A EROS")
+    print("   SPEECHES OF PRAISE TO EROS")
     print("─" * 70)
     
     for agent in net.agents.values():
@@ -408,7 +408,7 @@ def run_plato_simulation(backend_name: str = "deepseek", rounds: int = 5):
     
     # Rounds de discussão dialética
     print("\n" + "═" * 70)
-    print("   DIALÉTICA - Questionamento e Refinamento")
+    print("   DIALECTIC - Questioning and Refinement")
     print("═" * 70)
     
     for round_num in range(1, rounds + 1):
@@ -467,13 +467,13 @@ def run_plato_simulation(backend_name: str = "deepseek", rounds: int = 5):
     
     # Final: Heatmaps e análise
     print("\n" + "═" * 70)
-    print("   ANÁLISE SEMÂNTICA FINAL")
+    print("   FINAL SEMANTIC ANALYSIS")
     print("═" * 70)
-    
-    print("\n📊 Heatmaps dos agentes (eixos mais ativados):")
+
+    print("\n📊 Agent heatmaps (most activated axes):")
     for agent in net.agents.values():
         if agent.history:
-            print(f"\n  [{agent.name}] - Último estado:")
+            print(f"\n  [{agent.name}] - Final state:")
             print(net1337_render_heatmap(agent.history[-1]))
     
     # Calcular convergência de vocabulário
@@ -492,43 +492,43 @@ def run_plato_simulation(backend_name: str = "deepseek", rounds: int = 5):
     
     # Gerar relatório
     print("\n" + "═" * 70)
-    print("   RELATÓRIO DE MÉTRICAS 1337")
+    print("   1337 METRICS REPORT")
     print("═" * 70)
-    
+
     report = monitor.generate_report()
-    
-    print(f"\n📈 RESUMO:")
-    print(f"  Total de mensagens: {report['summary']['total_messages']}")
-    print(f"  Total de tokens: {report['summary']['total_tokens']:,}")
-    print(f"  Estimativa de custo: ${report['summary']['total_cost_estimate_usd']}")
-    print(f"  Razão de compressão 1337: {report['summary']['compression_ratio']}:1")
-    print(f"  (Texto bruto comprimido em vetores 32-dim)")
-    
-    print(f"\n👥 PERFORMANCE POR AGENTE:")
+
+    print(f"\n📈 SUMMARY:")
+    print(f"  Total messages: {report['summary']['total_messages']}")
+    print(f"  Total tokens: {report['summary']['total_tokens']:,}")
+    print(f"  Cost estimate: ${report['summary']['total_cost_estimate_usd']}")
+    print(f"  1337 compression ratio: {report['summary']['compression_ratio']}:1")
+    print(f"  (Raw text compressed into 32-dim vectors)")
+
+    print(f"\n👥 PERFORMANCE BY AGENT:")
     for name, stats in report['agent_performance'].items():
         print(f"  {name:12} {stats['messages']:3} msgs | {stats['tokens']:5} tokens")
-    
-    print(f"\n🧬 EVOLUÇÃO DE CONCEITOS:")
+
+    print(f"\n🧬 CONCEPT EVOLUTION:")
     for concept, data in report['concept_evolution'].items():
-        print(f"  {concept:20} - {data['refinements']} refinamentos")
-    
-    print(f"\n🏷️  OBJETOS RAW (OO):")
+        print(f"  {concept:20} - {data['refinements']} refinements")
+
+    print(f"\n🏷️  RAW OBJECTS (OO):")
     print(f"  Total RAW objects: {report['summary']['raw_objects']}")
     print(f"  Evidence objects: {report['efficiency_metrics']['evidence_objects']}")
     print(f"  Semantic refinements: {report['efficiency_metrics']['semantic_refinements']}")
-    
-    print(f"\n⚡ EFICIÊNCIA:")
-    print(f"  Caracteres por token: {report['efficiency_metrics']['chars_per_token']}")
-    print(f"  Vetores 1337 criados: {report['efficiency_metrics']['vectors_created']}")
-    print(f"  Drift semântico médio: {monitor.metrics.semantic_drift / max(report['summary']['total_messages'], 1):.4f}")
-    print(f"  Convergência vocabular: {monitor.metrics.vocabulary_convergence:.2%}")
+
+    print(f"\n⚡ EFFICIENCY:")
+    print(f"  Characters per token: {report['efficiency_metrics']['chars_per_token']}")
+    print(f"  1337 vectors created: {report['efficiency_metrics']['vectors_created']}")
+    print(f"  Average semantic drift: {monitor.metrics.semantic_drift / max(report['summary']['total_messages'], 1):.4f}")
+    print(f"  Vocabulary convergence: {monitor.metrics.vocabulary_convergence:.2%}")
     
     # Exportar relatório completo
     report_file = f"plato_1337_report_{int(time.time())}.json"
     with open(report_file, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     
-    print(f"\n💾 Relatório completo: {report_file}")
+    print(f"\n💾 Full report: {report_file}")
     
     return report
 
@@ -543,7 +543,7 @@ def net1337_render_heatmap(cogon):
             bar_len = int(val * 20)
             bar = "█" * bar_len + "░" * (20 - bar_len)
             lines.append(f"    {ax['code']:3} {ax['name']:18} │{bar}│ {val:.2f}")
-    return "\n".join(lines) if lines else "    (sem eixos significativos)"
+    return "\n".join(lines) if lines else "    (no significant axes)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -553,22 +553,22 @@ def net1337_render_heatmap(cogon):
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="O Banquete de Platão - Simulação 1337")
-    parser.add_argument("--backend", choices=["deepseek", "anthropic", "mock"], 
+    parser = argparse.ArgumentParser(description="The Symposium of Plato - 1337 Simulation")
+    parser.add_argument("--backend", choices=["deepseek", "anthropic", "mock"],
                        default="deepseek")
     parser.add_argument("--rounds", type=int, default=3,
-                       help="Número de rounds de diálogo")
+                       help="Number of dialogue rounds")
     parser.add_argument("--output", type=str, default=None,
-                       help="Arquivo para salvar relatório")
+                       help="File to save the report to")
     args = parser.parse_args()
-    
+
     # Verificar API key
     if args.backend == "deepseek" and not os.environ.get("DEEPSEEK_API_KEY"):
-        print("❌ DEEPSEEK_API_KEY não definida. Usando mock.")
+        print("❌ DEEPSEEK_API_KEY not set. Using mock.")
         args.backend = "mock"
-    
+
     if args.backend == "anthropic" and not os.environ.get("ANTHROPIC_API_KEY"):
-        print("❌ ANTHROPIC_API_KEY não definida. Usando mock.")
+        print("❌ ANTHROPIC_API_KEY not set. Using mock.")
         args.backend = "mock"
     
     try:
@@ -577,11 +577,11 @@ if __name__ == "__main__":
         if args.output:
             with open(args.output, 'w', encoding='utf-8') as f:
                 json.dump(report, f, indent=2, ensure_ascii=False)
-            print(f"\n✅ Relatório salvo em: {args.output}")
-            
+            print(f"\n✅ Report saved to: {args.output}")
+
     except KeyboardInterrupt:
-        print("\n\n⛔ Simulação interrompida pelo usuário")
+        print("\n\n⛔ Simulation interrupted by user")
     except Exception as e:
-        print(f"\n❌ Erro: {e}")
+        print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()

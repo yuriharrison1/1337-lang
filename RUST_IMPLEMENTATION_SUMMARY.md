@@ -1,34 +1,34 @@
-# Resumo de Implementação Rust - 1337
+# Rust Implementation Summary - 1337
 
-**Data:** 2026-04-01  
-**Status:** ✅ COMPLETO  
-**Testes:** 36/36 passando
+**Date:** 2026-04-01
+**Status:** ✅ COMPLETE
+**Tests:** 36/36 passing
 
 ---
 
-## ✅ MELHORIAS IMPLEMENTADAS
+## ✅ IMPLEMENTED IMPROVEMENTS
 
-### 1. Correção de Bug: `anomaly_score` Retorna Neutro
-**Arquivo:** `leet-core/src/operators.rs`
+### 1. Bug Fix: `anomaly_score` Returns Neutral
+**File:** `leet-core/src/operators.rs`
 
 ```rust
-// Antes
+// Before
 pub fn anomaly_score(c: &Cogon, history: &[Cogon]) -> f32 {
     if history.is_empty() {
-        return 0.0;  // Não faz sentido semântico
+        return 0.0;  // Doesn't make semantic sense
     }
 }
 
-// Depois
+// After
 pub fn anomaly_score(c: &Cogon, history: &[Cogon]) -> f32 {
     if history.is_empty() {
-        return 0.5;  // Neutro: sem baseline para comparação
+        return 0.5;  // Neutral: no baseline to compare against
     }
 }
 ```
 
-### 2. Cache de Topological Order em DAG
-**Arquivo:** `leet-core/src/types.rs`
+### 2. Topological Order Cache in DAG
+**File:** `leet-core/src/types.rs`
 
 ```rust
 pub struct Dag {
@@ -36,20 +36,20 @@ pub struct Dag {
     pub nodes: Vec<Cogon>,
     pub edges: Vec<Edge>,
     #[serde(skip)]
-    topo_cache: Option<Vec<Uuid>>,  // Cache invalidado automaticamente
+    topo_cache: Option<Vec<Uuid>>,  // Cache automatically invalidated
 }
 
 impl Dag {
     pub fn add_node(&mut self, cogon: Cogon) {
         self.nodes.push(cogon);
-        self.topo_cache = None;  // Invalida cache
+        self.topo_cache = None;  // Invalidates cache
     }
     
     pub fn topological_order(&mut self) -> Result<Vec<Uuid>, LeetError> {
         if let Some(ref cache) = self.topo_cache {
-            return Ok(cache.clone());  // Retorna cache
+            return Ok(cache.clone());  // Returns cache
         }
-        // Computa e armazena no cache
+        // Computes and stores in cache
         let order = self.compute_topological_order()?;
         self.topo_cache = Some(order.clone());
         Ok(order)
@@ -57,10 +57,10 @@ impl Dag {
 }
 ```
 
-### 3. Codificação Binária Compacta
-**Novo arquivo:** `leet-core/src/codec.rs`
+### 3. Compact Binary Encoding
+**New file:** `leet-core/src/codec.rs`
 
-Formato idêntico ao Python (92 bytes):
+Format identical to Python (92 bytes):
 ```
 [HEADER: 4 bytes][PAYLOAD: 88 bytes]
 
@@ -71,20 +71,20 @@ Header:
 
 Payload:
   - id: 16 bytes (UUID)
-  - sem: 32 bytes (32 uint8, quantizados)
-  - unc: 32 bytes (32 uint8, quantizados)
+  - sem: 32 bytes (32 uint8, quantized)
+  - unc: 32 bytes (32 uint8, quantized)
   - stamp: 8 bytes (u64 nanoseconds)
 ```
 
-Quantização:
+Quantization:
 - Float [0.0, 1.0] → uint8: `(v * 255).round() as u8`
 - uint8 → Float: `v as f32 / 255.0`
-- Precisão: ~0.4%
+- Precision: ~0.4%
 
-### 4. Lib.rs Completo
-**Novo arquivo:** `leet-core/src/lib.rs`
+### 4. Complete Lib.rs
+**New file:** `leet-core/src/lib.rs`
 
-Expõe todos os módulos:
+Exposes all modules:
 ```rust
 pub mod axes;
 pub mod codec;
@@ -101,18 +101,18 @@ pub use types::{Cogon, Dag, Edge, EdgeType, Intent, Msg1337, Receiver, SemVec};
 
 ---
 
-## 📊 MÉTRICAS
+## 📊 METRICS
 
-### Antes vs Depois
+### Before vs After
 
-| Métrica | Antes | Depois | Melhoria |
+| Metric | Before | After | Improvement |
 |---------|-------|--------|----------|
-| Testes | 31 | 36 | +5 novos (codec) |
-| Cache DAG | Não | Sim | Evita re-computação |
-| Codificação binária | Não | Sim | 92 bytes fixos |
-| `anomaly_score` vazio | 0.0 | 0.5 | Semântica correta |
+| Tests | 31 | 36 | +5 new (codec) |
+| DAG cache | No | Yes | Avoids recomputation |
+| Binary encoding | No | Yes | Fixed 92 bytes |
+| `anomaly_score` empty | 0.0 | 0.5 | Correct semantics |
 
-### Testes
+### Tests
 
 ```bash
 $ cargo test
@@ -130,34 +130,34 @@ $ cargo build
 
 ---
 
-## 📁 ARQUIVOS MODIFICADOS/NOVOS
+## 📁 MODIFIED/NEW FILES
 
-### Modificados
-- `leet-core/src/operators.rs` - `anomaly_score` retorna 0.5 para histórico vazio
-- `leet-core/src/types.rs` - Cache de topological_order em Dag
+### Modified
+- `leet-core/src/operators.rs` - `anomaly_score` returns 0.5 for empty history
+- `leet-core/src/types.rs` - topological_order cache in Dag
 
-### Novos
-- `leet-core/src/codec.rs` - Codificação binária completa
-- `leet-core/src/lib.rs` - Lib principal com re-exports
+### New
+- `leet-core/src/codec.rs` - complete binary encoding
+- `leet-core/src/lib.rs` - main lib with re-exports
 
-### Atualizado
-- `Cargo.toml` - Removido leet-bridge (não existente)
+### Updated
+- `Cargo.toml` - removed leet-bridge (did not exist)
 
 ---
 
-## 🔍 API BINÁRIA (Rust)
+## 🔍 BINARY API (Rust)
 
 ```rust
 use leet_core::{Cogon, encode_cogon, decode_cogon, compare_sizes};
 
-// Codificar
+// Encode
 let cogon = Cogon::new(...);
 let bytes = cogon.to_bytes();  // 92 bytes
 
-// Decodificar
+// Decode
 let recovered = Cogon::from_bytes(&bytes)?;
 
-// Comparar tamanhos
+// Compare sizes
 let stats = compare_sizes(&cogon);
 // SizeComparison {
 //     json_bytes: ~400,
@@ -169,18 +169,18 @@ let stats = compare_sizes(&cogon);
 
 ---
 
-## 🔄 COMPATIBILIDADE COM PYTHON
+## 🔄 PYTHON COMPATIBILITY
 
-O formato binário é **idêntico** entre Rust e Python:
-- Mesmo header (magic: 0x1337, version: 0x01)
-- Mesma quantização (float * 255)
-- Mesmo layout de bytes
-- Dados codificados em Rust podem ser decodificados em Python (e vice-versa)
+The binary format is **identical** between Rust and Python:
+- Same header (magic: 0x1337, version: 0x01)
+- Same quantization (float * 255)
+- Same byte layout
+- Data encoded in Rust can be decoded in Python (and vice versa)
 
 ---
 
-## 📝 NOTAS
+## 📝 NOTES
 
-- Rust já usa structs eficientes em memória (sem necessidade de `__slots__`)
-- Cache de topological_order requer `&mut self` (mutabilidade explícita)
-- Codificação binária usa big-endian (network byte order) para compatibilidade
+- Rust already uses memory-efficient structs (no need for `__slots__`)
+- topological_order cache requires `&mut self` (explicit mutability)
+- Binary encoding uses big-endian (network byte order) for compatibility

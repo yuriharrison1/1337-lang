@@ -130,62 +130,74 @@ MSG_1337 := {
 
 ## The 32 Canonical Axes
 
-### Group A — Ontological (indices 0–13)
+> **Note:** this table is corrected to match `leet-core/src/axes.rs` (the `CANONICAL_AXES`
+> array), the current ground truth as of v0.5.1. The deprecated Group A/B/C
+> (Ontological/Epistemic/Pragmatic, 14+8+10 axes) scheme below this note has been replaced
+> with the current 4-block S/D/G/P scheme (8 axes each).
+
+### Block S — Semantic (indices 0–7)
 
 | Index | Code | Name |
 |-------|------|------|
-| 0 | A0 | VIA |
-| 1 | A1 | CORRESPONDÊNCIA |
-| 2 | A2 | VIBRAÇÃO |
-| 3 | A3 | POLARIDADE |
-| 4 | A4 | RITMO |
-| 5 | A5 | CAUSA E EFEITO |
-| 6 | A6 | GÊNERO |
-| 7 | A7 | SISTEMA |
-| 8 | A8 | ESTADO |
-| 9 | A9 | PROCESSO |
-| 10 | A10 | RELAÇÃO |
-| 11 | A11 | SINAL |
-| 12 | A12 | ESTABILIDADE |
-| 13 | A13 | VALÊNCIA ONTOLÓGICA |
+| 0 | S1 | INTENTION |
+| 1 | S2 | AMBIGUITY |
+| 2 | S3 | LOCAL_CONTEXT |
+| 3 | S4 | GLOBAL_CONTEXT |
+| 4 | S5 | ENTROPY |
+| 5 | S6 | DENSITY |
+| 6 | S7 | COHERENCE |
+| 7 | S8 | ALIGNMENT |
 
-### Group B — Epistemic (indices 14–21)
+### Block D — Dynamic (indices 8–15)
 
 | Index | Code | Name |
 |-------|------|------|
-| 14 | B1 | VERIFICABILIDADE |
-| 15 | B2 | TEMPORALIDADE |
-| 16 | B3 | COMPLETUDE |
-| 17 | B4 | CAUSALIDADE |
-| 18 | B5 | REVERSIBILIDADE |
-| 19 | B6 | CARGA |
-| 20 | B7 | ORIGEM |
-| 21 | B8 | VALÊNCIA EPISTÊMICA |
+| 8 | D1 | CONNECTION_WEIGHT |
+| 9 | D2 | LEARNING_RATE |
+| 10 | D3 | DECAY |
+| 11 | D4 | STABILITY |
+| 12 | D5 | HYSTERESIS |
+| 13 | D6 | PROPAGATION |
+| 14 | D7 | CAUSALITY |
+| 15 | D8 | INERTIA |
 
-### Group C — Pragmatic (indices 22–31)
+### Block G — Gravity (indices 16–23)
 
 | Index | Code | Name |
 |-------|------|------|
-| 22 | C1 | URGÊNCIA |
-| 23 | C2 | IMPACTO |
-| 24 | C3 | AÇÃO |
-| 25 | C4 | VALOR |
-| 26 | C5 | ANOMALIA |
-| 27 | C6 | AFETO |
-| 28 | C7 | DEPENDÊNCIA |
-| 29 | C8 | VETOR TEMPORAL |
-| 30 | C9 | NATUREZA |
-| 31 | C10 | VALÊNCIA DE AÇÃO |
+| 16 | G1 | MASS |
+| 17 | G2 | TEMPORAL_ANCHOR |
+| 18 | G3★ | AFFINITY |
+| 19 | G4★ | TEMPORALITY |
+| 20 | G5 | LOCAL_FIELD |
+| 21 | G6 | GLOBAL_FIELD |
+| 22 | G7 | K_INTERACTION |
+| 23 | G8★ | GRADIENT |
+
+★ Bipolar axis — baseline/neutral is 0.5, not 0.
+
+### Block P — Precision (indices 24–31)
+
+| Index | Code | Name |
+|-------|------|------|
+| 24 | P1 | QUANTIZATION |
+| 25 | P2 | GRANULARITY |
+| 26 | P3 | COMPRESSION |
+| 27 | P4 | NOISE |
+| 28 | P5 | RESOLUTION |
+| 29 | P6 | CONFIDENCE |
+| 30 | P7 | ACTION |
+| 31 | P8 | LATENCY |
 
 ## Emergent Zone
 
 ```
-REGISTRO_EMERGENTE := {
-  id:           UUID
-  criado_por:   [AGENT_ID, ...]
-  freq:         int
-  vetor_ref:    VECTOR[32]
-  label_humano: string?
+EMERGENT_RECORD := {
+  id:          UUID
+  created_by:  [AGENT_ID, ...]
+  freq:        int
+  vector_ref:  VECTOR[32]
+  human_label: string?
 }
 ```
 
@@ -289,7 +301,7 @@ ANCHOR_5: uncertainty — degree of unknowing
 | Class | COGON + RAW(EVIDENCE, type_def) |
 | Object | COGON + RAW(EVIDENCE, parent_cogon_id) |
 | Inheritance | BLEND(child, parent, α) |
-| Method | COGON with C3_AÇÃO high + RAW(ARTIFACT) |
+| Method | COGON with P7_ACTION high + RAW(ARTIFACT) |
 | Override | Higher-specificity COGON in resolution chain |
 
 ## Interoperability via RAW BRIDGE

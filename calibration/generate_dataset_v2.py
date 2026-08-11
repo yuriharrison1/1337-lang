@@ -1,24 +1,24 @@
 """
 Step 1 (v2): Generate training data from multiple sources.
 
-Este script melhora o generate_dataset.py original ao permitir
-múltiplas fontes de dados: local, APIs, domínios especializados
-e geração sintética.
+This script improves on the original generate_dataset.py by allowing
+multiple data sources: local, APIs, specialized domains,
+and synthetic generation.
 
 Usage:
-    # Fonte padrão (diversas fontes combinadas)
+    # Default source (multiple sources combined)
     python generate_dataset_v2.py --output data/dataset_augmented.jsonl
-    
-    # Apenas dados sintéticos
+
+    # Synthetic data only
     python generate_dataset_v2.py --source synthetic --provider mock
-    
-    # Apenas dados técnicos
+
+    # Technical data only
     python generate_dataset_v2.py --source domain_tech
-    
-    # Com APIs externas
+
+    # With external APIs
     python generate_dataset_v2.py --include-apis --n 200
-    
-    # Ver estatísticas das fontes
+
+    # View source statistics
     python generate_dataset_v2.py --analyze
 """
 
@@ -27,7 +27,7 @@ import json
 import sys
 from pathlib import Path
 
-# Adiciona o calibration ao path
+# Add calibration to the path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from sources import (
@@ -67,7 +67,7 @@ def main():
     
     args = parser.parse_args()
     
-    # Configuração base
+    # Base configuration
     config = SourceConfig(
         max_samples=args.n,
         language=args.language,
@@ -83,7 +83,7 @@ def main():
     print(f"Language: {args.language}")
     print()
     
-    # Cria a fonte apropriada
+    # Create the appropriate source
     if args.source == "auto":
         print("Creating default aggregator with multiple sources...")
         aggregator = create_default_aggregator(
@@ -122,7 +122,7 @@ def main():
     elif args.source == "domain_legal":
         source = LegalDomainSource(config=config)
     
-    # Modo análise
+    # Analysis mode
     if args.analyze:
         print("\nSource Analysis:")
         print("-" * 40)
@@ -146,14 +146,14 @@ def main():
         
         return
     
-    # Gera os dados
+    # Generate the data
     print(f"\nFetching samples from {source.name}...")
     print("-" * 40)
     
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     
-    # Verifica se há dados existentes para resume
+    # Check for existing data to resume
     existing_ids = set()
     if output_path.exists():
         print(f"Resuming: checking {output_path}...")
@@ -172,7 +172,7 @@ def main():
     
     with open(output_path, 'a', encoding='utf-8') as f:
         for sample in source.fetch():
-            # Pula duplicatas
+            # Skip duplicates
             if sample.id in existing_ids:
                 skipped += 1
                 continue
@@ -198,12 +198,12 @@ def main():
     print(f"  Output: {output_path}")
     print(f"{'=' * 60}")
     
-    # Estatísticas
+    # Statistics
     if args.stats:
         print("\nDataset Statistics:")
         print("-" * 40)
         
-        # Recarrega para análise
+        # Reload for analysis
         all_samples = []
         with open(output_path, 'r', encoding='utf-8') as f:
             for line in f:

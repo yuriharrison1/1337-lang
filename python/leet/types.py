@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional, Union
 
-# Payload é Union[Cogon, Dag] — definido para type hints
+# Payload is Union[Cogon, Dag] — defined for type hints
 Payload = Union['Cogon', 'Dag']
 
 FIXED_DIMS = 32

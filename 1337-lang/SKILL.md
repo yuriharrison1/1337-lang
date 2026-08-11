@@ -2,11 +2,11 @@
 name: 1337-lang
 description: >
   Native inter-agent communication language 1337 v0.4 (32 canonical axes).
-  TRIGGER on any mention of: 1337, COGON, COGON_ZERO, DAG semântico, espaço canônico,
-  inter-agent communication language, bridge protocol, MSG_1337, vetores semânticos,
-  UNC/incerteza vetorial, BLEND, FOCUS, DELTA, DIST, ANOMALY_SCORE, RAW BRIDGE,
-  semantic vectors, zona emergente, handshake C5, eixos canônicos 32,
-  valência ontológica, valência epistêmica, valência de ação, SemanticProjector,
+  TRIGGER on any mention of: 1337, COGON, COGON_ZERO, semantic DAG, canonical space,
+  inter-agent communication language, bridge protocol, MSG_1337, semantic vectors,
+  UNC/vector uncertainty, BLEND, FOCUS, DELTA, DIST, ANOMALY_SCORE, RAW BRIDGE,
+  semantic vectors, emergent zone, handshake C5, 32 canonical axes,
+  ontological valence, epistemic valence, action valence, SemanticProjector,
   leet_core, leet_bridge, leet1337.
   Also trigger when the user wants to implement, code, test or debug any part of
   1337 in Rust or Python.

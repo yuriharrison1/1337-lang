@@ -1,5 +1,5 @@
 """
-Aggregator para combinar múltiplas fontes de dados.
+Aggregator for combining multiple data sources.
 """
 
 import json
@@ -15,25 +15,25 @@ from .domain import TechDomainSource, LegalDomainSource
 
 class SourceAggregator(DataSource):
     """
-    Agrega múltiplas fontes de dados em um único stream.
-    
-    Permite combinar dados de diferentes fontes (local, API, synthetic)
-    com balanceamento e deduplicação.
-    
-    Exemplo:
-        # Cria fontes individuais
+    Aggregates multiple data sources into a single stream.
+
+    Allows combining data from different sources (local, API, synthetic)
+    with balancing and deduplication.
+
+    Example:
+        # Create individual sources
         local = LocalFileSource("data/extras.jsonl")
         wiki = WikipediaSource(config=SourceConfig(max_samples=50))
         synthetic = SyntheticSource(provider="mock")
-        
-        # Agrega com pesos
+
+        # Aggregate with weights
         aggregator = SourceAggregator([
-            (local, 0.3),      # 30% de dados locais
-            (wiki, 0.4),       # 40% da Wikipedia
-            (synthetic, 0.3),  # 30% sintéticos
+            (local, 0.3),      # 30% local data
+            (wiki, 0.4),       # 40% Wikipedia
+            (synthetic, 0.3),  # 30% synthetic
         ])
-        
-        # Busca todos os dados balanceados
+
+        # Fetch all balanced data
         samples = aggregator.fetch_all()
     """
     
@@ -46,44 +46,44 @@ class SourceAggregator(DataSource):
     ):
         """
         Args:
-            sources: Lista de (fonte, peso) onde peso é a proporção desejada
-            config: Configuração global (max_samples determina o total)
-            deduplicate: Se deve remover duplicatas entre fontes
-            balance: Se deve balancear as fontes pelos pesos
+            sources: List of (source, weight) where weight is the desired proportion
+            config: Global configuration (max_samples determines the total)
+            deduplicate: Whether to remove duplicates across sources
+            balance: Whether to balance sources by their weights
         """
         super().__init__(config)
         self.sources = sources
         self._deduplicate = deduplicate
         self.balance = balance
         self.name = "aggregated"
-        
-        # Normaliza pesos
+
+        # Normalize weights
         total_weight = sum(w for _, w in sources)
         self.normalized_weights = [(s, w / total_weight) for s, w in sources]
     
     def fetch(self) -> Iterator[TextSample]:
-        """Busca dados de todas as fontes combinadas."""
+        """Fetches data from all combined sources."""
         if self.balance:
             yield from self._fetch_balanced()
         else:
             yield from self._fetch_sequential()
-    
+
     def _fetch_balanced(self) -> Iterator[TextSample]:
-        """Busca dados balanceados pelos pesos."""
-        # Calcula quantas amostras de cada fonte
+        """Fetches data balanced by weight."""
+        # Calculate how many samples from each source
         allocations = []
         for source, weight in self.normalized_weights:
             n_samples = int(self.config.max_samples * weight)
             allocations.append((source, n_samples))
-        
-        # Ajusta para garantir que soma = max_samples
+
+        # Adjust to ensure the sum equals max_samples
         total_allocated = sum(n for _, n in allocations)
         if total_allocated < self.config.max_samples:
-            # Adiciona a diferença na fonte com maior peso
+            # Add the difference to the highest-weight source
             diff = self.config.max_samples - total_allocated
             allocations[0] = (allocations[0][0], allocations[0][1] + diff)
-        
-        # Coleta de cada fonte
+
+        # Collect from each source
         all_samples = []
         for source, n in allocations:
             try:
@@ -97,11 +97,11 @@ class SourceAggregator(DataSource):
                 print(f"Warning: source {source.name} failed: {e}")
                 continue
         
-        # Deduplica se necessário
+        # Deduplicate if needed
         if self._deduplicate:
             all_samples = self.deduplicate(all_samples)
-        
-        # Yield em ordem aleatória misturada
+
+        # Yield in shuffled random order
         import random
         random.shuffle(all_samples)
         
@@ -109,7 +109,7 @@ class SourceAggregator(DataSource):
             yield sample
     
     def _fetch_sequential(self) -> Iterator[TextSample]:
-        """Busca dados sequencialmente de cada fonte."""
+        """Fetches data sequentially from each source."""
         seen = set() if self._deduplicate else None
         count = 0
         
@@ -119,7 +119,7 @@ class SourceAggregator(DataSource):
                     if count >= self.config.max_samples:
                         return
                     
-                    # Deduplicação
+                    # Deduplication
                     if seen is not None:
                         if sample.id in seen:
                             continue
@@ -133,7 +133,7 @@ class SourceAggregator(DataSource):
                 continue
     
     def get_stats(self) -> dict:
-        """Retorna estatísticas agregadas."""
+        """Returns aggregated statistics."""
         stats = super().get_stats()
         
         source_stats = []
@@ -153,11 +153,11 @@ class SourceAggregator(DataSource):
     
     def export_combined(self, path: str, format: str = "jsonl") -> None:
         """
-        Exporta todos os dados combinados para arquivo.
-        
+        Exports all combined data to a file.
+
         Args:
-            path: Caminho do arquivo de saída
-            format: Formato (jsonl, json, csv)
+            path: Output file path
+            format: Format (jsonl, json, csv)
         """
         samples = self.fetch_all()
         
@@ -186,9 +186,9 @@ class SourceAggregator(DataSource):
     
     def analyze_sources(self) -> dict:
         """
-        Analisa a composição das fontes.
-        
-        Retorna estatísticas sobre domínios, idiomas, categorias, etc.
+        Analyzes the composition of sources.
+
+        Returns statistics about domains, languages, categories, etc.
         """
         samples = self.fetch_all()
         
@@ -224,22 +224,22 @@ def create_default_aggregator(
     include_domains: bool = True,
 ) -> SourceAggregator:
     """
-    Cria um aggregator com configuração padrão recomendada.
-    
-    Esta é a configuração "sensata padrão" para treinamento inicial.
-    
+    Creates an aggregator with the recommended default configuration.
+
+    This is the "sensible default" configuration for initial training.
+
     Args:
-        target_samples: Número total de amostras desejado
-        include_apis: Se deve incluir fontes de API (requer internet)
-        include_synthetic: Se deve incluir dados sintéticos
-        include_domains: Se deve incluir dados de domínio especializado
-    
+        target_samples: Total number of desired samples
+        include_apis: Whether to include API sources (requires internet)
+        include_synthetic: Whether to include synthetic data
+        include_domains: Whether to include specialized domain data
+
     Returns:
-        SourceAggregator configurado
+        Configured SourceAggregator
     """
     sources = []
-    
-    # 1. Dados locais (se existirem)
+
+    # 1. Local data (if it exists)
     local_path = Path("calibration/data/local_texts.jsonl")
     if local_path.exists():
         sources.append((
@@ -247,14 +247,14 @@ def create_default_aggregator(
             0.2
         ))
     
-    # 2. Dados sintéticos (diversidade controlada)
+    # 2. Synthetic data (controlled diversity)
     if include_synthetic:
         sources.append((
             SyntheticSource(provider="mock", diversity="high"),
             0.3
         ))
     
-    # 3. Dados de domínio
+    # 3. Domain data
     if include_domains:
         sources.append((
             TechDomainSource(config=SourceConfig(max_samples=200)),
@@ -265,7 +265,7 @@ def create_default_aggregator(
             0.15
         ))
     
-    # 4. APIs externas (opcional)
+    # 4. External APIs (optional)
     if include_apis:
         sources.append((
             WikipediaSource(config=SourceConfig(max_samples=100, language="pt")),

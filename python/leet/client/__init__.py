@@ -1,23 +1,23 @@
-"""Clientes para comunicação com serviços 1337.
+"""Clients for communicating with 1337 services.
 
-Fornece clientes para:
+Provides clients for:
 - gRPC (leet-service)
-- ZeroMQ (transporte leve)
+- ZeroMQ (lightweight transport)
 - WebSocket (real-time)
-- Agente completo (participação na rede)
-- Pool de conexões (load balancing)
+- Full agent (network participation)
+- Connection pool (load balancing)
 
 Example:
     >>> from leet.client import GrpcClient, Agent1337
-    >>> 
-    >>> # Cliente gRPC
+    >>>
+    >>> # gRPC client
     >>> async with GrpcClient("localhost:50051") as client:
     ...     cogon = await client.encode("Hello world")
-    >>> 
-    >>> # Agente completo
+    >>>
+    >>> # Full agent
     >>> agent = Agent1337(AgentConfig(name="Dev"))
     >>> await agent.start()
-    >>> await agent.send_assert("Deploy realizado")
+    >>> await agent.send_assert("Deploy completed")
 """
 
 from .grpc_client import GrpcClient, GrpcConfig, EncodeResult

@@ -1,20 +1,20 @@
 # leet-vm
 
-VM de orquestração de agentes em Python. Gerencia projeção, memória semântica, sessões e roteamento de mensagens.
+Python agent orchestration VM. Manages projection, semantic memory, sessions, and message routing.
 
-## Visão Geral
+## Overview
 
 ```
 Input (text | JSON-RPC | MCP | REST)
      │
      ▼
 LeetVM.process()
-     ├── Adapter → Frame   (detecção e decode do protocolo)
+     ├── Adapter → Frame   (protocol detection and decode)
      ├── Projector → Cogon (LocalProjector | ServiceProjector)
-     ├── PersonalStore     (recall de contexto semântico)
-     ├── SessionDAG        (delta de sessão)
-     ├── Router            (despacha para o agente handler)
-     └── SurfaceC4         (reconstituição de texto)
+     ├── PersonalStore     (semantic context recall)
+     ├── SessionDAG        (session delta)
+     ├── Router            (dispatches to the agent handler)
+     └── SurfaceC4         (text reconstruction)
      │
      ▼
 VMResult { text, cogon, tokens_saved, session_id }
@@ -32,88 +32,88 @@ vm = LeetVM(
 )
 ```
 
-### Modos de Projeção
+### Projection Modes
 
-| Modo | Comportamento |
-|------|---------------|
-| `"local"` | Sempre usa `LocalProjector` (heurísticas, sem rede) |
-| `"service"` | Sempre usa `ServiceProjector` (conecta ao leet-service gRPC) |
-| `"auto"` | Tenta `ServiceProjector`; cai para `LocalProjector` se indisponível |
+| Mode | Behavior |
+|------|----------|
+| `"local"` | Always uses `LocalProjector` (heuristics, no network) |
+| `"service"` | Always uses `ServiceProjector` (connects to leet-service gRPC) |
+| `"auto"` | Tries `ServiceProjector`; falls back to `LocalProjector` if unavailable |
 
-### Processamento
+### Processing
 
 ```python
 result = await vm.process(
-    input=texto_ou_frame,
-    agent_id="meu-agente",
+    input=text_or_frame,
+    agent_id="my-agent",
     session_id="sess-uuid",
     protocol="auto",        # "auto" | "text" | "json_rpc" | "mcp" | "rest"
-    target_agent="",        # agente específico ou "" para default
+    target_agent="",        # specific agent or "" for default
 )
 
-print(result.text)           # texto reconstruído
-print(result.tokens_saved)   # estimativa de tokens economizados
-print(result.cogon)          # Cogon resultante
+print(result.text)           # reconstructed text
+print(result.tokens_saved)   # estimated tokens saved
+print(result.cogon)          # resulting Cogon
 ```
 
-### Pipeline de Processamento (7 etapas)
+### Processing Pipeline (7 steps)
 
-1. **Detecção de protocolo** — identifica o formato do input
-2. **Decode via Adapter** — extrai `Frame(method, params)`
-3. **Projeção → COGON** — `Projector.project(text, agent_id)`
-4. **Recall de contexto** — 5 COGONs mais próximos do `PersonalStore`
-5. **DELTA de sessão** — apenas o que mudou desde o último request na sessão
-6. **Roteamento** — despacha `(cogon, context)` ao handler registrado
-7. **Persistência** — salva input e resultado no store e na sessão
+1. **Protocol detection** — identifies the input format
+2. **Decode via Adapter** — extracts `Frame(method, params)`
+3. **Projection → COGON** — `Projector.project(text, agent_id)`
+4. **Context recall** — 5 nearest COGONs from `PersonalStore`
+5. **Session DELTA** — only what changed since the last request in the session
+6. **Routing** — dispatches `(cogon, context)` to the registered handler
+7. **Persistence** — saves input and result to the store and the session
 
-### Registro de Agentes
+### Agent Registration
 
 ```python
-async def meu_handler(cogon: Cogon, context: list[Cogon]) -> Cogon:
-    # processa e retorna cogon de resposta
+async def my_handler(cogon: Cogon, context: list[Cogon]) -> Cogon:
+    # processes and returns response cogon
     ...
 
-vm.register_agent("agente-x", meu_handler)
-vm.set_default_agent(meu_handler)  # handler para agentes não registrados
+vm.register_agent("agent-x", my_handler)
+vm.set_default_agent(my_handler)  # handler for unregistered agents
 ```
 
 ## Projectors
 
 ### LocalProjector
 
-Projeção local via heurísticas de palavras-chave. Sem rede, sem API.
+Local projection via keyword heuristics. No network, no API.
 
 ```python
 from leet_vm.projector.local import LocalProjector
 
 proj = LocalProjector()
-cogon = await proj.project("texto", "agent-id")
+cogon = await proj.project("text", "agent-id")
 text  = await proj.decode(cogon)
 ```
 
 ### ServiceProjector
 
-Conecta ao `leet-service` gRPC. Usa `encode` e `decode` do serviço.
+Connects to `leet-service` gRPC. Uses the service's `encode` and `decode`.
 
 ```python
 from leet_vm.projector.service import ServiceProjector
 
 proj = ServiceProjector("localhost:50051")
-cogon = await proj.project("texto", "agent-id")
+cogon = await proj.project("text", "agent-id")
 ```
 
-Cai graciosamente — se o serviço não responder, o `LeetVM` em modo `auto` substitui por `LocalProjector`.
+Falls back gracefully — if the service doesn't respond, `LeetVM` in `auto` mode substitutes `LocalProjector`.
 
 ## PersonalStore
 
-Memória semântica persistente por agente. Suporta recall por similaridade cosseno.
+Persistent per-agent semantic memory. Supports recall by cosine similarity.
 
 ```python
 from leet_vm.store.personal import PersonalStore
 
-store = PersonalStore("memory")   # ou Redis URL
+store = PersonalStore("memory")   # or Redis URL
 
-await store.add(agent_id, cogon, text="hint opcional")
+await store.add(agent_id, cogon, text="optional hint")
 results = await store.recall(agent_id, cogon, k=5)
 # results: list[(record_dict, dist_float)]
 
@@ -122,7 +122,7 @@ count = await store.count(agent_id)
 
 ## SessionDAG
 
-Rastro de sessão — DAG de COGONs trocados na sessão atual. Permite calcular DELTA incremental.
+Session trace — DAG of COGONs exchanged in the current session. Enables incremental DELTA computation.
 
 ```python
 from leet_vm.store.session import SessionDAG
@@ -135,11 +135,11 @@ delta = session.delta_since(prev_stamp)  # list[Cogon]
 
 ## Adapters
 
-Detectam e decodificam diferentes formatos de input:
+Detect and decode different input formats:
 
-| Protocolo | Detecção |
+| Protocol | Detection |
 |-----------|----------|
-| `text` | string simples |
+| `text` | simple string |
 | `json_rpc` | `{"jsonrpc": "2.0", ...}` |
 | `mcp` | `{"method": "tools/call", ...}` |
 | `rest` | `{"path": ..., "body": ...}` |
@@ -154,7 +154,7 @@ frame = ADAPTERS[protocol].decode(input_data)
 
 ## SurfaceC4
 
-Reconstituição de texto para interface humana a partir de um COGON.
+Text reconstruction for a human interface from a COGON.
 
 ```python
 from leet_vm.runtime.surface import SurfaceC4
@@ -165,23 +165,23 @@ text = surface.reconstruct(cogon)
 
 ## Router
 
-Despacha COGONs para handlers registrados.
+Dispatches COGONs to registered handlers.
 
 ```python
 from leet_vm.runtime.router import Router
 
 router = Router()
-router.register("agente-x", handler_x)
+router.register("agent-x", handler_x)
 router.set_default(handler_default)
 
 result = await router.route(cogon, context, target_agent="")
 ```
 
-## Testes
+## Tests
 
 ```bash
 cd leet-vm
-python -m pytest      # todos os testes da VM
+python -m pytest      # all VM tests
 ```
 
-Testes cobrem: adapters, projectors (local e service mock), store (add/recall/count), VM end-to-end.
+Tests cover: adapters, projectors (local and service mock), store (add/recall/count), VM end-to-end.

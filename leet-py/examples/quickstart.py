@@ -19,14 +19,14 @@ async def main() -> None:
     print()
 
     # ── 2. Chat ──────────────────────────────────────────────────────────
-    resp = await client.chat("explica controle preditivo MPC")
+    resp = await client.chat("explain MPC predictive control")
     print("Response:", resp.text)
     print(f"Tokens saved (vs raw text): {client.stats.tokens_saved}")
     print()
 
     # ── 3. Semantic memory ───────────────────────────────────────────────
     await client.remember("MPC stands for Model Predictive Control")
-    await client.remember("controle preditivo minimiza função de custo com horizonte finito")
+    await client.remember("predictive control minimizes a cost function over a finite horizon")
     results = await client.recall("control system", k=3)
     print(f"Recalled {len(results)} similar memories from PersonalStore:")
     for r in results:
@@ -35,11 +35,11 @@ async def main() -> None:
     print()
 
     # ── 4. Direct COGON access ───────────────────────────────────────────
-    cogon = await client.encode("sistema em falha crítica — urgência máxima")
+    cogon = await client.encode("system in critical failure — maximum urgency")
     print(f"COGON id   : {cogon.id}")
-    print(f"  axis[22] C1_URGÊNCIA   : {cogon.sem[22]:.3f}")
-    print(f"  axis[26] C5_ANOMALIA   : {cogon.sem[26]:.3f}")
-    print(f"  axis[23] C2_IMPACTO    : {cogon.sem[23]:.3f}")
+    print(f"  axis[22] C1_URGENCY    : {cogon.sem[22]:.3f}")
+    print(f"  axis[26] C5_ANOMALY    : {cogon.sem[26]:.3f}")
+    print(f"  axis[23] C2_IMPACT     : {cogon.sem[23]:.3f}")
     print()
 
     # Decode back to text description

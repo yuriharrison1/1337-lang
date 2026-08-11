@@ -1,10 +1,10 @@
-# SDK Python — python/leet
+# Python SDK — python/leet
 
-SDK Python puro (sem dependências Rust em runtime) que implementa os tipos, operadores, bridge, cache e validação do protocolo 1337.
+Pure Python SDK (no Rust runtime dependencies) that implements the types, operators, bridge, cache, and validation for the 1337 protocol.
 
-Namespace de pacote: `leet1337` (instalação) / `leet` (import).
+Package namespace: `leet1337` (install) / `leet` (import).
 
-## Tipos Principais
+## Main Types
 
 ### `Cogon`
 
@@ -12,32 +12,32 @@ Namespace de pacote: `leet1337` (instalação) / `leet` (import).
 from leet_vm.types import Cogon
 
 c = Cogon(
-    sem=[0.5] * 32,   # list[float], todos em [0, 1]
-    id="uuid-str",    # opcional, gerado automaticamente
+    sem=[0.5] * 32,   # list[float], all in [0, 1]
+    id="uuid-str",    # optional, auto-generated
     stamp=1700000000000,  # Unix ms
 )
 ```
 
-Métodos:
-- `cogon.is_zero()` — verifica se é o COGON_ZERO canônico
+Methods:
+- `cogon.is_zero()` — checks whether it's the canonical COGON_ZERO
 - `cogon.is_low_confidence()` — `sem[29] < 0.1` (R5)
-- `cogon.to_dict()` / `Cogon.from_dict(d)` — serialização
-- `cogon.to_bytes()` / `Cogon.from_bytes(b)` — codec binário 96 bytes
+- `cogon.to_dict()` / `Cogon.from_dict(d)` — serialization
+- `cogon.to_bytes()` / `Cogon.from_bytes(b)` — 96-byte binary codec
 
 ### `Dag`
 
 ```python
 from leet_vm.types import Dag, Edge
 
-dag = Dag(root="uuid-raiz")
+dag = Dag(root="uuid-root")
 dag.add_node(cogon)
 dag.add_edge(Edge(from_id="a", to_id="b", edge_type="CAUSA", weight=0.9))
-order = dag.topological_order()   # algoritmo de Kahn, cacheado
+order = dag.topological_order()   # Kahn's algorithm, cached
 ```
 
 ### `Msg1337`
 
-Envelope completo:
+Complete envelope:
 
 ```python
 from leet_vm.types import Msg1337, C5Block, SurfaceBlock
@@ -58,12 +58,12 @@ msg = Msg1337(
 ```python
 RawField(
     type="text/plain",          # MIME type
-    content="conteúdo",         # str | dict | bytes
+    content="content",          # str | dict | bytes
     role="ARTIFACT",            # EVIDENCE | ARTIFACT | TRACE | BRIDGE
 )
 ```
 
-## Operadores
+## Operators
 
 ```python
 from leet_vm.types import blend, delta, dist, focus, anomaly_score
@@ -71,44 +71,44 @@ from leet_vm.types import blend, delta, dist, focus, anomaly_score
 # BLEND
 result = blend(c1, c2, alpha=0.7)
 
-# DELTA — retorna list[float], pode ser negativo
+# DELTA — returns list[float], can be negative
 patch = delta(c_prev, c_curr)
 
-# DIST — distância cosseno [0, 2]
+# DIST — cosine distance [0, 2]
 d = dist(c1, c2)
 
-# FOCUS — zera dimensões não selecionadas
+# FOCUS — zeroes out unselected dimensions
 focused = focus(cogon, dims=[8, 23, 26])
 
-# ANOMALY_SCORE — distância ao centróide histórico
+# ANOMALY_SCORE — distance to historical centroid
 score = anomaly_score(cogon, history=[c1, c2, c3])
 ```
 
-Regras especiais de BLEND (espelham a implementação Rust):
+Special BLEND rules (mirror the Rust implementation):
 
-| Eixo | Regra |
-|------|-------|
+| Axis | Rule |
+|------|------|
 | D4 SIGNAL (11) | `min(c1, c2)` |
 | G1 TEMPORALITY (16) | `clamp(c1 + c2, 0, 1)` |
 | G7 EPISTEMIC_VALENCE (22) | `max(c1, c2)` |
 | P6 TEMPORAL_VECTOR (29) | `min(c1, c2)` |
-| demais | `α·c1 + (1-α)·c2` |
+| others | `α·c1 + (1-α)·c2` |
 
 ## Bridge
 
 ```python
 from leet.bridge import Bridge, MockBridge
 
-bridge = Bridge()     # usa heurísticas
-mock   = MockBridge() # determinístico para testes
+bridge = Bridge()     # uses heuristics
+mock   = MockBridge() # deterministic for testing
 
-cogon = bridge.encode("deploy urgente falhou")
+cogon = bridge.encode("urgent deploy failed")
 text  = bridge.decode(cogon)
 ```
 
-### Heurísticas de Projeção
+### Projection Heuristics
 
-A implementação Python usa as mesmas regras que o `MockProjector` Rust:
+The Python implementation uses the same rules as the Rust `MockProjector`:
 
 ```python
 RULES = [
@@ -120,26 +120,26 @@ RULES = [
 ]
 ```
 
-## Validação
+## Validation
 
 ```python
 from leet.validate import validate, check_confidence
 
-error = validate(msg)      # None se válido, str se erro
-flags = check_confidence(msg)  # list[str] de warnings R5
+error = validate(msg)      # None if valid, str if error
+flags = check_confidence(msg)  # list[str] of R5 warnings
 ```
 
-Todas as regras R2–R23 de escopo estrutural são implementadas. Erros retornam a primeira violação encontrada.
+All R2–R23 structural-scope rules are implemented. Errors return the first violation found.
 
 ## Cache
 
 ```python
 from leet.cache import MemoryCache, RedisCache, CacheBackend
 
-# Memória (padrão)
+# Memory (default)
 cache = MemoryCache()
 
-# Redis (requer redis-py)
+# Redis (requires redis-py)
 cache = RedisCache(host="localhost", port=6379)
 ```
 
@@ -163,7 +163,7 @@ bp = BatchProcessor(process_item, max_concurrent=10)
 results = await bp.run(items)
 ```
 
-## Eixos
+## Axes
 
 ```python
 from leet_vm.types import CANONICAL_AXES, axis_by_code
@@ -171,10 +171,10 @@ from leet_vm.types import CANONICAL_AXES, axis_by_code
 ax = axis_by_code("G8")  # {"index": 23, "name": "URGENCY", ...}
 ```
 
-## Testes
+## Tests
 
 ```bash
 cd python
-python -m pytest                # todos os testes
-python -m pytest leet/          # testes do SDK
+python -m pytest                # all tests
+python -m pytest leet/          # SDK tests
 ```

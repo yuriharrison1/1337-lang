@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Teste de Integração 1337 - Verifica todos os componentes
+1337 Integration Test - Verifies all components
 """
 
 import sys
 import subprocess
 
 def run_test(name, command, cwd=None):
-    """Executa comando e retorna sucesso."""
+    """Runs a command and returns whether it succeeded."""
     try:
         result = subprocess.run(
             command,
@@ -31,7 +31,7 @@ def run_test(name, command, cwd=None):
         return False
 
 print("═" * 70)
-print("TESTE DE INTEGRAÇÃO 1337")
+print("1337 INTEGRATION TEST")
 print("═" * 70)
 
 results = []
@@ -46,7 +46,7 @@ results.append(run_test(
 ))
 
 # ═══════════════════════════════════════════════════════════════════════════════
-print("\n📦 2. LEET-VM (VM Python)")
+print("\n📦 2. LEET-VM (Python VM)")
 # ═══════════════════════════════════════════════════════════════════════════════
 results.append(run_test(
     "VM tests (42)",
@@ -55,7 +55,7 @@ results.append(run_test(
 ))
 
 # ═══════════════════════════════════════════════════════════════════════════════
-print("\n📦 3. LEET-PY (SDK Público)")
+print("\n📦 3. LEET-PY (Public SDK)")
 # ═══════════════════════════════════════════════════════════════════════════════
 results.append(run_test(
     "SDK tests (12)",
@@ -79,7 +79,7 @@ results.append(run_test(
 # ═══════════════════════════════════════════════════════════════════════════════
 print("\n📦 5. RUST SERVICE (leet-service)")
 # ═══════════════════════════════════════════════════════════════════════════════
-# Verificar se binário existe
+# Check whether the binary exists
 import os
 service_bin = "/home/yuri/Projetos/1337/leet1337/target/debug/leet-service"
 if os.path.exists(service_bin):
@@ -108,20 +108,20 @@ else:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 print("\n" + "═" * 70)
-print("RESUMO")
+print("SUMMARY")
 print("═" * 70)
 
 total = len(results)
 passed = sum(results)
 failed = total - passed
 
-print(f"\nComponentes: {total}")
+print(f"\nComponents: {total}")
 print(f"✅ OK: {passed}")
-print(f"❌ Falhas: {failed}")
+print(f"❌ Failures: {failed}")
 
 if failed == 0:
-    print("\n🎉 Todos os componentes estão integrados e funcionando!")
+    print("\n🎉 All components are integrated and working!")
     sys.exit(0)
 else:
-    print(f"\n⚠️  {failed} componente(s) com problemas")
+    print(f"\n⚠️  {failed} component(s) with issues")
     sys.exit(1)

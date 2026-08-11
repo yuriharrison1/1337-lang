@@ -331,50 +331,50 @@ class DebateMonitor:
 
         sep = "═" * 70
         print(f"\n{sep}")
-        print("   RELATÓRIO DE MÉTRICAS 1337 — DEBATE DA CONSCIÊNCIA")
+        print("   1337 METRICS REPORT — CONSCIOUSNESS DEBATE")
         print(sep)
 
         print(f"\n{'─'*35} VOLUME {'─'*26}")
-        print(f"  Mensagens totais         : {m.total_messages}")
-        print(f"  Caracteres (texto bruto) : {m.text_bytes_total:,} bytes")
-        print(f"  Vetores COGON criados    : {m.cogon_vectors_total}")
-        print(f"  Bytes via 1337           : {cogon_bytes:,} bytes  ({FIXED_DIMS}×f32/vetor)")
-        print(f"  Tokens estimados (input) : {m.total_tokens_raw_estimate:,}")
+        print(f"  Total messages           : {m.total_messages}")
+        print(f"  Characters (raw text)    : {m.text_bytes_total:,} bytes")
+        print(f"  COGON vectors created    : {m.cogon_vectors_total}")
+        print(f"  Bytes via 1337           : {cogon_bytes:,} bytes  ({FIXED_DIMS}×f32/vector)")
+        print(f"  Estimated tokens (input) : {m.total_tokens_raw_estimate:,}")
 
-        print(f"\n{'─'*35} COMPRESSÃO {'─'*23}")
-        print(f"  Texto → COGON            : {compression:.2f}x")
-        print(f"  (texto/{cogon_bytes} bytes → vetores/{cogon_bytes} bytes)")
+        print(f"\n{'─'*35} COMPRESSION {'─'*22}")
+        print(f"  Text → COGON             : {compression:.2f}x")
+        print(f"  (text/{cogon_bytes} bytes → vectors/{cogon_bytes} bytes)")
         pct_saved = (1 - 1 / compression) * 100 if compression > 1 else 0
-        print(f"  Redução estimada         : {pct_saved:.1f}%")
-        print(f"  INTENTs DELTA            : {m.delta_intent_count}  (conteúdo reutilizado)")
-        print(f"  INTENTs ASSERT           : {m.assert_intent_count}")
+        print(f"  Estimated reduction      : {pct_saved:.1f}%")
+        print(f"  DELTA INTENTs            : {m.delta_intent_count}  (reused content)")
+        print(f"  ASSERT INTENTs           : {m.assert_intent_count}")
 
-        print(f"\n{'─'*35} SEMÂNTICA {'─'*24}")
-        print(f"  Drift semântico médio    : {avg_drift:.4f}  (0=idêntico, 1=ortogonal)")
-        print(f"  Convergência final       : {avg_conv:.2%}")
-        print(f"\n  Distâncias pairwise (estado final):")
+        print(f"\n{'─'*35} SEMANTICS {'─'*24}")
+        print(f"  Average semantic drift   : {avg_drift:.4f}  (0=identical, 1=orthogonal)")
+        print(f"  Final convergence        : {avg_conv:.2%}")
+        print(f"\n  Pairwise distances (final state):")
         for p in m.final_pairwise_distances:
             bar_len = int(p["dist"] * 20)
             bar = "█" * bar_len + "░" * (20 - bar_len)
             print(f"    {p['pair']:25} │{bar}│ {p['dist']:.4f}")
 
-        print(f"\n{'─'*35} POR AGENTE {'─'*23}")
+        print(f"\n{'─'*35} BY AGENT {'─'*25}")
         for name, s in m.agent_stats.items():
             efficiency = s["delta_count"] / max(s["messages"], 1) * 100
             print(f"  {name:14} {s['messages']:3} msgs | "
-                  f"urgência média: {s['avg_urgency']:.2f} | "
+                  f"avg urgency: {s['avg_urgency']:.2f} | "
                   f"DELTA: {efficiency:.0f}%")
 
-        print(f"\n{'─'*35} CONCEITOS {'─'*24}")
+        print(f"\n{'─'*35} CONCEPTS {'─'*25}")
         for concept, hist in m.concept_history.items():
-            print(f"  {concept:20} : {len(hist)} refinamentos")
+            print(f"  {concept:20} : {len(hist)} refinements")
 
         print(f"\n{'─'*35} RAW OBJECTS {'─'*22}")
-        print(f"  Total RAW criados : {len(m.raw_objects)}")
+        print(f"  Total RAW created : {len(m.raw_objects)}")
         for obj in m.raw_objects[:8]:
             print(f"    [{obj['id']}] {obj['type']:10} — {obj['topic']}")
         if len(m.raw_objects) > 8:
-            print(f"    ... e mais {len(m.raw_objects)-8}")
+            print(f"    ... and {len(m.raw_objects)-8} more")
 
         return {
             "session_id": str(uuid.uuid4()),
@@ -422,22 +422,22 @@ def _heatmap(cogon: Cogon, n: int = 10) -> str:
         ax = AXES[idx]
         bar = "█" * int(val * 20) + "░" * (20 - int(val * 20))
         lines.append(f"    {ax['code']:3} {ax['name']:22} │{bar}│ {val:.2f}")
-    return "\n".join(lines) or "    (nenhum eixo > 0.2)"
+    return "\n".join(lines) or "    (no axis > 0.2)"
 
 
 def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25) -> Dict:
     if rounds < 25:
-        print(f"  ⚠  rounds={rounds} < 25 mínimo — ajustando para 25.")
+        print(f"  ⚠  rounds={rounds} < 25 minimum — adjusting to 25.")
         rounds = 25
 
     print("=" * 70)
-    print("   1337 — DEBATE DA CONSCIÊNCIA")
+    print("   1337 — CONSCIOUSNESS DEBATE")
     print("   Kant · Nietzsche · Schopenhauer · Hegel · Pinóquio · Bolsonaro · Alan")
     print("=" * 70)
     print(f"\n  Backend : {backend_name}")
-    print(f"  Agentes : {', '.join(a['name'] for a in CONSCIENCIA_SCENARIO['agents'])}")
+    print(f"  Agents  : {', '.join(a['name'] for a in CONSCIENCIA_SCENARIO['agents'])}")
     print(f"  Rounds  : {rounds}")
-    print(f"  Conceitos rastreados: {', '.join(CONSCIENCIA_SCENARIO['concepts'])}")
+    print(f"  Tracked concepts: {', '.join(CONSCIENCIA_SCENARIO['concepts'])}")
     print()
 
     # ── setup ─────────────────────────────────────────────────────────────────
@@ -448,9 +448,9 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
 
     for ad in CONSCIENCIA_SCENARIO["agents"]:
         net.add_agent(ad["name"], ad["persona"])
-        print(f"  ✓ {ad['name']} entrou no debate")
+        print(f"  ✓ {ad['name']} joined the debate")
 
-    print(f"\n  Rust: {'ativo (' + rust.mode + ')' if rust.available() else 'Python puro'}")
+    print(f"\n  Rust: {'active (' + rust.mode + ')' if rust.available() else 'pure Python'}")
 
     # ── handshake ─────────────────────────────────────────────────────────────
     print("\n  Handshake C5 (R20 — COGON_ZERO)...")
@@ -459,7 +459,7 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
     # ── estímulo inicial ──────────────────────────────────────────────────────
     stimulus = CONSCIENCIA_SCENARIO["stimulus"]
     print(f"\n{'─'*70}")
-    print("  MEDIADOR — Estímulo inicial:")
+    print("  MEDIATOR — Initial stimulus:")
     print(f'  "{stimulus[:120]}..."')
     print(f"{'─'*70}")
 
@@ -472,7 +472,7 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
 
     # ── discursos iniciais (round 0) ──────────────────────────────────────────
     print(f"\n{'═'*70}")
-    print("  POSIÇÕES INICIAIS — Round 0")
+    print("  INITIAL POSITIONS — Round 0")
     print(f"{'═'*70}")
 
     for agent in net.agents.values():
@@ -491,7 +491,7 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
 
     # ── dialética — rounds ────────────────────────────────────────────────────
     print(f"\n{'═'*70}")
-    print("  DIALÉTICA — Questionamento e Refinamento")
+    print("  DIALECTIC — Questioning and Refinement")
     print(f"{'═'*70}")
 
     agent_list = list(net.agents.values())
@@ -506,7 +506,7 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
         if round_num % 5 == 0:
             prov_idx = (round_num // 5 - 1) % len(provocations)
             provocation = provocations[prov_idx]
-            print(f"  [MEDIADOR injeta provocação]")
+            print(f"  [MEDIATOR injects provocation]")
             print(f"  \"{provocation[:80]}...\"")
             prov_msg = net.human.text_to_msg(provocation, "BROADCAST")
             monitor.record("Mediador", provocation, prov_msg.payload, "ASSERT", round_num)
@@ -561,7 +561,7 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
 
     # ── análise final ─────────────────────────────────────────────────────────
     print(f"\n{'═'*70}")
-    print("  HEATMAPS — Estado Final de cada Filósofo")
+    print("  HEATMAPS — Final State of Each Philosopher")
     print(f"{'═'*70}")
 
     for agent in net.agents.values():
@@ -579,11 +579,11 @@ def run_consciencia_simulation(backend_name: str = "deepseek", rounds: int = 25)
     with open(fname, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 
-    print(f"\n  💾 Relatório completo salvo: {fname}")
+    print(f"\n  💾 Full report saved: {fname}")
     print(f"\n{'═'*70}")
-    print(f"  Simulação concluída — {rounds} rounds | {report['summary']['total_messages']} mensagens")
-    print(f"  Compressão 1337: {report['summary']['compression_ratio']}x "
-          f"({report['summary']['pct_saved']}% redução)")
+    print(f"  Simulation complete — {rounds} rounds | {report['summary']['total_messages']} messages")
+    print(f"  1337 compression: {report['summary']['compression_ratio']}x "
+          f"({report['summary']['pct_saved']}% reduction)")
     print(f"{'═'*70}\n")
 
     return report
@@ -597,35 +597,35 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="1337 — Debate da Consciência (Kant · Nietzsche · Schopenhauer · Hegel)"
+        description="1337 — Consciousness Debate (Kant · Nietzsche · Schopenhauer · Hegel)"
     )
     parser.add_argument(
         "--backend",
         choices=["deepseek", "anthropic", "mock"],
         default="deepseek",
-        help="Backend LLM (default: deepseek)",
+        help="LLM backend (default: deepseek)",
     )
     parser.add_argument(
         "--rounds",
         type=int,
         default=25,
-        help="Rounds de dialética, mínimo 25 (default: 25)",
+        help="Dialectic rounds, minimum 25 (default: 25)",
     )
     parser.add_argument(
         "--output",
         type=str,
         default=None,
-        help="Arquivo JSON de saída alternativo",
+        help="Alternative output JSON file",
     )
     args = parser.parse_args()
 
     # Verificar API keys
     if args.backend == "deepseek" and not os.environ.get("DEEPSEEK_API_KEY"):
-        print("⚠  DEEPSEEK_API_KEY não definida. Usando mock.")
+        print("⚠  DEEPSEEK_API_KEY not set. Using mock.")
         args.backend = "mock"
 
     if args.backend == "anthropic" and not os.environ.get("ANTHROPIC_API_KEY"):
-        print("⚠  ANTHROPIC_API_KEY não definida. Usando mock.")
+        print("⚠  ANTHROPIC_API_KEY not set. Using mock.")
         args.backend = "mock"
 
     try:
@@ -634,12 +634,12 @@ if __name__ == "__main__":
         if args.output:
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2, ensure_ascii=False)
-            print(f"  ✓ Relatório salvo em: {args.output}")
+            print(f"  ✓ Report saved to: {args.output}")
 
     except KeyboardInterrupt:
-        print("\n\n  ⛔ Simulação interrompida pelo usuário")
+        print("\n\n  ⛔ Simulation interrupted by user")
     except Exception as e:
-        print(f"\n  ✗ Erro: {e}")
+        print(f"\n  ✗ Error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

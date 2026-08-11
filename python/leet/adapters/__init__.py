@@ -1,19 +1,19 @@
-"""IDE Adapters for 1337 — Integração com ferramentas de coding.
+"""IDE Adapters for 1337 — Integration with coding tools.
 
-Este módulo fornece adaptadores para integrar o protocolo 1337 com
-ferramentas de coding como Claude Code, Codex, Kimi e Aider.
+This module provides adapters to integrate the 1337 protocol with
+coding tools such as Claude Code, Codex, Kimi and Aider.
 
-Exemplo:
+Example:
     >>> from leet.adapters import ClaudeCodeAdapter
     >>> adapter = ClaudeCodeAdapter()
-    >>> await adapter.send_message("Analise este código", context={"file": "main.py"})
+    >>> await adapter.send_message("Analyze this code", context={"file": "main.py"})
 
-Os adaptadores convertem automaticamente:
-- Texto natural → COGON (vetores semânticos 32D)
-- COGON → Comandos da ferramenta IDE
-- Respostas da IDE → COGON de volta
+The adapters automatically convert:
+- Natural text → COGON (32D semantic vectors)
+- COGON → IDE tool commands
+- IDE responses → COGON, back
 
-Suporte:
+Support:
     - Claude Code (Anthropic)
     - Codex (OpenAI)
     - Kimi Code CLI (Moonshot)
@@ -45,18 +45,18 @@ __all__ = [
 
 
 def create_adapter(name: str, **kwargs) -> BaseIDEAdapter:
-    """Factory function para criar adaptadores.
-    
+    """Factory function to create adapters.
+
     Args:
-        name: Nome do adaptador ('claude', 'codex', 'kimi', 'aider')
-        **kwargs: Argumentos passados para o construtor do adaptador
-        
+        name: Adapter name ('claude', 'codex', 'kimi', 'aider')
+        **kwargs: Arguments passed to the adapter's constructor
+
     Returns:
-        Instância do adaptador configurado
-        
+        Configured adapter instance
+
     Raises:
-        ValueError: Se o nome do adaptador for inválido
-        
+        ValueError: If the adapter name is invalid
+
     Example:
         >>> adapter = create_adapter('claude', project_dir='/path/to/project')
         >>> adapter = create_adapter('kimi', api_key='sk-...')
@@ -69,15 +69,15 @@ def create_adapter(name: str, **kwargs) -> BaseIDEAdapter:
         'kimi-code': KimiAdapter,
         'aider': AiderAdapter,
     }
-    
+
     name_lower = name.lower()
     if name_lower not in adapters:
-        raise ValueError(f"Adaptador '{name}' não encontrado. "
-                        f"Opções: {list(adapters.keys())}")
-    
+        raise ValueError(f"Adapter '{name}' not found. "
+                        f"Options: {list(adapters.keys())}")
+
     return adapters[name_lower](**kwargs)
 
 
 def list_adapters() -> list[str]:
-    """Lista os adaptadores disponíveis."""
+    """Lists the available adapters."""
     return ['claude', 'codex', 'kimi', 'aider']

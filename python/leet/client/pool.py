@@ -1,20 +1,20 @@
-"""Pool de clientes para conexões eficientes.
+"""Client pool for efficient connections.
 
-Gerencia pool de conexões gRPC/ZeroMQ para:
-- Reutilização de conexões
+Manages a pool of gRPC/ZeroMQ connections for:
+- Connection reuse
 - Load balancing
 - Health checking
 - Circuit breaker
 
 Example:
     >>> from leet.client import ClientPool
-    >>> 
+    >>>
     >>> pool = ClientPool([
         "localhost:50051",
         "localhost:50052",
         "localhost:50053"
     ])
-    >>> 
+    >>>
     >>> async with pool.acquire() as client:
     ...     result = await client.encode("hello")
 """
@@ -33,7 +33,7 @@ from leet.client.zmq_client import ZmqClient, ZmqConfig
 
 @dataclass
 class PooledClient:
-    """Cliente em pool com metadata."""
+    """Pooled client with metadata."""
     client: Any
     url: str
     healthy: bool = True
@@ -42,31 +42,31 @@ class PooledClient:
 
 
 class ClientPool:
-    """Pool de clientes para load balancing.
-    
-    Distribui requisições entre múltiplos endpoints
-    com health checking e circuit breaker.
-    
+    """Client pool for load balancing.
+
+    Distributes requests across multiple endpoints
+    with health checking and circuit breaker.
+
     Args:
-        urls: Lista de URLs de endpoints
-        client_type: Tipo de cliente (grpc, zmq)
-        max_failures: Máximo de falhas antes de marcar unhealthy
-        health_interval: Intervalo de health check
-        
+        urls: List of endpoint URLs
+        client_type: Client type (grpc, zmq)
+        max_failures: Max failures before marking unhealthy
+        health_interval: Health check interval
+
     Example:
         >>> pool = ClientPool([
         ...     "localhost:50051",
         ...     "localhost:50052"
         ])
-        >>> 
-        >>> # Round-robin automático
+        >>>
+        >>> # Automatic round-robin
         >>> result = await pool.execute(lambda c: c.encode("hello"))
-        >>> 
-        >>> # Ou com context manager
+        >>>
+        >>> # Or with a context manager
         >>> async with pool.acquire() as client:
         ...     result = await client.encode("hello")
     """
-    
+
     def __init__(
         self,
         urls: List[str],
@@ -78,51 +78,51 @@ class ClientPool:
         self.client_type = client_type
         self.max_failures = max_failures
         self.health_interval = health_interval
-        
+
         self._pool: List[PooledClient] = []
         self._current_index = 0
         self._lock = asyncio.Lock()
-        
+
         self._health_task: Optional[asyncio.Task] = None
         self._running = False
-    
+
     async def start(self):
-        """Inicia pool e conecta clientes."""
+        """Starts the pool and connects clients."""
         self._running = True
-        
+
         for url in self.urls:
             client = await self._create_client(url)
             self._pool.append(PooledClient(client, url))
-        
-        # Inicia health checks
+
+        # Start health checks
         self._health_task = asyncio.create_task(self._health_loop())
-    
+
     async def stop(self):
-        """Para pool e fecha conexões."""
+        """Stops the pool and closes connections."""
         self._running = False
-        
+
         if self._health_task:
             self._health_task.cancel()
             try:
                 await self._health_task
             except asyncio.CancelledError:
                 pass
-        
+
         for pooled in self._pool:
             if hasattr(pooled.client, 'close'):
                 await pooled.client.close()
-        
+
         self._pool.clear()
-    
+
     async def __aenter__(self):
         await self.start()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.stop()
-    
+
     async def _create_client(self, url: str) -> Any:
-        """Cria cliente para URL."""
+        """Creates a client for the given URL."""
         if self.client_type == "grpc":
             config = GrpcConfig()
             if ":" in url:
@@ -131,45 +131,45 @@ class ClientPool:
                 config.port = int(port)
             else:
                 config.host = url
-            
+
             client = GrpcClient(config)
             await client.connect()
             return client
-        
+
         elif self.client_type == "zmq":
             config = ZmqConfig()
             client = ZmqClient(config)
             await client.connect(url)
             return client
-        
+
         else:
-            raise ValueError(f"Tipo desconhecido: {self.client_type}")
-    
+            raise ValueError(f"Unknown type: {self.client_type}")
+
     def _get_next_client(self) -> Optional[PooledClient]:
-        """Seleciona próximo cliente (round-robin)."""
+        """Selects the next client (round-robin)."""
         healthy = [p for p in self._pool if p.healthy]
-        
+
         if not healthy:
             return None
-        
+
         # Round-robin
         client = healthy[self._current_index % len(healthy)]
         self._current_index += 1
-        
+
         return client
-    
+
     @asynccontextmanager
     async def acquire(self) -> AsyncIterator[Any]:
-        """Adquire cliente do pool.
-        
+        """Acquires a client from the pool.
+
         Yields:
-            Cliente disponível
+            An available client
         """
         pooled = self._get_next_client()
-        
+
         if pooled is None:
-            raise RuntimeError("Nenhum cliente healthy disponível")
-        
+            raise RuntimeError("No healthy client available")
+
         try:
             pooled.requests += 1
             yield pooled.client
@@ -178,44 +178,44 @@ class ClientPool:
             if pooled.failures >= self.max_failures:
                 pooled.healthy = False
             raise
-    
+
     async def execute(self, operation: Callable[[Any], Any]) -> Any:
-        """Executa operação em cliente do pool.
-        
+        """Executes an operation on a client from the pool.
+
         Args:
-            operation: Função que recebe cliente e retorna resultado
-            
+            operation: Function that receives a client and returns a result
+
         Returns:
-            Resultado da operação
+            The operation's result
         """
         async with self.acquire() as client:
             return await operation(client)
-    
+
     async def _health_loop(self):
-        """Loop de health check."""
+        """Health check loop."""
         while self._running:
             await asyncio.sleep(self.health_interval)
-            
+
             for pooled in self._pool:
                 try:
-                    # Tenta health check
+                    # Try health check
                     if hasattr(pooled.client, 'health_check'):
                         result = await pooled.client.health_check()
                         pooled.healthy = result.get("status") == "ok"
                     else:
-                        # Assume healthy se conectado
+                        # Assume healthy if connected
                         pooled.healthy = True
-                    
+
                     if pooled.healthy:
                         pooled.failures = 0
-                        
+
                 except Exception:
                     pooled.failures += 1
                     if pooled.failures >= self.max_failures:
                         pooled.healthy = False
-    
+
     def get_stats(self) -> dict:
-        """Retorna estatísticas do pool."""
+        """Returns pool statistics."""
         return {
             "total": len(self._pool),
             "healthy": sum(1 for p in self._pool if p.healthy),
@@ -233,38 +233,38 @@ class ClientPool:
 
 
 class StickyClientPool(ClientPool):
-    """Pool com sticky sessions.
-    
-    Cliente é selecionado baseado em uma chave (ex: user_id)
-    para garantir que o mesmo cliente seja usado para a mesma chave.
+    """Pool with sticky sessions.
+
+    A client is selected based on a key (e.g. user_id)
+    to ensure the same client is used for the same key.
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._sticky_map: dict = {}
-    
+
     def _get_client_for_key(self, key: str) -> Optional[PooledClient]:
-        """Seleciona cliente baseado em chave."""
+        """Selects a client based on a key."""
         healthy = [p for p in self._pool if p.healthy]
-        
+
         if not healthy:
             return None
-        
-        # Hash consistente
+
+        # Consistent hashing
         if key not in self._sticky_map:
             idx = hash(key) % len(healthy)
             self._sticky_map[key] = healthy[idx]
-        
+
         return self._sticky_map[key]
-    
+
     @asynccontextmanager
     async def acquire_sticky(self, key: str) -> AsyncIterator[Any]:
-        """Adquire cliente sticky para chave."""
+        """Acquires the sticky client for a key."""
         pooled = self._get_client_for_key(key)
-        
+
         if pooled is None:
-            raise RuntimeError("Nenhum cliente healthy disponível")
-        
+            raise RuntimeError("No healthy client available")
+
         try:
             pooled.requests += 1
             yield pooled.client
@@ -272,7 +272,7 @@ class StickyClientPool(ClientPool):
             pooled.failures += 1
             if pooled.failures >= self.max_failures:
                 pooled.healthy = False
-                # Remove do sticky map
+                # Remove from sticky map
                 if key in self._sticky_map:
                     del self._sticky_map[key]
             raise

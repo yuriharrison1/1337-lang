@@ -5,7 +5,7 @@
 [![docs.rs](https://docs.rs/leet-core/badge.svg)](https://docs.rs/leet-core)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-**1337** é um protocolo semântico para comunicação entre agentes de IA. Em vez de trocar texto livre, agentes codificam seu estado, intenção e conteúdo em vetores semânticos de 32 dimensões chamados **COGONs** — alcançando até 90% de redução de tokens sem perda de informação estrutural.
+**1337** is a semantic protocol for communication between AI agents. Instead of exchanging free text, agents encode their state, intent, and content into 32-dimensional semantic vectors called **COGONs** — achieving up to 90% token reduction without loss of structural information.
 
 ```
 "deploy urgente falhou em produção"
@@ -57,46 +57,46 @@ bash test_all.sh
 - **API reference**: [docs.rs/leet-core](https://docs.rs/leet-core)
 - **Getting started**: [leetlang.org/getting-started](https://leetlang.org/getting-started)
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 1337/
-├── leet-core/          # Tipos COGON, eixos, protocolo, validação (Rust)
-├── leet-bridge/        # NL→COGON via heurísticas + W matrix (Rust)
-├── leet-service/       # Serviço TCP/gRPC + armazenamento (Rust)
-├── leet-cli/           # Ferramentas de linha de comando (Rust)
-├── python/             # SDK Python puro (leet1337)
-├── leet-vm/            # VM de orquestração de agentes (Python)
-├── leet-py/            # SDK público para integrações (Python)
-├── mcp/                # Servidor MCP para Claude Code
-├── calibration/        # Pipeline de calibração da W matrix
-├── deploy/             # Scripts systemd
-└── docs/               # Documentação completa
+├── leet-core/          # COGON types, axes, protocol, validation (Rust)
+├── leet-bridge/        # NL→COGON via heuristics + W matrix (Rust)
+├── leet-service/       # TCP/gRPC service + storage (Rust)
+├── leet-cli/           # Command-line tools (Rust)
+├── python/             # Pure Python SDK (leet1337)
+├── leet-vm/            # Agent orchestration VM (Python)
+├── leet-py/            # Public SDK for integrations (Python)
+├── mcp/                # MCP server for Claude Code
+├── calibration/        # W matrix calibration pipeline
+├── deploy/             # systemd scripts
+└── docs/               # Complete documentation
 ```
 
-## Documentação
+## Documentation
 
-| Documento | Conteúdo |
+| Document | Content |
 |---|---|
-| [Arquitetura](docs/ARCHITECTURE.md) | Visão geral do sistema, diagrama de componentes, fluxo de dados |
-| [COGON](docs/COGON.md) | Tipo de dado central, 32 eixos canônicos, operadores semânticos |
-| [Protocolo MSG_1337](docs/PROTOCOL.md) | Estrutura da mensagem, regras R1–R23, handshake C5 |
-| [leet-core](docs/crates/leet-core.md) | Tipos, validação, operadores, codec binário |
-| [leet-bridge](docs/crates/leet-bridge.md) | Tradução NL↔COGON, W matrix, cliente Anthropic |
-| [leet-service](docs/crates/leet-service.md) | Servidor TCP, cliente de agente, storage |
-| [leet-cli](docs/crates/leet-cli.md) | Todos os comandos CLI com exemplos |
-| [SDK Python](docs/python/leet-sdk.md) | Tipos, operadores, bridge, cache, validação |
-| [leet-vm](docs/python/leet-vm.md) | VM de orquestração, pipeline de processamento |
-| [leet-py](docs/python/leet-py.md) | SDK público, LeetClient, providers, @agent |
-| [Primeiros Passos](docs/guides/getting-started.md) | Instalação, configuração, exemplos básicos |
-| [Claude Code / MCP](docs/guides/mcp-claude-code.md) | Integração com Claude Code, skill /leet |
-| [Deploy](docs/guides/deployment.md) | Produção com systemd, variáveis de ambiente |
-| [Calibração](docs/guides/calibration.md) | Treino da W matrix |
+| [Architecture](docs/ARCHITECTURE.md) | System overview, component diagram, data flow |
+| [COGON](docs/COGON.md) | Core data type, 32 canonical axes, semantic operators |
+| [MSG_1337 Protocol](docs/PROTOCOL.md) | Message structure, R1–R23 rules, C5 handshake |
+| [leet-core](docs/crates/leet-core.md) | Types, validation, operators, binary codec |
+| [leet-bridge](docs/crates/leet-bridge.md) | NL↔COGON translation, W matrix, Anthropic client |
+| [leet-service](docs/crates/leet-service.md) | TCP server, agent client, storage |
+| [leet-cli](docs/crates/leet-cli.md) | All CLI commands with examples |
+| [Python SDK](docs/python/leet-sdk.md) | Types, operators, bridge, cache, validation |
+| [leet-vm](docs/python/leet-vm.md) | Orchestration VM, processing pipeline |
+| [leet-py](docs/python/leet-py.md) | Public SDK, LeetClient, providers, @agent |
+| [Getting Started](docs/guides/getting-started.md) | Installation, configuration, basic examples |
+| [Claude Code / MCP](docs/guides/mcp-claude-code.md) | Claude Code integration, /leet skill |
+| [Deploy](docs/guides/deployment.md) | Production with systemd, environment variables |
+| [Calibration](docs/guides/calibration.md) | Training the W matrix |
 
-## Versão
+## Version
 
-**v0.5.1** — especificação com 32 eixos canônicos, W matrix calibrada, protocolo C5.
+**v0.5.1** — specification with 32 canonical axes, calibrated W matrix, C5 protocol.
 
-## Licença
+## License
 
-Apache 2.0 — veja [LICENSE](LICENSE).
+Apache 2.0 — see [LICENSE](LICENSE).
